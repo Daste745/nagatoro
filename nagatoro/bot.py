@@ -47,6 +47,8 @@ class Bot(commands.Bot):
             title = "Missing bot permissions"
         except cerrors.NSFWChannelRequired:
             title = "Channel is not NSFW"
+        except cerrors.CommandOnCooldown:
+            title = "Cooldown"
         except Exception:
             logging.error(f"{type(exception)}, {exception}")
 
