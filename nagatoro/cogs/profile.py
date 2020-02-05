@@ -8,7 +8,7 @@ from nagatoro.converters import Member
 from nagatoro.objects import Embed
 
 
-def get_profile(user_id: int):
+async def get_profile(user_id: int):
     with db_session:
         if not (user := db.User.get(id=user_id)):
             user = db.User(id=user_id)
@@ -32,7 +32,7 @@ class Profile(Cog):
             member = ctx.author
 
         with db_session:
-            profile = get_profile(member.id)
+            profile = await get_profile(member.id)
             progress = round(
                 profile.exp / (((profile.level + 1) * 4) ** 2) * 100)
 
@@ -57,7 +57,7 @@ class Profile(Cog):
         """Requirements for the next 5 levels"""
 
         with db_session:
-            profile = get_profile(ctx.author.id)
+            profile = await get_profile(ctx.author.id)
             embed = Embed(ctx, title="Next 5 levels", description="",
                           color=Color.blue())
             for i in range(profile.level + 1, profile.level + 6):
@@ -91,7 +91,7 @@ class Profile(Cog):
             return
 
         with db_session:
-            profile = get_profile(ctx.author.id)
+            profile = await get_profile(ctx.author.id)
             profile.exp += 1
 
             # Level up
