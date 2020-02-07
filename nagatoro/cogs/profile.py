@@ -1,21 +1,13 @@
 from math import sqrt, floor
 from pony.orm import db_session, select
 from discord import Message, Color
-from discord.ext.commands import Cog, Context, command, cooldown, BucketType
+from discord.ext.commands import Cog, Context, command, group, cooldown, \
+    BucketType
 
 import nagatoro.objects.database as db
 from nagatoro.converters import Member
 from nagatoro.objects import Embed
-
-
-async def get_profile(user_id: int):
-    with db_session:
-        if not (user := db.User.get(id=user_id)):
-            user = db.User(id=user_id)
-        if not (profile := db.Profile.get(user=user)):
-            profile = db.Profile(user=user, exp=0, level=0, balance=0)
-
-    return profile
+from nagatoro.utils.db import get_profile
 
 
 class Profile(Cog):
@@ -33,22 +25,28 @@ class Profile(Cog):
 
         with db_session:
             profile = await get_profile(member.id)
-            progress = round(
-                profile.exp / (((profile.level + 1) * 4) ** 2) * 100)
+            # Calculate current level progress from proportions:
+            # (exp - curr lvl req) * 100 / (curr lvl req - next lvl req)
+            current_level_exp = (profile.level * 4) ** 2
+            next_level_exp = ((profile.level + 1) * 4) ** 2
+            progress = round((profile.exp - current_level_exp) * 100 /
+                             (next_level_exp - current_level_exp))
 
             embed = Embed(
                 ctx, title=f"{member.name}'s profile", color=member.color)
             embed.set_thumbnail(url=member.avatar_url)
-            embed.add_field(name="Level",
-                            value=f"{profile.level} ({progress}%)")
-            embed.add_field(name="Experience", value=f"{profile.exp} exp")
-            embed.add_field(name="Balance", value=f"{profile.balance} coins")
             mutes = select(i for i in profile.user.punishments
                            if isinstance(i, db.Mute)).without_distinct()
             warns = select(i for i in profile.user.punishments
                            if isinstance(i, db.Warn)).without_distinct()
-            embed.add_field(name="Mutes", value=str(len(mutes)))
-            embed.add_field(name="Warns", value=str(len(warns)))
+            embed.add_fields(
+                ("Level", f"{profile.level}"),
+                ("Experience", f"{profile.exp}/{next_level_exp} "
+                               f"({progress}%)"),
+                ("Balance", f"{profile.balance} coins"),
+                ("Mutes", str(len(mutes))),
+                ("Warns", str(len(warns)))
+            )
 
             await ctx.send(embed=embed)
 
@@ -66,19 +64,45 @@ class Profile(Cog):
 
             await ctx.send(embed=embed)
 
-    # TODO: Make exp and balance ranking
-    @command(name="ranking", aliases=["top"])
+    @group(name="ranking", aliases=["top"])
+    @cooldown(rate=2, per=20, type=BucketType.guild)
     async def ranking(self, ctx: Context):
+        """User ranking"""
+        if ctx.invoked_subcommand:
+            return
+        await self.level.__call__(ctx)
+
+    @ranking.command(name="level", aliases=["lvl"])
+    async def level(self, ctx: Context):
         """Top users by level"""
 
         with db_session:
-            top_users = db.Profile.select().order_by(db.desc(db.Profile.exp))[:10]
+            top_users = \
+                db.Profile.select().order_by(db.desc(db.Profile.exp))[:10]
 
-            embed = Embed(ctx, title="Ranking", description="",
+            embed = Embed(ctx, title="Level ranking", description="",
                           color=Color.blue())
             for profile in top_users:
-                user = str(self.bot.get_user(profile.user.id))
-                embed.description += f"{user} - level {profile.level}, {profile.balance} coins\n"
+                user = await self.bot.fetch_user(profile.user.id)
+                embed.description += \
+                    f"{user.mention}: **{profile.level}** level\n"
+
+            await ctx.send(embed=embed)
+
+    @ranking.command(name="balance", aliases=["bal", "money"])
+    async def balance(self, ctx: Context):
+        """Top users by balance"""
+
+        with db_session:
+            top_users = \
+                db.Profile.select().order_by(db.desc(db.Profile.balance))[:10]
+
+            embed = Embed(ctx, title="Balance ranking", description="",
+                          color=Color.blue())
+            for profile in top_users:
+                user = await self.bot.fetch_user(profile.user.id)
+                embed.description += \
+                    f"{user.mention}: **{profile.balance}** coins\n"
 
             await ctx.send(embed=embed)
 

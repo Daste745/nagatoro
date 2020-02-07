@@ -1,4 +1,5 @@
 from pony.orm import db_session
+
 import nagatoro.objects.database as db
 
 
