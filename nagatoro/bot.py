@@ -19,10 +19,10 @@ class Bot(commands.Bot):
         # self.remove_command("help")
 
     def startup(self):
+        Management.load_cogs(bot=self)
         self.run(self.config.token)
 
     async def on_ready(self):
-        Management.load_cogs(bot=self)
         logging.info(f"Bot started as {self.user}.")
         logging.info(f"Loaded cogs: {', '.join(self.cogs)}")
         logging.info(

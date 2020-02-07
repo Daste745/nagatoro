@@ -2,7 +2,9 @@ import os
 from time import time
 from datetime import timedelta
 from discord import Color
-from discord.ext.commands import Cog, Context, Bot, command, group, is_owner
+from discord.ext.commands import Cog, Context, Bot, command, group, is_owner, \
+    ExtensionAlreadyLoaded
+from discord.ext.tasks import loop
 
 from nagatoro.objects import Embed
 from nagatoro.utils.db import get_prefix, set_prefix
@@ -12,6 +14,10 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     """Commands to manage the bot's settings"""
     def __init__(self, bot):
         self.bot = bot
+        self.wake_database.start()
+
+    def cog_unload(self):
+        self.wake_database.cancel()
 
     @staticmethod
     def load_cogs(bot: Bot):
@@ -20,7 +26,10 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
                       for i in os.listdir(path)
                       if os.path.isfile(f"{path}{i}")]
         for extension in extensions:
-            bot.load_extension(extension)
+            try:
+                bot.load_extension(extension)
+            except ExtensionAlreadyLoaded:
+                pass
 
     @staticmethod
     def unload_cogs(bot: Bot):
@@ -86,6 +95,16 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         await set_prefix(ctx.guild.id, None)
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
+
+    # This is just a hack to keep the database busy
+    # and to not let it block the bot thread after ~20 minutes of inactivity
+    # TODO: Use proper async ORM
+    @loop(minutes=10)
+    async def wake_database(self):
+        if not await get_prefix(123):
+            return
+        else:
+            return
 
 
 def setup(bot):

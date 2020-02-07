@@ -15,4 +15,5 @@ with open("data/config.json") as file:
 
 bot = nagatoro.Bot(config)
 
-bot.startup()
+if __name__ == "__main__":
+    bot.startup()
