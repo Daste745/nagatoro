@@ -13,7 +13,6 @@ class Member(Converter):
                 lambda x: x.name.lower() == argument.lower(),
                 ctx.guild.members)
         else:
-            print(member_id_match.group("id"))
             member = utils.find(
                 lambda x: x.id == int(member_id_match.group("id")),
                 ctx.guild.members)
