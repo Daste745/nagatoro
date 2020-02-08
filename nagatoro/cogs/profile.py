@@ -2,7 +2,7 @@ from math import sqrt, floor
 from pony.orm import db_session, select
 from discord import Message, Color
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
-    BucketType
+    BucketType, BadArgument
 
 import nagatoro.objects.database as db
 from nagatoro.converters import Member
@@ -68,6 +68,7 @@ class Profile(Cog):
     @cooldown(rate=2, per=20, type=BucketType.guild)
     async def ranking(self, ctx: Context):
         """User ranking"""
+
         if ctx.invoked_subcommand:
             return
         await self.level.__call__(ctx)
@@ -104,6 +105,31 @@ class Profile(Cog):
                 embed.description += \
                     f"{user.mention}: **{profile.balance}** coins\n"
 
+            await ctx.send(embed=embed)
+
+    @command(name="transfer", aliases=["give", "pay"])
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def transfer(self, ctx: Context, amount: int, *, member: Member):
+        """Transfer coins to another member"""
+
+        with db_session:
+            profile = await get_profile(ctx.author.id)
+
+            if member == ctx.author:
+                raise BadArgument("You can't transfer money to yourself.")
+            if amount <= 0:
+                raise BadArgument("Transfer amount can't be zero or negative.")
+            if profile.balance < amount:
+                raise BadArgument(f"Not enough funds, you have only "
+                                  f"{profile.balance} coins.")
+
+            target_profile = await get_profile(member.id)
+            profile.balance -= amount
+            target_profile.balance += amount
+
+            embed = Embed(ctx, title="Transfer")
+            embed.description = f"Transferred **{amount}** coin(s) from" \
+                                f" {ctx.author.mention} to {member.mention}."
             await ctx.send(embed=embed)
 
     @Cog.listener()
