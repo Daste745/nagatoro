@@ -1,3 +1,4 @@
+import json
 from discord.ext.commands import Cog, Context, command, cooldown, \
     BucketType
 
@@ -5,11 +6,13 @@ from nagatoro.objects import Embed
 from nagatoro.utils import get_gif
 
 
+with open("data/action_config.json", "r") as f:
+    action_commands = json.load(f)["commands"]
+
+
 class Action(Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    action_commands = ["hug", "pat", "smile", "cuddle", "kiss"]
 
     @command(name="action", ignore_extra=True, aliases=action_commands)
     @cooldown(rate=3, per=15, type=BucketType.user)
