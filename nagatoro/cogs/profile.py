@@ -134,6 +134,8 @@ class Profile(Cog):
 
     @Cog.listener()
     async def on_message(self, message: Message):
+        if self.bot.config.testing:
+            return
         if message.author.bot:
             return
         ctx = await self.bot.get_context(message)
@@ -157,7 +159,8 @@ class Profile(Cog):
                     f"to **level {profile.level}**. " \
                     f"Level up bonus: **{bonus} points**."
 
-                await ctx.send(embed=embed)
+                level_up_message = await ctx.send(embed=embed)
+                await level_up_message.delete(delay=15)
 
 
 def setup(bot):

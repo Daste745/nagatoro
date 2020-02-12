@@ -3,7 +3,8 @@ from typing import IO
 
 
 class Config:
-    def __init__(self, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str, tenor_key: str):
+    def __init__(self, testing: bool, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str):
+        self.testing = testing
         self.prefix = prefix
         self.token = token
         self.db_url = db_url
@@ -16,6 +17,7 @@ class Config:
     def from_file(cls, file: IO):
         data = json.load(file)
         return Config(
+            testing=data["testing"] if data["testing"] else False,
             prefix=data["prefix"],
             token=data["token"],
             db_url=data["db_url"],
