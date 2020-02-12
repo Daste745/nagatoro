@@ -157,7 +157,8 @@ class Profile(Cog):
                     f"to **level {profile.level}**. " \
                     f"Level up bonus: **{bonus} points**."
 
-                await ctx.send(embed=embed)
+                level_up_message = await ctx.send(embed=embed)
+                await level_up_message.delete(delay=15)
 
 
 def setup(bot):
