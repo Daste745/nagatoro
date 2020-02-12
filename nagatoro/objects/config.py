@@ -3,7 +3,7 @@ from typing import IO
 
 
 class Config:
-    def __init__(self, testing: bool, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str):
+    def __init__(self, testing: bool, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str, tenor_key: str):
         self.testing = testing
         self.prefix = prefix
         self.token = token
