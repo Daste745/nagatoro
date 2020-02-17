@@ -8,12 +8,14 @@ from nagatoro.objects import Embed
 
 class Utility(Cog):
     """Utility commands"""
+
     def __init__(self, bot):
         self.bot = bot
 
     @command(name="role")
     async def role(self, ctx: Context, *, role: Role):
         """Shows info about a role"""
+
         embed = Embed(ctx, title=role.name, color=role.color)
 
         embed.add_field(name="ID", value=role.id)
@@ -35,6 +37,7 @@ class Utility(Cog):
     @command(name="user", aliases=["me", "member"])
     async def user(self, ctx: Context, *, user: Union[Member, User] = None):
         """Shows info about an user or a member"""
+
         if not user:
             user = ctx.author
 
@@ -49,6 +52,7 @@ class Utility(Cog):
     @command(name="avatar", aliases=["av", "pfp"])
     async def avatar(self, ctx: Context, *, user: User = None):
         """Shows an user's avatar"""
+
         if not user:
             user = ctx.author
 
@@ -59,6 +63,7 @@ class Utility(Cog):
     @command(name="server", aliases=["guild"])
     async def server(self, ctx: Context):
         """Shows info about this server"""
+
         embed = Embed(ctx, title=ctx.guild.name)
         embed.set_thumbnail(url=ctx.guild.icon_url_as(size=2048))
         embed.add_field(name="ID", value=ctx.guild.id)

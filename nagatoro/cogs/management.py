@@ -22,7 +22,8 @@ def get_size(bytes: int):
 
 
 class Management(Cog, command_attrs=dict(ignore_extra=True)):
-    """Commands to manage the bot's settings"""
+    """Bot settings and info"""
+
     def __init__(self, bot):
         self.bot = bot
         self.wake_database.start()
@@ -82,8 +83,10 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     @command(name="info")
     async def info(self, ctx: Context):
         """Bot info"""
+
+        # TODO: Make branch info operational on other systems.
         git_branch = os.popen(
-            "git branch | awk '{print $2}' | sed '/^\s*$/d'").read()
+            r"git branch | awk '{print $2}' | sed '/^\s*$/d'").read()
 
         embed = Embed(ctx, title="Bot info", color=Color(0x56517b))
         if self.bot.config.testing:
@@ -111,7 +114,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
     @group(name="prefix")
     async def prefix(self, ctx: Context):
-        """Shows the current prefix"""
+        """Bot prefix"""
 
         if ctx.invoked_subcommand:
             return
@@ -120,13 +123,13 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
             prefix = ctx.prefix
 
         embed = Embed(ctx, title="Prefix", color=Color.blue())
-        embed.description = f"The current prefix is `{prefix}`"
+        embed.description = f"The current prefix is **{prefix}**"
         return await ctx.send(embed=embed)
 
     @prefix.command(name="set")
     @is_owner()
     async def prefix_set(self, ctx: Context, prefix: str):
-        """Shows the prefix for this server"""
+        """Set the prefix for this server"""
 
         await set_prefix(ctx.guild.id, prefix)
         return await ctx.send(f"Set custom prefix to `{prefix}`")
@@ -134,14 +137,14 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     @prefix.command("remove", aliases=["unset", "delete"])
     @is_owner()
     async def prefix_remove(self, ctx: Context):
-        """Removes the prefix for this server"""
+        """Remove the prefix for this server"""
 
         await set_prefix(ctx.guild.id, None)
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
 
     # This is just a hack to keep the database busy
     # and to not let it block the bot thread after ~20 minutes of inactivity
-    # TODO: Use proper async ORM
+    # TODO: Use proper async ORM.
     @loop(minutes=10)
     async def wake_database(self):
         if not await get_prefix(123):

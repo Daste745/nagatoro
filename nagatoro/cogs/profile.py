@@ -12,6 +12,7 @@ from nagatoro.utils.db import get_profile
 
 class Profile(Cog):
     """Profile commands"""
+
     def __init__(self, bot):
         self.bot = bot
 
