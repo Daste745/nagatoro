@@ -87,8 +87,9 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         # TODO: Make branch info operational on other systems.
         git_branch = os.popen(
             r"git branch | awk '{print $2}' | sed '/^\s*$/d'").read()
+        app_info = await self.bot.application_info()
 
-        embed = Embed(ctx, title="Bot info", color=Color(0x56517b))
+        embed = Embed(ctx, title=app_info.name, color=Color(0x56517b))
         if self.bot.config.testing:
             embed.description = f"Development version, git: **{git_branch}**"
         embed.set_thumbnail(url=self.bot.user.avatar_url)
@@ -98,7 +99,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
             ("Uptime",
              str(timedelta(seconds=round(time() - self.bot.start_timestamp)))),
             ("Commands", f"{len(self.bot.commands)} commands"),
-            ("Creator", str(await self.bot.fetch_user(self.bot.owner_id))),
+            ("Creator", str(app_info.owner)),
             ("Library", f"discord.py {discord_version}"),
             ("Python version",
              f"{platform.python_implementation()} {platform.python_version()}"),
