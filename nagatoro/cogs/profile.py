@@ -153,15 +153,18 @@ class Profile(Cog):
                 bonus = floor(sqrt(profile.level) * 100)
                 profile.balance += bonus
 
+                if profile.level < 5:
+                    return
+
                 embed = Embed(ctx, title="Level up!")
                 embed.set_thumbnail(url=ctx.author.avatar_url)
                 embed.description = \
-                    f"{ctx.author.mention} levelled up " \
-                    f"to **level {profile.level}**. " \
-                    f"Level up bonus: **{bonus} points**."
+                    f"Congratulations, {ctx.mention.user}! " \
+                    f"You have advanced to **level {profile.level}** " \
+                    f"and got a bonus of **{bonus} points**."
 
                 level_up_message = await ctx.send(embed=embed)
-                await level_up_message.delete(delay=15)
+                await level_up_message.delete(delay=30)
 
 
 def setup(bot):
