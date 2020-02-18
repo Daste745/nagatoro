@@ -158,7 +158,7 @@ class Profile(Cog):
                 embed = Embed(ctx, title="Level up!")
                 embed.set_thumbnail(url=ctx.author.avatar_url)
                 embed.description = \
-                    f"Congratulations, {ctx.mention.user}! " \
+                    f"Congratulations, {ctx.author.mention}! " \
                     f"You have advanced to **level {profile.level}** " \
                     f"and got a bonus of **{bonus} points**."
 
