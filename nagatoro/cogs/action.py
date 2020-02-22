@@ -27,9 +27,10 @@ class Action(Cog):
                             value=", ".join(self.action.aliases))
             return await ctx.send(embed=embed)
 
+        await ctx.trigger_typing()
         embed = Embed(ctx, footer="Via Tenor", color=ctx.author.color)
         embed.set_image(
-            url=get_gif(ctx.invoked_with, self.bot.config.tenor_key))
+            url=await get_gif(ctx.invoked_with, self.bot.config.tenor_key))
 
         await ctx.send(embed=embed)
 
