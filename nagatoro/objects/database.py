@@ -41,13 +41,13 @@ class User(Snowflake):
     profile = Optional('Profile')
 
 
-class Warn(Punishment):
+class Mute(Punishment):
     start = Required(datetime)
     end = Required(datetime)
     active = Required(bool)
 
 
-class Mute(Punishment):
+class Warn(Punishment):
     when = Required(datetime)
 
 
