@@ -12,6 +12,7 @@ from nagatoro.utils.db import get_profile
 
 class Profile(Cog):
     """Profile commands"""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -134,6 +135,8 @@ class Profile(Cog):
 
     @Cog.listener()
     async def on_message(self, message: Message):
+        if self.bot.config.testing:
+            return
         if message.author.bot:
             return
         ctx = await self.bot.get_context(message)
@@ -150,14 +153,18 @@ class Profile(Cog):
                 bonus = floor(sqrt(profile.level) * 100)
                 profile.balance += bonus
 
+                if profile.level < 5:
+                    return
+
                 embed = Embed(ctx, title="Level up!")
                 embed.set_thumbnail(url=ctx.author.avatar_url)
                 embed.description = \
-                    f"{ctx.author.mention} levelled up " \
-                    f"to **level {profile.level}**. " \
-                    f"Level up bonus: **{bonus} points**."
+                    f"Congratulations, {ctx.author.mention}! " \
+                    f"You have advanced to **level {profile.level}** " \
+                    f"and got a bonus of **{bonus} points**."
 
-                await ctx.send(embed=embed)
+                level_up_message = await ctx.send(embed=embed)
+                await level_up_message.delete(delay=30)
 
 
 def setup(bot):

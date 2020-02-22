@@ -11,6 +11,8 @@ with open("data/action_config.json", "r") as f:
 
 
 class Action(Cog):
+    """Action and reaction GIFs"""
+
     def __init__(self, bot):
         self.bot = bot
 
