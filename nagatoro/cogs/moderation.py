@@ -161,7 +161,7 @@ class Moderation(Cog):
     @command(name="mute")
     @is_moderator()
     async def mute(self, ctx: Context, member: Member, time: Timedelta, *,
-                   reason: str = "No reason"):
+                   reason: str = None):
         """Mute a member
 
         Most emotes don't work with mute reasons.

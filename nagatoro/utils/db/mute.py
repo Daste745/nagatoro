@@ -9,7 +9,7 @@ from nagatoro.utils.db import get_user, get_guild
 
 
 async def make_mute(ctx: Context, user_id: int, time: timedelta,
-                    reason: str) -> db.Mute:
+                    reason: str = None) -> db.Mute:
     with db_session:
         user = await get_user(user_id)
         guild = await get_guild(ctx.guild.id)
