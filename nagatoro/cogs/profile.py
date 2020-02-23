@@ -1,4 +1,5 @@
 from math import sqrt, floor
+from asyncio import TimeoutError
 from pony.orm import db_session, select
 from discord import Message, Color
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
@@ -78,6 +79,7 @@ class Profile(Cog):
     async def level(self, ctx: Context):
         """Top users by level"""
 
+        await ctx.trigger_typing()
         with db_session:
             top_users = \
                 db.Profile.select().order_by(db.desc(db.Profile.exp))[:10]
@@ -95,6 +97,7 @@ class Profile(Cog):
     async def balance(self, ctx: Context):
         """Top users by balance"""
 
+        await ctx.trigger_typing()
         with db_session:
             top_users = \
                 db.Profile.select().order_by(db.desc(db.Profile.balance))[:10]
@@ -113,25 +116,41 @@ class Profile(Cog):
     async def transfer(self, ctx: Context, amount: int, *, member: Member):
         """Transfer coins to another member"""
 
+        if member == ctx.author:
+            raise BadArgument("You can't transfer money to yourself.")
+        if amount <= 0:
+            raise BadArgument("Transfer amount can't be zero or negative.")
+
+        with db_session:
+            if balance := (await get_profile(ctx.author.id)).balance < amount:
+                raise BadArgument(f"Not enough funds, you have only "
+                                  f"{balance} coins.")
+
+        embed = Embed(ctx, title="Transfer")
+        embed.description = f"You are about to give **{amount}** coin(s) " \
+                            f"to {member.mention}, are you sure?"
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+
+        try:
+            await self.bot.wait_for("reaction_add", timeout=30,
+                                    check=lambda r, u: u == ctx.message.author
+                                    and str(r.emoji) == "✅")
+        except TimeoutError:
+            embed.description = "Transfer cancelled."
+            return await message.edit(embed=embed)
+        finally:
+            await message.clear_reactions()
+
         with db_session:
             profile = await get_profile(ctx.author.id)
-
-            if member == ctx.author:
-                raise BadArgument("You can't transfer money to yourself.")
-            if amount <= 0:
-                raise BadArgument("Transfer amount can't be zero or negative.")
-            if profile.balance < amount:
-                raise BadArgument(f"Not enough funds, you have only "
-                                  f"{profile.balance} coins.")
-
             target_profile = await get_profile(member.id)
             profile.balance -= amount
             target_profile.balance += amount
 
-            embed = Embed(ctx, title="Transfer")
-            embed.description = f"Transferred **{amount}** coin(s) from" \
-                                f" {ctx.author.mention} to {member.mention}."
-            await ctx.send(embed=embed)
+            embed.description = f"Transferred **{amount}** coin(s) " \
+                                f"to {member.mention}"
+            await message.edit(embed=embed)
 
     @Cog.listener()
     async def on_message(self, message: Message):
