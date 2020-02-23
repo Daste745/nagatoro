@@ -1,4 +1,6 @@
 /venv/
 /.idea/
-/data/
 *__pycache__
+
+/data/config.json
+/data/nagatoro.log
