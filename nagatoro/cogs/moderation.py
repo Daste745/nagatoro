@@ -1,10 +1,10 @@
 from datetime import datetime
 from pony.orm import db_session
 from discord import Role
+from discord.errors import Forbidden
 from discord.ext.tasks import loop
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
     has_permissions, BucketType, check_any
-
 
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
@@ -23,12 +23,9 @@ class Moderation(Cog):
     def cog_unload(self):
         self.check_mutes.cancel()
 
-    @group(name="modrole")
+    @group(name="modrole", invoke_without_command=True)
     async def mod_role(self, ctx: Context):
         """Check the moderator role"""
-
-        if ctx.invoked_subcommand:
-            return
 
         if not (mod_role := await get_mod_role(self.bot, ctx.guild.id)):
             return await ctx.send(
@@ -49,10 +46,10 @@ class Moderation(Cog):
 
         await ctx.send(f"Set the mod role to **{role.name}**.")
 
-    @mod_role.command(name="remove")
+    @mod_role.command(name="delete", aliases=["remove"])
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
-    async def mod_role_remove(self, ctx: Context):
+    async def mod_role_delete(self, ctx: Context):
         """Remove the mod role for this server
 
         It is recommended to use use this before deleting the role.
@@ -64,12 +61,9 @@ class Moderation(Cog):
 
         await ctx.send(f"Removed the mod role from {ctx.guild.name}.")
 
-    @group(name="muterole")
+    @group(name="muterole", invoke_without_command=True)
     async def mute_role(self, ctx: Context):
         """Check the mute role"""
-
-        if ctx.invoked_subcommand:
-            return
 
         if not (mute_role := await get_mute_role(self.bot, ctx.guild.id)):
             return await ctx.send(
@@ -90,10 +84,10 @@ class Moderation(Cog):
 
         await ctx.send(f"Set the mute role to **{role.name}**.")
 
-    @mute_role.command(name="remove")
+    @mute_role.command(name="delete", aliases=["remove"])
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
-    async def mute_role_remove(self, ctx: Context):
+    async def mute_role_delete(self, ctx: Context):
         """Remove the mute role for this server
 
         It is recommended to use use this before deleting the role.
@@ -115,12 +109,12 @@ class Moderation(Cog):
 
         await ctx.send(f"Banned {member}, reason: *{reason}*. :hammer:")
 
-    @command(name="warn")
+    @command(name="warn", invoke_without_subcommand=True)
     @is_moderator()
     async def warn(self, ctx: Context, member: Member, *, reason: str):
         """Warn a member
 
-        Most emotes don't work with warn reasons.
+        Note: Most emotes don't work with warn reasons.
         """
 
         # FIXME: Database does not recognise emoji
@@ -131,8 +125,12 @@ class Moderation(Cog):
         embed.description = f"Warned {member.mention}, reason: *{reason}*"
 
         await ctx.send(embed=embed)
-        await member.send(f"You have been warned in **{ctx.guild.name}**, "
-                          f"reason: *{reason}*")
+
+        try:
+            await member.send(f"You have been warned in **{ctx.guild.name}**, "
+                              f"reason: *{reason}*")
+        except Forbidden:
+            pass
 
     @command(name="warns")
     @cooldown(rate=3, per=15, type=BucketType.guild)
@@ -142,8 +140,8 @@ class Moderation(Cog):
         if not member:
             member = ctx.author
 
-        embed = Embed(ctx, title=f"{member.name}'s warns", description="")
-        embed.set_thumbnail(url=member.avatar_url)
+        embed = Embed(ctx, title=f"{member.name}'s warns", description="",
+                      color=member.color)
         await ctx.trigger_typing()
 
         with db_session:
@@ -154,7 +152,7 @@ class Moderation(Cog):
             for i in reversed(warns[:15]):
                 moderator = self.bot.get_user(i.given_by)
                 embed.description += \
-                    f"[{i.when}] {moderator} - *{i.reason}*\n"
+                    f"**{moderator}:** {i.when} - *{i.reason}*\n"
 
         await ctx.send(embed=embed)
 
@@ -164,7 +162,10 @@ class Moderation(Cog):
                    reason: str = None):
         """Mute a member
 
-        Most emotes don't work with mute reasons.
+        Note: Most emotes don't work with mute reasons.
+        Note: Mutes are checked every 15 seconds,
+        so muting someone for 5 seconds would probably turn
+        into a 15 second mute.
         """
 
         if await is_muted(member.id, ctx.guild.id):
@@ -186,22 +187,23 @@ class Moderation(Cog):
                             f"Reason: *{reason}*"
 
         await ctx.send(embed=embed)
-        await member.send(f"You have been muted in **{ctx.guild.name}** "
-                          f"for {time}, reason: *{reason}*")
+
+        try:
+            await member.send(f"You have been muted in **{ctx.guild.name}** "
+                              f"for {time}, reason: *{reason}*")
+        except Forbidden:
+            pass
 
     @group(name="mutes", invoke_without_command=True)
     @cooldown(rate=3, per=15, type=BucketType.guild)
     async def mutes(self, ctx: Context, member: Member = None):
         """See someone else's mutes"""
 
-        if ctx.invoked_subcommand:
-            return
-
         if not member:
             member = ctx.author
 
-        embed = Embed(ctx, title=f"{member.name}'s mutes", description="")
-        embed.set_thumbnail(url=member.avatar_url)
+        embed = Embed(ctx, title=f"{member.name}'s mutes", description="",
+                      color=member.color)
         await ctx.trigger_typing()
 
         with db_session:
@@ -211,8 +213,9 @@ class Moderation(Cog):
 
             for i in reversed(mutes[:15]):
                 moderator = await self.bot.fetch_user(i.given_by)
-                embed.description += f"[{i.end - i.start}] " \
-                                     f"{moderator} - *{i.reason}*\n"
+                embed.description += f"**{moderator}**: {i.start} - " \
+                                     f"{i.end - i.start} - " \
+                                     f"*{i.reason or 'No reason'}*\n"
 
         await ctx.send(embed=embed)
 
@@ -236,7 +239,8 @@ class Moderation(Cog):
                                 value=f"**Given at**: {i.start}\n"
                                       f"**Duration**: {i.end - i.start}\n"
                                       f"**Moderator**: {moderator.mention}\n"
-                                      f"**Reason**: *{i.reason}*")
+                                      f"**Reason**: *"
+                                      f"{i.reason or 'No reason'}*")
 
         await ctx.send(embed=embed)
 
@@ -261,7 +265,10 @@ class Moderation(Cog):
                 await member.remove_roles(mute_role, reason="Mute ended.")
                 i.active = False
 
-                await member.send(f"Your mute on {guild.name} has ended.")
+                try:
+                    await member.send(f"Your mute on {guild.name} has ended.")
+                except Forbidden:
+                    pass
 
     @check_mutes.before_loop
     async def before_check_mutes(self):
