@@ -1,4 +1,5 @@
 from math import sqrt, floor
+from datetime import datetime, timedelta
 from asyncio import TimeoutError
 from pony.orm import db_session, select
 from discord import Message, Color
@@ -151,6 +152,52 @@ class Profile(Cog):
             embed.description = f"Transferred **{amount}** coin(s) " \
                                 f"to {member.mention}"
             await message.edit(embed=embed)
+
+    @command(name="daily")
+    async def daily(self, ctx: Context, member: Member = None):
+        """Daily coin reward
+
+        Mention someone to give your reward to them.
+        Can be used once every 23 hours.
+        Streak gives you more coins, but will be lost
+        after 2 days of inactivity.
+        """
+
+        with db_session:
+            profile = await get_profile(ctx.author.id)
+
+            if profile.last_daily and \
+                    profile.last_daily + timedelta(hours=23) > datetime.now():
+                next_daily = timedelta(hours=23) - \
+                             (datetime.now() - profile.last_daily)
+                return await ctx.send(
+                    f"Your next daily will be available in "
+                    f"**{round(next_daily.seconds / 3600)} hours**.")
+
+            target_profile = await get_profile(member.id) if member else profile
+
+            if profile.daily_streak and \
+                    datetime.now() - profile.last_daily < timedelta(days=2):
+                profile.daily_streak += 1
+            else:
+                profile.daily_streak = 1
+
+            profile.last_daily = datetime.now()
+            bonus = floor(sqrt(profile.daily_streak) * 20)
+            target_profile.balance += 100 + bonus
+
+            embed = Embed(ctx, title="Daily", color=ctx.author.color)
+            if target_profile == profile:
+                embed.description = \
+                    f"You got **{100 + bonus}** daily points.\n" \
+                    f"Streak: **{profile.daily_streak}**."
+            else:
+                embed.description = \
+                    f"You gave your daily **{100 + bonus} points** " \
+                    f"to {member.mention}.\n" \
+                    f"Streak: **{profile.daily_streak}**"
+
+            await ctx.send(embed=embed)
 
     @Cog.listener()
     async def on_message(self, message: Message):
