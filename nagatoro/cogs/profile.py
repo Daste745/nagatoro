@@ -51,7 +51,22 @@ class Profile(Cog):
                 ("Warns", str(len(warns)))
             )
 
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
+
+    @command(name="balance", aliases=["bal", "money"])
+    async def balance(self, ctx: Context, member: Member = None):
+        """Coin balance"""
+
+        if not member:
+            member = ctx.author
+        
+        with db_session:
+            profile = await get_profile(member.id)
+            embed = Embed(ctx, title=f"{member.name}'s balance",
+                          description=f"Balance: **{profile.balance} coins**",
+                          color=member.color)
+
+        await ctx.send(embed=embed)
 
     @command(name="levels")
     async def levels(self, ctx: Context):
@@ -74,10 +89,11 @@ class Profile(Cog):
 
         if ctx.invoked_subcommand:
             return
-        await self.level.__call__(ctx)
+
+        await self.ranking_level.__call__(ctx)
 
     @ranking.command(name="level", aliases=["lvl"])
-    async def level(self, ctx: Context):
+    async def ranking_level(self, ctx: Context):
         """Top users by level"""
 
         await ctx.trigger_typing()
@@ -95,7 +111,7 @@ class Profile(Cog):
             await ctx.send(embed=embed)
 
     @ranking.command(name="balance", aliases=["bal", "money"])
-    async def balance(self, ctx: Context):
+    async def ranking_balance(self, ctx: Context):
         """Top users by balance"""
 
         await ctx.trigger_typing()
@@ -115,7 +131,7 @@ class Profile(Cog):
     @command(name="transfer", aliases=["give", "pay"])
     @cooldown(rate=2, per=10, type=BucketType.user)
     async def transfer(self, ctx: Context, amount: int, *, member: Member):
-        """Transfer coins to another member"""
+        """Give coins to someone"""
 
         if member == ctx.author:
             raise BadArgument("You can't transfer money to yourself.")
