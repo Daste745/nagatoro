@@ -1,4 +1,5 @@
 import json
+from asyncio import TimeoutError
 from discord.ext.commands import Cog, Context, command, cooldown, \
     BucketType
 
@@ -32,7 +33,25 @@ class Action(Cog):
         embed.set_image(
             url=await get_gif(ctx.invoked_with, self.bot.config.tenor_key))
 
-        await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed)
+
+        await message.add_reaction("🔁")
+
+        while True:
+            try:
+                await self.bot.wait_for(
+                    "reaction_add",
+                    timeout=20,
+                    check=lambda r, u: u == ctx.message.author
+                                       and str(r.emoji) == "🔁")
+
+                embed.set_image(
+                    url=await get_gif(ctx.invoked_with,
+                                      self.bot.config.tenor_key))
+                await message.edit(embed=embed)
+            except TimeoutError:
+                await message.clear_reactions()
+                break
 
 
 def setup(bot):
