@@ -1,4 +1,6 @@
 from math import sqrt, floor
+from datetime import datetime, timedelta
+from asyncio import TimeoutError
 from pony.orm import db_session, select
 from discord import Message, Color
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
@@ -49,7 +51,22 @@ class Profile(Cog):
                 ("Warns", str(len(warns)))
             )
 
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
+
+    @command(name="balance", aliases=["bal", "money"])
+    async def balance(self, ctx: Context, member: Member = None):
+        """Coin balance"""
+
+        if not member:
+            member = ctx.author
+        
+        with db_session:
+            profile = await get_profile(member.id)
+            embed = Embed(ctx, title=f"{member.name}'s balance",
+                          description=f"Balance: **{profile.balance} coins**",
+                          color=member.color)
+
+        await ctx.send(embed=embed)
 
     @command(name="levels")
     async def levels(self, ctx: Context):
@@ -72,12 +89,14 @@ class Profile(Cog):
 
         if ctx.invoked_subcommand:
             return
-        await self.level.__call__(ctx)
+
+        await self.ranking_level.__call__(ctx)
 
     @ranking.command(name="level", aliases=["lvl"])
-    async def level(self, ctx: Context):
+    async def ranking_level(self, ctx: Context):
         """Top users by level"""
 
+        await ctx.trigger_typing()
         with db_session:
             top_users = \
                 db.Profile.select().order_by(db.desc(db.Profile.exp))[:10]
@@ -92,9 +111,10 @@ class Profile(Cog):
             await ctx.send(embed=embed)
 
     @ranking.command(name="balance", aliases=["bal", "money"])
-    async def balance(self, ctx: Context):
+    async def ranking_balance(self, ctx: Context):
         """Top users by balance"""
 
+        await ctx.trigger_typing()
         with db_session:
             top_users = \
                 db.Profile.select().order_by(db.desc(db.Profile.balance))[:10]
@@ -111,26 +131,88 @@ class Profile(Cog):
     @command(name="transfer", aliases=["give", "pay"])
     @cooldown(rate=2, per=10, type=BucketType.user)
     async def transfer(self, ctx: Context, amount: int, *, member: Member):
-        """Transfer coins to another member"""
+        """Give coins to someone"""
+
+        if member == ctx.author:
+            raise BadArgument("You can't transfer money to yourself.")
+        if amount <= 0:
+            raise BadArgument("Transfer amount can't be zero or negative.")
+
+        with db_session:
+            if balance := (await get_profile(ctx.author.id)).balance < amount:
+                raise BadArgument(f"Not enough funds, you have only "
+                                  f"{balance} coins.")
+
+        embed = Embed(ctx, title="Transfer")
+        embed.description = f"You are about to give **{amount}** coin(s) " \
+                            f"to {member.mention}, are you sure?"
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+
+        try:
+            await self.bot.wait_for("reaction_add", timeout=30,
+                                    check=lambda r, u: u == ctx.message.author
+                                    and str(r.emoji) == "✅")
+        except TimeoutError:
+            embed.description = "Transfer cancelled."
+            return await message.edit(embed=embed)
+        finally:
+            await message.clear_reactions()
 
         with db_session:
             profile = await get_profile(ctx.author.id)
-
-            if member == ctx.author:
-                raise BadArgument("You can't transfer money to yourself.")
-            if amount <= 0:
-                raise BadArgument("Transfer amount can't be zero or negative.")
-            if profile.balance < amount:
-                raise BadArgument(f"Not enough funds, you have only "
-                                  f"{profile.balance} coins.")
-
             target_profile = await get_profile(member.id)
             profile.balance -= amount
             target_profile.balance += amount
 
-            embed = Embed(ctx, title="Transfer")
-            embed.description = f"Transferred **{amount}** coin(s) from" \
-                                f" {ctx.author.mention} to {member.mention}."
+            embed.description = f"Transferred **{amount}** coin(s) " \
+                                f"to {member.mention}"
+            await message.edit(embed=embed)
+
+    @command(name="daily")
+    async def daily(self, ctx: Context, member: Member = None):
+        """Daily coin reward
+
+        Mention someone to give your reward to them.
+        Can be used once every 23 hours.
+        Streak gives you more coins, but will be lost
+        after 2 days of inactivity.
+        """
+
+        with db_session:
+            profile = await get_profile(ctx.author.id)
+
+            if profile.last_daily and \
+                    profile.last_daily + timedelta(hours=23) > datetime.now():
+                next_daily = timedelta(hours=23) - \
+                             (datetime.now() - profile.last_daily)
+                return await ctx.send(
+                    f"Your next daily will be available in "
+                    f"**{round(next_daily.seconds / 3600)} hours**.")
+
+            target_profile = await get_profile(member.id) if member else profile
+
+            if profile.daily_streak and \
+                    datetime.now() - profile.last_daily < timedelta(days=2):
+                profile.daily_streak += 1
+            else:
+                profile.daily_streak = 1
+
+            profile.last_daily = datetime.now()
+            bonus = floor(sqrt(profile.daily_streak) * 20)
+            target_profile.balance += 100 + bonus
+
+            embed = Embed(ctx, title="Daily", color=ctx.author.color)
+            if target_profile == profile:
+                embed.description = \
+                    f"You got **{100 + bonus}** daily points.\n" \
+                    f"Streak: **{profile.daily_streak}**."
+            else:
+                embed.description = \
+                    f"You gave your daily **{100 + bonus} points** " \
+                    f"to {member.mention}.\n" \
+                    f"Streak: **{profile.daily_streak}**"
+
             await ctx.send(embed=embed)
 
     @Cog.listener()

@@ -41,22 +41,24 @@ class User(Snowflake):
     profile = Optional('Profile')
 
 
-class Warn(Punishment):
+class Mute(Punishment):
     start = Required(datetime)
     end = Required(datetime)
     active = Required(bool)
 
 
-class Mute(Punishment):
+class Warn(Punishment):
     when = Required(datetime)
 
 
 class Profile(db.Entity):
     id = PrimaryKey(int, auto=True)
+    user = Required(User)
     exp = Required(int, unsigned=True)
     level = Required(int, unsigned=True)
     balance = Required(int)
-    user = Required(User)
+    last_daily = Optional(datetime)
+    daily_streak = Optional(int)
 
 
 db.generate_mapping()
