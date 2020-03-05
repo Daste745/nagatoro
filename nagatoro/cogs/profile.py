@@ -1,4 +1,4 @@
-from math import sqrt, floor
+from math import sqrt, floor, ceil
 from datetime import datetime, timedelta
 from asyncio import TimeoutError
 from pony.orm import db_session, select
@@ -188,7 +188,7 @@ class Profile(Cog):
                              (datetime.now() - profile.last_daily)
                 return await ctx.send(
                     f"Your next daily will be available in "
-                    f"**{round(next_daily.seconds / 3600)} hours**.")
+                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**.")
 
             target_profile = await get_profile(member.id) if member else profile
 
@@ -209,8 +209,8 @@ class Profile(Cog):
                     f"Streak: **{profile.daily_streak}**."
             else:
                 embed.description = \
-                    f"You gave your daily **{100 + bonus} points** " \
-                    f"to {member.mention}.\n" \
+                    f"You gave your **{100 + bonus}** daily points " \
+                    f"to {member.mention}\n" \
                     f"Streak: **{profile.daily_streak}**"
 
             await ctx.send(embed=embed)
