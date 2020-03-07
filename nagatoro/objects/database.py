@@ -53,10 +53,12 @@ class Warn(Punishment):
 
 class Profile(db.Entity):
     id = PrimaryKey(int, auto=True)
+    user = Required(User)
     exp = Required(int, unsigned=True)
     level = Required(int, unsigned=True)
     balance = Required(int)
-    user = Required(User)
+    last_daily = Optional(datetime)
+    daily_streak = Optional(int)
 
 
 db.generate_mapping()

@@ -44,8 +44,10 @@ class Utility(Cog):
         title = str(user) if not user.bot else f"{user} :robot:"
         embed = Embed(ctx, title=title, color=user.color)
         embed.set_thumbnail(url=user.avatar_url)
-        embed.add_field(name="ID", value=user.id, inline=False)
-        embed.add_field(name="Created at", value=user.created_at)
+        embed.add_fields(
+            ("ID", user.id),
+            ("Created at", user.created_at)
+        )
 
         await ctx.send(embed=embed)
 
@@ -66,16 +68,15 @@ class Utility(Cog):
 
         embed = Embed(ctx, title=ctx.guild.name)
         embed.set_thumbnail(url=ctx.guild.icon_url_as(size=2048))
-        embed.add_field(name="ID", value=ctx.guild.id)
-        embed.add_field(name="Owner", value=ctx.guild.owner.mention)
-        embed.add_field(name="Region", value=ctx.guild.region)
-        embed.add_field(name="Members", value=str(ctx.guild.member_count))
-        embed.add_field(name="Text channels",
-                        value=str(len(ctx.guild.text_channels)))
-        embed.add_field(name="Voice channels",
-                        value=str(len(ctx.guild.voice_channels)))
-        embed.add_field(name="Emojis",
-                        value=" ".join([str(i) for i in ctx.guild.emojis]))
+
+        embed.add_fields(
+            ("ID", ctx.guild.id),
+            ("Owner", ctx.guild.owner.mention),
+            ("Region", ctx.guild.region),
+            ("Members", str(ctx.guild.member_count)),
+            ("Text channels", str(len(ctx.guild.text_channels))),
+            ("Voice channels", str(len(ctx.guild.voice_channels)))
+        )
 
         await ctx.send(embed=embed)
 
