@@ -19,13 +19,17 @@ async def make_mute(ctx: Context, user_id: int, time: timedelta,
 
         mute = db.Mute(
             given_by=ctx.author.id,
-            reason=reason,
+            # Pony doesn't like assigning None to an Optional field
+            # reason=reason,
             user=user,
             guild=guild,
             start=datetime.now(),
             end=datetime.now() + time,
             active=True
         )
+
+        if reason:
+            mute.reason = reason
 
         return mute
 

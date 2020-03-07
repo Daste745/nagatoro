@@ -281,11 +281,12 @@ class Moderation(Cog):
                 mute_role = guild.get_role(i.guild.mute_role)
                 member = guild.get_member(i.user.id)
 
-                await member.remove_roles(mute_role, reason="Mute ended.")
+                if member in guild.members:
+                    await member.remove_roles(mute_role, reason="Mute ended.")
                 i.active = False
 
                 try:
-                    await member.send(f"Your mute on {guild.name} has ended.")
+                    await member.send(f"Your mute in {guild.name} has ended.")
                 except Forbidden:
                     pass
 
