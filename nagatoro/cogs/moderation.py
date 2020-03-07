@@ -1,6 +1,6 @@
 from datetime import datetime
 from pony.orm import db_session
-from discord import Role
+from discord import Role, User
 from discord.errors import Forbidden
 from discord.ext.tasks import loop
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
@@ -46,7 +46,7 @@ class Moderation(Cog):
 
         await ctx.send(f"Set the mod role to **{role.name}**.")
 
-    @mod_role.command(name="delete", aliases=["remove"])
+    @mod_role.command(name="delete", aliases=["del", "remove"])
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mod_role_delete(self, ctx: Context):
@@ -84,7 +84,7 @@ class Moderation(Cog):
 
         await ctx.send(f"Set the mute role to **{role.name}**.")
 
-    @mute_role.command(name="delete", aliases=["remove"])
+    @mute_role.command(name="delete", aliases=["del", "remove"])
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mute_role_delete(self, ctx: Context):
@@ -100,14 +100,33 @@ class Moderation(Cog):
         await ctx.send(f"Removed the mute role from {ctx.guild.name}.")
 
     @command(name="ban")
-    @check_any(is_moderator(), has_permissions(ban_members=True))
-    async def ban(self, ctx: Context, member: Member, *,
+    @has_permissions(ban_members=True)
+    async def ban(self, ctx: Context, user: User, *,
                   reason: str = None):
-        """Ban a member without deleting their messages"""
+        """Ban a user or member without deleting their messages"""
 
-        await member.ban(reason=reason, delete_message_days=0)
+        await ctx.guild.ban(user=user, reason=reason, delete_message_days=0)
 
-        await ctx.send(f"Banned {member}, reason: *{reason}*. :hammer:")
+        ban_message = f"Banned {user}"
+        if reason:
+            ban_message += f", reason: *{reason}*."
+
+        await ctx.send(ban_message)
+
+    @command(name="unban", aliases=["pardon"])
+    @has_permissions(ban_members=True)
+    async def unban(self, ctx: Context, user: User):
+        """Unban a user using their ID
+
+        To get a user's ID, enable Developer Mode under Appearance Settings.
+        """
+
+        if user.id not in [i.user.id for i in await ctx.guild.bans()]:
+            return await ctx.send(f"{user} is not banned.")
+
+        await ctx.guild.unban(user, reason=f"Moderator: {ctx.author}")
+
+        await ctx.send(f"Unbanned {user}")
 
     @command(name="warn", invoke_without_subcommand=True)
     @is_moderator()
