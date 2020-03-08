@@ -263,7 +263,7 @@ class Moderation(Cog):
 
         await ctx.send(embed=embed)
 
-    @loop(seconds=15)
+    @loop(seconds=10)
     async def check_mutes(self):
         with db_session:
             mutes = await get_mutes(active_only=True)
@@ -287,8 +287,26 @@ class Moderation(Cog):
 
                 try:
                     await member.send(f"Your mute in {guild.name} has ended.")
-                except Forbidden:
+                except (Forbidden, AttributeError):
                     pass
+
+    @Cog.listener()
+    async def on_member_join(self, member: Member):
+        with db_session:
+            mute = await get_mutes(guild_id=member.guild.id,
+                                   user_id=member.id, active_only=True)
+
+            if not mute:
+                return
+
+            # User joined the guild, has an active mute
+            # and doesn't have the mute role, add it
+
+            guild = self.bot.get_guild(member.guild.id)
+            mute_role = guild.get_role(mute.guild.mute_role)
+
+            if member in guild.members and mute_role not in member.roles:
+                await member.add_roles(mute_role)
 
     @check_mutes.before_loop
     async def before_check_mutes(self):

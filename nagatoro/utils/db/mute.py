@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import timedelta, datetime
 from pony.orm import db_session, select
 from discord.ext.commands import Context
@@ -35,7 +35,8 @@ async def make_mute(ctx: Context, user_id: int, time: timedelta,
 
 
 async def get_mutes(guild_id: int = None, user_id: int = None,
-                    active_only: bool = False) -> Optional[List[db.Mute]]:
+                    active_only: bool = False
+                    ) -> Optional[Union[List[db.Mute], db.Mute]]:
     with db_session:
         if active_only and not guild_id and not user_id:
             mutes = db.Mute.select(lambda x: x.active)
@@ -43,6 +44,11 @@ async def get_mutes(guild_id: int = None, user_id: int = None,
         elif active_only and guild_id and not user_id:
             mutes = db.Mute.select(
                 lambda x: x.active and x.guild.id == guild_id)
+
+        elif active_only and guild_id and user_id:
+            return db.Mute.get(
+                lambda x: x.active and x.guild.id == guild_id
+                and x.user.id == user_id)
 
         elif not active_only and guild_id and user_id:
             mutes = db.Mute.select(
