@@ -221,6 +221,11 @@ class Profile(Cog):
             return
         if message.author.bot:
             return
+        # TODO: Make better spam filter.
+        if len(message.content) <= 5:
+            return
+        if "spam" in message.channel.name.lower():
+            return
         ctx = await self.bot.get_context(message)
         if ctx.valid:
             return
