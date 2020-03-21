@@ -38,19 +38,29 @@ class Profile(Cog):
             embed = Embed(
                 ctx, title=f"{member.name}'s profile", color=member.color)
             embed.set_thumbnail(url=member.avatar_url)
+
             mutes = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Mute)).without_distinct()
+                           if isinstance(i, db.Mute)
+                           and i.guild.id == ctx.guild.id).without_distinct()
             warns = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Warn)).without_distinct()
-            # TODO: Add global rank to profile
+                           if isinstance(i, db.Warn)
+                           and i.guild.id == ctx.guild.id).without_distinct()
+            # Find position of profile in global user ranking
+            rank = list(db.Profile.select().order_by(db.desc(db.Profile.exp))
+                        ).index(profile)
+
             embed.add_fields(
+                ("Global rank", str(rank + 1)),
                 ("Level", f"{profile.level}"),
                 ("Experience", f"{profile.exp}/{next_level_exp} "
                                f"({progress}%)"),
-                ("Balance", f"{profile.balance} coins"),
-                ("Mutes", str(len(mutes))),
-                ("Warns", str(len(warns)))
+                ("Balance", f"{profile.balance} coins")
             )
+
+            if mutes:
+                embed.add_field(name="Mutes", value=str(len(mutes)))
+            if warns:
+                embed.add_field(name="Warns", value=str(len(warns)))
 
         await ctx.send(embed=embed)
 
