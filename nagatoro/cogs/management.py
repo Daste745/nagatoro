@@ -7,11 +7,12 @@ from discord import __version__ as discord_version
 from datetime import timedelta
 from discord import Color
 from discord.ext.commands import Cog, Context, Bot, command, group, is_owner, \
-    ExtensionAlreadyLoaded
+    ExtensionAlreadyLoaded, cooldown, BucketType
 from discord.ext.tasks import loop
 
 from nagatoro.objects import Embed
 from nagatoro.utils.db import get_prefix, set_prefix
+from nagatoro.checks import is_moderator
 
 
 def get_size(bytes: int):
@@ -81,6 +82,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         return uptime
 
     @command(name="info")
+    @cooldown(rate=1, per=15, type=BucketType.user)
     async def info(self, ctx: Context):
         """Bot info"""
 
@@ -113,32 +115,32 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         await ctx.send(embed=embed)
 
-    @group(name="prefix")
+    @group(name="prefix", invoke_without_command=True)
+    @cooldown(rate=2, per=10, type=BucketType.user)
     async def prefix(self, ctx: Context):
         """Bot prefix"""
 
-        if ctx.invoked_subcommand:
-            return
+        embed = Embed(ctx, title=f"Prefixes for {ctx.guild.name}",
+                      description="", color=Color.blue())
 
-        if not (prefix := await get_prefix(ctx.guild.id)):
-            prefix = ctx.prefix
+        for i in (await ctx.bot.command_prefix(ctx.bot, ctx.message))[1:]:
+            embed.description += f"- **{i}**\n"
 
-        embed = Embed(ctx, title="Prefix", color=Color.blue())
-        embed.description = f"The current prefix is **{prefix}**"
         return await ctx.send(embed=embed)
 
     @prefix.command(name="set")
-    @is_owner()
+    @is_moderator()
+    @cooldown(rate=2, per=10, type=BucketType.user)
     async def prefix_set(self, ctx: Context, prefix: str):
         """Set the prefix for this server"""
 
         await set_prefix(ctx.guild.id, prefix)
         return await ctx.send(f"Set custom prefix to `{prefix}`")
 
-    @prefix.command("remove", aliases=["unset", "delete"])
-    @is_owner()
-    async def prefix_remove(self, ctx: Context):
-        """Remove the prefix for this server"""
+    @prefix.command(name="delete", aliases=["unset", "remove", "del"])
+    @is_moderator()
+    async def prefix_delete(self, ctx: Context):
+        """Delete the prefix from this server"""
 
         await set_prefix(ctx.guild.id, None)
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")

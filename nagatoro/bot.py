@@ -45,10 +45,14 @@ class Bot(commands.Bot):
             title = "Insufficient permissions"
         except cerrors.BotMissingPermissions:
             title = "Missing bot permissions"
+        except cerrors.MissingRole:
+            title = "Missing role"
         except cerrors.NSFWChannelRequired:
             title = "Channel is not NSFW"
         except cerrors.CommandOnCooldown:
             title = "Cooldown"
+        except cerrors.CommandError:
+            title = "Command Error"
         except Exception:
             logging.error(f"{type(exception)}, {exception}")
 
