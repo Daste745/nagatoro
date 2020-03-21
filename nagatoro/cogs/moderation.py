@@ -129,7 +129,7 @@ class Moderation(Cog):
 
         await ctx.send(f"Unbanned {user}")
 
-    @command(name="warn")
+    @group(name="warn", invoke_without_command=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def warn(self, ctx: Context, member: Member, *, reason: str):
@@ -139,10 +139,9 @@ class Moderation(Cog):
         """
 
         # FIXME: Database does not recognise emoji
-        await make_warn(ctx, member.id, reason)
+        warn = await make_warn(ctx, member.id, reason)
 
-        embed = Embed(ctx, title="Warn", color=member.color)
-        embed.set_thumbnail(url=member.avatar_url)
+        embed = Embed(ctx, title=f"Warn [{warn.id}]", color=member.color)
         embed.description = f"Warned {member.mention}, reason: *{reason}*"
 
         await ctx.send(embed=embed)
@@ -150,12 +149,29 @@ class Moderation(Cog):
         try:
             await member.send(f"You have been warned in **{ctx.guild.name}**, "
                               f"reason: *{reason}*")
-        except Forbidden:
+        except (Forbidden, AttributeError):
             pass
+
+    @warn.command(name="delete", aliases=["del", "remove"])
+    @is_moderator()
+    @cooldown(rate=4, per=10, type=BucketType.user)
+    async def warn_delete(self, ctx: Context, id: int):
+        """Delete a warn from the database
+
+        Use the mute id given when muting or viewing user's mutes.
+        """
+
+        with db_session:
+            if not (warn := db.Warn[id]):
+                return await ctx.send(f"A Warn with ID **{id}** doesn't exist.")
+
+            warn.delete()
+
+            await ctx.send(f"Removed warn `{id}` from the database.")
 
     @command(name="warns")
     @cooldown(rate=3, per=15, type=BucketType.guild)
-    async def warns(self, ctx: Context, member: Member = None):
+    async def warns(self, ctx: Context, *, member: Member = None):
         """See someone else's warns"""
 
         if not member:
@@ -173,7 +189,7 @@ class Moderation(Cog):
             for i in reversed(warns[:15]):
                 moderator = self.bot.get_user(i.given_by)
                 embed.description += \
-                    f"**{moderator}:** {i.when} - *{i.reason}*\n"
+                    f"`{i.id}` **{moderator}:** {i.when} - *{i.reason}*\n"
 
         await ctx.send(embed=embed)
 
@@ -213,7 +229,7 @@ class Moderation(Cog):
         try:
             await member.send(f"You have been muted in **{ctx.guild.name}** "
                               f"for {time}, reason: *{reason}*")
-        except Forbidden:
+        except (Forbidden, AttributeError):
             pass
 
     @mute.command(name="delete", aliases=["del", "remove"])
