@@ -1,1 +1,1 @@
-from .is_server_owner import is_server_owner
+from .is_moderator import is_moderator
