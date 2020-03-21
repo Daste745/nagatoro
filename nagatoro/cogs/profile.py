@@ -38,23 +38,34 @@ class Profile(Cog):
             embed = Embed(
                 ctx, title=f"{member.name}'s profile", color=member.color)
             embed.set_thumbnail(url=member.avatar_url)
+
             mutes = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Mute)).without_distinct()
+                           if isinstance(i, db.Mute)
+                           and i.guild.id == ctx.guild.id).without_distinct()
             warns = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Warn)).without_distinct()
+                           if isinstance(i, db.Warn)
+                           and i.guild.id == ctx.guild.id).without_distinct()
+            # Find position of profile in global user ranking
+            rank = list(db.Profile.select().order_by(db.desc(db.Profile.exp))
+                        ).index(profile)
+
             embed.add_fields(
+                ("Global rank", str(rank + 1)),
                 ("Level", f"{profile.level}"),
                 ("Experience", f"{profile.exp}/{next_level_exp} "
                                f"({progress}%)"),
-                ("Balance", f"{profile.balance} coins"),
-                ("Mutes", str(len(mutes))),
-                ("Warns", str(len(warns)))
+                ("Balance", f"{profile.balance} coins")
             )
+
+            if mutes:
+                embed.add_field(name="Mutes", value=str(len(mutes)))
+            if warns:
+                embed.add_field(name="Warns", value=str(len(warns)))
 
         await ctx.send(embed=embed)
 
     @command(name="balance", aliases=["bal", "money"])
-    async def balance(self, ctx: Context, member: Member = None):
+    async def balance(self, ctx: Context, *, member: Member = None):
         """Coin balance"""
 
         if not member:
@@ -68,27 +79,23 @@ class Profile(Cog):
 
         await ctx.send(embed=embed)
 
-    @command(name="levels")
-    async def levels(self, ctx: Context):
-        """Requirements for the next 5 levels"""
+    @command(name="level", aliases=["lvl"])
+    async def level(self, ctx: Context, *, member: Member = None):
+        """User's level"""
 
-        with db_session:
-            profile = await get_profile(ctx.author.id)
-            embed = Embed(ctx, title="Next 5 levels", description="",
-                          color=Color.blue())
-            for i in range(profile.level + 1, profile.level + 6):
-                embed.description += \
-                    f"**Level {i}**: {(i * 4) ** 2} exp\n"
+        if not member:
+            member = ctx.author
 
-            await ctx.send(embed=embed)
+        profile = await get_profile(member.id)
+        embed = Embed(ctx, title=f"{member.name}'s level", color=member.color,
+                      description=f"Level: **{profile.level}**")
 
-    @group(name="ranking", aliases=["top"])
+        await ctx.send(embed=embed)
+
+    @group(name="ranking", aliases=["top"], invoke_without_command=True)
     @cooldown(rate=2, per=20, type=BucketType.guild)
     async def ranking(self, ctx: Context):
         """User ranking"""
-
-        if ctx.invoked_subcommand:
-            return
 
         await self.ranking_level.__call__(ctx)
 
@@ -175,7 +182,7 @@ class Profile(Cog):
 
         Mention someone to give your reward to them.
         Can be used once every 23 hours.
-        Streak gives you more coins, but will be lost
+        Streak gives you more coins over time, but will be lost
         after 2 days of inactivity.
         """
 
@@ -188,7 +195,8 @@ class Profile(Cog):
                              (datetime.now() - profile.last_daily)
                 return await ctx.send(
                     f"Your next daily will be available in "
-                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**.")
+                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
+                    f"Current streak: **{profile.daily_streak}**.")
 
             target_profile = await get_profile(member.id) if member else profile
 
@@ -220,6 +228,11 @@ class Profile(Cog):
         if self.bot.config.testing:
             return
         if message.author.bot:
+            return
+        # TODO: Make better spam filter.
+        if len(message.content) <= 5:
+            return
+        if "spam" in message.channel.name.lower():
             return
         ctx = await self.bot.get_context(message)
         if ctx.valid:
