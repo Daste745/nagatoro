@@ -9,9 +9,10 @@ from discord import Color
 from discord.ext.commands import Cog, Context, Bot, command, group, is_owner, \
     ExtensionAlreadyLoaded, cooldown, BucketType
 from discord.ext.tasks import loop
+from pony.orm import db_session
 
 from nagatoro.objects import Embed
-from nagatoro.utils.db import get_prefix, set_prefix
+from nagatoro.utils.db import get_guild, set_prefix
 from nagatoro.checks import is_moderator
 
 
@@ -150,10 +151,9 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     # TODO: Use proper async ORM.
     @loop(minutes=10)
     async def wake_database(self):
-        if not await get_prefix(123):
-            return
-        else:
-            return
+        with db_session:
+            temp = await get_guild(123)
+            temp.delete()
 
 
 def setup(bot):
