@@ -35,12 +35,10 @@ class Bot(commands.Bot):
             raise exception
         except cerrors.CommandNotFound:
             return
-        except cerrors.MissingRequiredArgument:
-            title = "Missing required arguments"
-        except cerrors.TooManyArguments:
-            title = "Too many arguments"
-        except (cerrors.BadArgument, cerrors.BadUnionArgument):
-            title = "Bad argument"
+        except (cerrors.MissingRequiredArgument, cerrors.TooManyArguments,
+                cerrors.BadArgument, cerrors.BadUnionArgument):
+            # Send the help message
+            return await ctx.send_help(ctx.invoked_with)
         except (cerrors.NotOwner, cerrors.MissingPermissions):
             title = "Insufficient permissions"
         except cerrors.BotMissingPermissions:
@@ -51,8 +49,6 @@ class Bot(commands.Bot):
             title = "Channel is not NSFW"
         except cerrors.CommandOnCooldown:
             title = "Cooldown"
-        except cerrors.CommandError:
-            title = "Command Error"
         except Exception:
             logging.error(f"{type(exception)}, {exception}")
 
