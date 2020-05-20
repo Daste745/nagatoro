@@ -93,15 +93,16 @@ class Profile(Cog):
         await ctx.send(embed=embed)
 
     @group(name="ranking", aliases=["top"], invoke_without_command=True)
-    @cooldown(rate=2, per=20, type=BucketType.guild)
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking(self, ctx: Context):
         """User ranking"""
 
         await self.ranking_level.__call__(ctx)
 
     @ranking.command(name="level", aliases=["lvl"])
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking_level(self, ctx: Context):
-        """Top users by level"""
+        """User ranking, by level"""
 
         await ctx.trigger_typing()
         with db_session:
@@ -110,16 +111,18 @@ class Profile(Cog):
 
             embed = Embed(ctx, title="Level ranking", description="",
                           color=Color.blue())
-            for profile in top_users:
+            for i, profile in enumerate(top_users, start=1):
                 user = await self.bot.fetch_user(profile.user.id)
                 embed.description += \
-                    f"{user.mention}: **{profile.level}** level\n"
+                    f"{i}. **{user.name}**: {profile.level} " \
+                    f"({profile.exp} exp)\n"
 
             await ctx.send(embed=embed)
 
     @ranking.command(name="balance", aliases=["bal", "money"])
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking_balance(self, ctx: Context):
-        """Top users by balance"""
+        """User ranking, sorted by balance"""
 
         await ctx.trigger_typing()
         with db_session:
@@ -128,10 +131,10 @@ class Profile(Cog):
 
             embed = Embed(ctx, title="Balance ranking", description="",
                           color=Color.blue())
-            for profile in top_users:
+            for i, profile in enumerate(top_users, start=1):
                 user = await self.bot.fetch_user(profile.user.id)
                 embed.description += \
-                    f"{user.mention}: **{profile.balance}** coins\n"
+                    f"{i}. **{user.name}**: {profile.balance} coins\n"
 
             await ctx.send(embed=embed)
 
