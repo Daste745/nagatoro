@@ -186,6 +186,9 @@ class Profile(Cog):
         after 2 days of inactivity.
         """
 
+        if member.bot:
+            return await ctx.send("You can't give points to a bot!")
+
         with db_session:
             profile = await get_profile(ctx.author.id)
 
@@ -198,7 +201,8 @@ class Profile(Cog):
                     f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
                     f"Current streak: **{profile.daily_streak}**.")
 
-            target_profile = await get_profile(member.id) if member else profile
+            target_profile = await get_profile(member.id) \
+                if member else profile
 
             if profile.daily_streak and \
                     datetime.now() - profile.last_daily < timedelta(days=2):
