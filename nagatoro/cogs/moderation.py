@@ -165,6 +165,11 @@ class Moderation(Cog):
             if not (warn := db.Warn[id]):
                 return await ctx.send(f"A Warn with ID **{id}** doesn't exist.")
 
+            if warn.guild.id != ctx.guild.id:
+                return await ctx.send(
+                    f"The warn with id `{id}` is from another server. "
+                    f"You can't change or delete it.")
+
             warn.delete()
 
             await ctx.send(f"Removed warn `{id}` from the database.")
@@ -244,6 +249,11 @@ class Moderation(Cog):
         with db_session:
             if not (mute := db.Mute[id]):
                 return await ctx.send(f"A Mute with ID **{id}** doesn't exist.")
+
+            if mute.guild.id != ctx.guild.id:
+                return await ctx.send(
+                    f"The mute with id `{id}` is from another server. "
+                    f"You can't change or delete it.")
 
             member = ctx.guild.get_member(mute.user.id)
 
