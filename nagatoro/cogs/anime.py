@@ -18,7 +18,7 @@ class Anime(Cog):
         query = """
         query ($title: String) {
             Media (search: $title, type: ANIME) {
-                title {english}
+                title {romaji}
                 coverImage {medium color}
                 description(asHtml: false)
                 siteUrl
@@ -34,8 +34,11 @@ class Anime(Cog):
         }
         """
         anime = (await anilist(query, {"title": title}))["data"]["Media"]
+        # TODO: Add error raises to 'anilist' function
+        if not anime:
+            return await ctx.send(f"Anime {title} not found.")
 
-        embed = Embed(ctx, title=anime["title"]["english"],
+        embed = Embed(ctx, title=anime["title"]["romaji"],
                       color=Color(int(
                           anime["coverImage"]["color"].replace("#", ""), 16)),
                       url=anime["siteUrl"], footer="Via AniList")
@@ -48,7 +51,7 @@ class Anime(Cog):
         embed.add_fields(
             ("Status", anime["status"].title()),
             ("Episodes", anime["episodes"]),
-            ("Episode length", f"{anime['duration']} minute(s)"),
+            ("Episode length", f"{anime['duration']} minutes"),
             ("Season", f"{anime['season'].title()} {anime['seasonYear']}"),
             ("Format", anime["format"].title().replace("_", " ")),
             ("Score", f"{anime['averageScore']} / 100"),
