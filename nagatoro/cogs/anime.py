@@ -30,6 +30,7 @@ class Anime(Cog):
                 format
                 averageScore
                 genres
+                studios(isMain: true) {nodes {name}}
             }
         }
         """
@@ -55,8 +56,16 @@ class Anime(Cog):
             ("Season", f"{anime['season'].title()} {anime['seasonYear']}"),
             ("Format", anime["format"].title().replace("_", " ")),
             ("Score", f"{anime['averageScore']} / 100"),
-            ("Genres", ", ".join(anime["genres"]))
+
         )
+
+        # These information are not guaranteed to exist for every anime
+        if anime["studios"]["nodes"]:
+            embed.add_field(name="Studio",
+                            value=anime["studios"]["nodes"][0]["name"])
+
+        if anime["genres"]:
+            embed.add_field(name="Genres", value=", ".join(anime["genres"]))
 
         await ctx.send(embed=embed)
 
