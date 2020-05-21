@@ -19,7 +19,7 @@ class Anime(Cog):
         query ($title: String) {
             Media (search: $title, type: ANIME) {
                 title {romaji}
-                coverImage {medium color}
+                coverImage {extraLarge color}
                 description(asHtml: false)
                 siteUrl
                 status
@@ -43,11 +43,13 @@ class Anime(Cog):
                       color=Color(int(
                           anime["coverImage"]["color"].replace("#", ""), 16)),
                       url=anime["siteUrl"], footer="Via AniList")
+
         description = \
             anime["description"].replace("<br>", "").replace("\n", " ")
-        embed.description = f"{description[:250]}..." \
-            if len(description) >= 250 else description
-        embed.set_thumbnail(url=anime["coverImage"]["medium"])
+        embed.description = f"Synopsis: ||{description[:250]}...||" \
+            if len(description) >= 250 else f"Synopsis: ||{description}||"
+
+        embed.set_thumbnail(url=anime["coverImage"]["extraLarge"])
 
         embed.add_fields(
             ("Status", anime["status"].title()),
