@@ -35,9 +35,6 @@ class Anime(Cog):
         }
         """
         anime = (await anilist(query, {"title": title}))["data"]["Media"]
-        # TODO: Add error raises to 'anilist' function
-        if not anime:
-            return await ctx.send(f"Anime {title} not found.")
 
         embed = Embed(ctx, title=anime["title"]["romaji"],
                       color=Color(int(
