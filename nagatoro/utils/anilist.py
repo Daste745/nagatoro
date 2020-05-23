@@ -10,9 +10,10 @@ async def anilist(query: str, variables: dict) -> dict:
                 json={'query': query, 'variables': variables}) as request:
             response = await request.json()
 
-            if not (errors := response["errors"]):
+            if "errors" not in response:
                 return response
 
+            errors = response["errors"]
             for error in errors:
                 if error["status"] == 404:
                     raise BadArgument(message=error["message"])

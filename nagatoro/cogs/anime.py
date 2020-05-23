@@ -22,9 +22,10 @@ class Anime(Cog):
     @cooldown(rate=5, per=20, type=BucketType.user)
     async def anime(self, ctx: Context, *, title: str):
         """Anime info from AniList"""
+
         query = """
         query ($title: String) {
-            Media (search: $title, type: ANIME, sort: POPULARITY_DESC) {
+            Media (search: $title, type: ANIME, sort: TRENDING_DESC) {
                 title {romaji}
                 coverImage {extraLarge color}
                 description (asHtml: false)
@@ -72,6 +73,60 @@ class Anime(Cog):
 
         if anime["genres"]:
             embed.add_field(name="Genres", value=", ".join(anime["genres"]))
+
+        # TODO: Add pagination.
+        await ctx.send(embed=embed)
+
+    @command(name="manga")
+    @cooldown(rate=5, per=20, type=BucketType.user)
+    async def manga(self, ctx: Context, *, title: str):
+        """Manga info from AniList"""
+
+        query = """
+        query ($title: String) {
+            Media (search: $title, type: MANGA, sort: TRENDING_DESC) {
+                title {romaji}
+                coverImage {extraLarge color}
+                description (asHtml: false)
+                siteUrl
+                status
+                chapters
+                volumes
+                format
+                averageScore
+                genres
+            }
+        }
+        """
+        manga = (await anilist(query, {"title": title}))["data"]["Media"]
+
+        embed = Embed(ctx, title=manga["title"]["romaji"],
+                      url=manga["siteUrl"], footer="Via AniList")
+
+        embed.set_thumbnail(url=manga["coverImage"]["extraLarge"])
+
+        description = clean_description(manga["description"])
+        embed.description = f"Synopsis: ||{description[:250]}...||" \
+            if len(description) >= 250 else f"Synopsis: ||{description}||"
+
+        if color_hex := manga["coverImage"]["color"]:
+            embed.color = Color(int(color_hex.replace("#", ""), 16))
+        else:
+            embed.color = Color.blue()
+
+        embed.add_field(name="Status", value=manga["status"].title())
+
+        if manga["chapters"]:
+            embed.add_field(name="Chapters", value=manga["chapters"])
+
+        if manga["volumes"]:
+            embed.add_field(name="Volumes", value=manga["volumes"])
+
+        embed.add_field(name="Format", value=manga["format"].title())
+        embed.add_field(name="Score", value=f"{manga['averageScore']} / 100")
+
+        if manga["genres"]:
+            embed.add_field(name="Genres", value=", ".join(manga["genres"]))
 
         # TODO: Add pagination.
         await ctx.send(embed=embed)
