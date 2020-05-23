@@ -70,7 +70,7 @@ class Profile(Cog):
 
         if not member:
             member = ctx.author
-        
+
         with db_session:
             profile = await get_profile(member.id)
             embed = Embed(ctx, title=f"{member.name}'s balance",
@@ -162,7 +162,7 @@ class Profile(Cog):
         try:
             await self.bot.wait_for("reaction_add", timeout=30,
                                     check=lambda r, u: u == ctx.message.author
-                                    and str(r.emoji) == "✅")
+                                                       and str(r.emoji) == "✅")
         except TimeoutError:
             embed.description = "Transfer cancelled."
             return await message.edit(embed=embed)
@@ -189,7 +189,7 @@ class Profile(Cog):
         after 2 days of inactivity.
         """
 
-        if member.bot:
+        if member and member.bot:
             return await ctx.send("You can't give points to a bot!")
 
         with db_session:
