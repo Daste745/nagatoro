@@ -25,11 +25,12 @@ class Anime(Cog):
 
         query = """
         query ($title: String) {
-            Media (search: $title, type: ANIME, sort: TRENDING_DESC) {
+            Media (search: $title, type: ANIME) {
                 title {romaji}
                 coverImage {extraLarge color}
                 description (asHtml: false)
                 siteUrl
+                rankings {rank allTime type context}
                 status
                 episodes
                 duration
@@ -44,13 +45,25 @@ class Anime(Cog):
         """
         anime = (await anilist(query, {"title": title}))["data"]["Media"]
 
-        embed = Embed(ctx, title=anime["title"]["romaji"],
+        embed = Embed(ctx, title=anime["title"]["romaji"], description="",
                       url=anime["siteUrl"], footer="Via AniList")
 
         embed.set_thumbnail(url=anime["coverImage"]["extraLarge"])
 
+        for i in anime["rankings"]:
+            if not i["allTime"]:
+                continue
+
+            if i["type"] == "RATED":
+                embed.description += "⭐"
+            elif i["type"] == "POPULAR":
+                embed.description += "❤️"
+
+            embed.description += f" #{i['rank']} {i['context'].title()}\n"
+        embed.description += "\n"
+
         if description := clean_description(anime["description"]):
-            embed.description = f"Synopsis: ||{description[:250]}...||" \
+            embed.description += f"Synopsis: ||{description[:250]}...||" \
                 if len(description) >= 250 else f"Synopsis: ||{description}||"
 
         if color_hex := anime["coverImage"]["color"]:
@@ -84,11 +97,12 @@ class Anime(Cog):
 
         query = """
         query ($title: String) {
-            Media (search: $title, type: MANGA, sort: TRENDING_DESC) {
+            Media (search: $title, type: MANGA) {
                 title {romaji}
                 coverImage {extraLarge color}
                 description (asHtml: false)
                 siteUrl
+                rankings {rank allTime type context}
                 status
                 chapters
                 volumes
@@ -100,14 +114,26 @@ class Anime(Cog):
         """
         manga = (await anilist(query, {"title": title}))["data"]["Media"]
 
-        embed = Embed(ctx, title=manga["title"]["romaji"],
+        embed = Embed(ctx, title=manga["title"]["romaji"], description="",
                       url=manga["siteUrl"], footer="Via AniList")
 
         embed.set_thumbnail(url=manga["coverImage"]["extraLarge"])
 
+        for i in manga["rankings"]:
+            if not i["allTime"]:
+                continue
+
+            if i["type"] == "RATED":
+                embed.description += "⭐"
+            elif i["type"] == "POPULAR":
+                embed.description += "❤️"
+
+            embed.description += f" #{i['rank']} {i['context'].title()}\n"
+        embed.description += "\n"
+
         if manga["description"]:
             description = clean_description(manga["description"])
-            embed.description = f"Synopsis: ||{description[:250]}...||" \
+            embed.description += f"Synopsis: ||{description[:250]}...||" \
                 if len(description) >= 250 else f"Synopsis: ||{description}||"
 
         if color_hex := manga["coverImage"]["color"]:
