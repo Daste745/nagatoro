@@ -132,6 +132,53 @@ class Anime(Cog):
         # TODO: Add pagination.
         await ctx.send(embed=embed)
 
+    @command(name="studio")
+    @cooldown(rate=5, per=20, type=BucketType.user)
+    async def studio(self, ctx: Context, *, name: str):
+        """Studio info from AniList"""
+
+        query = """
+        query ($name: String) {
+            Studio (search: $name, sort: SEARCH_MATCH) {
+                name
+                siteUrl
+                isAnimationStudio
+                media (sort: POPULARITY_DESC, perPage: 10) {
+                    nodes {
+                        title {romaji}
+                        coverImage {extraLarge}
+                        siteUrl
+                        popularity
+                        favourites
+                    }
+                }
+            }
+        }
+        """
+        studio = (await anilist(query, {"name": name}))["data"]["Studio"]
+
+        embed = Embed(ctx, title=studio["name"],
+                      url=studio["siteUrl"], footer="Via AniList")
+
+        embed.set_thumbnail(
+            url=studio["media"]["nodes"][0]["coverImage"]["extraLarge"])
+
+        if studio["isAnimationStudio"]:
+            embed.description = "Animation Studio"
+
+        # TODO: Observe, if this breaks when isAnimationStudio=False.
+        most_popular = ["(Popularity ⭐ Favorites ❤)"]
+        for i in studio["media"]["nodes"]:
+            most_popular.append(
+                f"{i['popularity']} ⭐ {i['favourites']} ❤️ "
+                f"[{i['title']['romaji']}]({i['siteUrl']}) "
+            )
+
+        embed.add_field(name="Most popular productions",
+                        value="\n".join(most_popular))
+
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Anime(bot))
