@@ -49,9 +49,9 @@ class Anime(Cog):
 
         embed.set_thumbnail(url=anime["coverImage"]["extraLarge"])
 
-        description = clean_description(anime["description"])
-        embed.description = f"Synopsis: ||{description[:250]}...||" \
-            if len(description) >= 250 else f"Synopsis: ||{description}||"
+        if description := clean_description(anime["description"]):
+            embed.description = f"Synopsis: ||{description[:250]}...||" \
+                if len(description) >= 250 else f"Synopsis: ||{description}||"
 
         if color_hex := anime["coverImage"]["color"]:
             embed.color = Color(int(color_hex.replace("#", ""), 16))
@@ -105,9 +105,10 @@ class Anime(Cog):
 
         embed.set_thumbnail(url=manga["coverImage"]["extraLarge"])
 
-        description = clean_description(manga["description"])
-        embed.description = f"Synopsis: ||{description[:250]}...||" \
-            if len(description) >= 250 else f"Synopsis: ||{description}||"
+        if manga["description"]:
+            description = clean_description(manga["description"])
+            embed.description = f"Synopsis: ||{description[:250]}...||" \
+                if len(description) >= 250 else f"Synopsis: ||{description}||"
 
         if color_hex := manga["coverImage"]["color"]:
             embed.color = Color(int(color_hex.replace("#", ""), 16))
