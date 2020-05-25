@@ -9,7 +9,11 @@ def clean_description(text: str) -> str:
     return text. \
         replace("<br>", ""). \
         replace("\n", " "). \
-        replace("&ndash;", " - ")
+        replace("&ndash;", " - "). \
+        replace("<i>", "*"). \
+        replace("</i>", "*"). \
+        replace("<b>", "**"). \
+        replace("</b>", "**")
 
 
 class Anime(Cog):
