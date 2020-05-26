@@ -254,7 +254,7 @@ class Anime(Cog):
                 if len(description) >= 250 \
                 else f"Description: ||{description}||"
 
-        appears_in = ["Main 🌕 Supporting 🌗 Background 🌑️"]
+        appears_in = ["Main 🌕 Supporting 🌗 Background 🌑"]
         for i in character["media"]["edges"]:
             role = i["characterRole"] \
                 .replace("MAIN", "🌕") \
