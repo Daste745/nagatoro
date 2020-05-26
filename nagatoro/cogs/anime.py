@@ -13,7 +13,9 @@ def clean_description(text: str) -> str:
         replace("<i>", "*"). \
         replace("</i>", "*"). \
         replace("<b>", "**"). \
-        replace("</b>", "**")
+        replace("</b>", "**"). \
+        replace("~!", " "). \
+        replace("!~", " ")
 
 
 class Anime(Cog):
@@ -197,7 +199,7 @@ class Anime(Cog):
             embed.description = "Animation Studio"
 
         # TODO: Observe, if this breaks when isAnimationStudio=False.
-        most_popular = ["(Popularity ⭐ Favorites ❤)"]
+        most_popular = ["Popularity ⭐ Favorites ❤"]
         for i in studio["media"]["nodes"]:
             most_popular.append(
                 f"{i['popularity']} ⭐ {i['favourites']} ❤️ "
@@ -206,6 +208,63 @@ class Anime(Cog):
 
         embed.add_field(name="Most popular productions",
                         value="\n".join(most_popular))
+
+        await ctx.send(embed=embed)
+
+    @command(name="character", aliases=["char", "chr"])
+    @cooldown(rate=5, per=2, type=BucketType.user)
+    async def character(self, ctx: Context, *, name: str):
+        """Character info from AniList"""
+
+        query = """
+        query ($name: String) {
+            Character (search: $name) {
+                name {full}
+                image {large}
+                description (asHtml: false)
+                siteUrl
+                favourites
+                media (perPage: 10) {
+                    edges {
+                        node {
+                            title {romaji}
+                            siteUrl
+                        }
+                        characterRole
+                    }
+                }
+            }
+        }
+        """
+
+        character = (await anilist(query, {"name": name}))["data"]["Character"]
+
+        embed = Embed(ctx, title=character["name"]["full"], description="",
+                      url=character["siteUrl"], footer="Via AniList",
+                      color=Color.blue())
+
+        embed.set_thumbnail(url=character["image"]["large"])
+
+        if character["favourites"]:
+            embed.description += f"❤️ {character['favourites']} favorites \n\n"
+
+        if character["description"]:
+            description = clean_description(character["description"])
+            embed.description += f"Description: ||{description[:250]}...||" \
+                if len(description) >= 250 \
+                else f"Description: ||{description}||"
+
+        appears_in = ["Main 🌕 Supporting 🌗 Background 🌑️"]
+        for i in character["media"]["edges"]:
+            role = i["characterRole"] \
+                .replace("MAIN", "🌕") \
+                .replace("SUPPORTING", "🌗") \
+                .replace("BACKGROUND", "🌑")
+
+            appears_in.append(f"{role} [{i['node']['title']['romaji']}]"
+                              f"({i['node']['siteUrl']})")
+
+        embed.add_field(name="Appears in", value="\n".join(appears_in))
 
         await ctx.send(embed=embed)
 
