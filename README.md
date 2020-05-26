@@ -1,13 +1,33 @@
-# Nagatoro
-## A simple, general purpose Discord bot
-This bot is still in early development stages, so expect things to change, not work on some occasions or break over night when it decides, that the new feature I just added is bad.
+<p align="center">
+    <img src="nagatoro.png">
+    <br>
+    <font size=16>Nagatoro</font>
+    <br>
+    A modular bot for various tasks
+</p>
+
 
 # Features
-- Global levelling and balance
-- Global level/balance ranking
-- Action commands (pat, hug, etc.)
-- Custom prefix
-- A few utility commands
+
+## Global profiles and rankings
+
+You earn experience through typing, then you level up and gain coin rewards. You can trade coins, and in the future™️, you will be able to buy profile or bot perks with them.
+
+![Profile](https://cdn.discordapp.com/attachments/483273472555089930/714646948283547729/unknown.png)
+
+## Moderation
+
+As a moderator, you are able to give users warn and mute punishments.
+
+![Muting](https://cdn.discordapp.com/attachments/483273472555089930/714647821189513226/unknown.png) | ![Warning](https://cdn.discordapp.com/attachments/483273472555089930/714648476495118416/unknown.png)
+:-:|:-:
+
+## AniList integration
+
+Thanks to AniList's API, you can see info about you favorite anime, manga, studio and much more on the fly. More features are coming soon™️.
+
+![Anime](https://cdn.discordapp.com/attachments/483273472555089930/714651179405279292/unknown.png) | ![Studio](https://cdn.discordapp.com/attachments/483273472555089930/714651416211226704/unknown.png)
+:-:|:-:
 
 # Running your own fork
 You need to make a config file, that will be located in `data/config.json`.
