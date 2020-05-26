@@ -1,13 +1,16 @@
 <p align="center">
-    <img src="nagatoro.png">
+    <img src="nagatoro.png" width="128">
     <br>
-    <font size=16>Nagatoro</font>
+    <b>Nagatoro</b>
     <br>
-    A modular bot for various tasks
+    <i>A modular bot for various tasks</i>
+    <br>
+    <br>
+    <a href="https://discordapp.com/oauth2/authorize?client_id=672485626179747864&scope=bot&permissions=8262"><sub>Invite Nagatoro to your server<sub></a>
 </p>
 
-
-# Features
+<br>
+<br>
 
 ## Global profiles and rankings
 
