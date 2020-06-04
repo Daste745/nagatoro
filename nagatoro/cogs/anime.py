@@ -1,5 +1,7 @@
 from discord import Color
-from discord.ext.commands import Cog, Context, command, cooldown, BucketType
+from discord.ext.commands import Cog, Context, command, BucketType, \
+    CooldownMapping
+from discord.ext.commands.errors import CommandOnCooldown
 
 from nagatoro.objects import Embed
 from nagatoro.utils import anilist
@@ -23,9 +25,17 @@ class Anime(Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self._cooldown = CooldownMapping.from_cooldown(rate=5, per=20,
+                                                       type=BucketType.user)
+
+    async def cog_before_invoke(self, ctx: Context):
+        # Cog-wide cooldowns, every command is on a shared cooldown.
+        # Will get removed if any command gets its own cooldown.
+        bucket = self._cooldown.get_bucket(ctx.message)
+        if retry_after := bucket.update_rate_limit():
+            raise CommandOnCooldown(self._cooldown, retry_after)
 
     @command(name="anime")
-    @cooldown(rate=5, per=20, type=BucketType.user)
     async def anime(self, ctx: Context, *, title: str):
         """Anime info from AniList"""
 
@@ -97,7 +107,6 @@ class Anime(Cog):
         await ctx.send(embed=embed)
 
     @command(name="manga")
-    @cooldown(rate=5, per=20, type=BucketType.user)
     async def manga(self, ctx: Context, *, title: str):
         """Manga info from AniList"""
 
@@ -165,7 +174,6 @@ class Anime(Cog):
         await ctx.send(embed=embed)
 
     @command(name="studio")
-    @cooldown(rate=5, per=20, type=BucketType.user)
     async def studio(self, ctx: Context, *, name: str):
         """Studio info from AniList"""
 
@@ -212,7 +220,6 @@ class Anime(Cog):
         await ctx.send(embed=embed)
 
     @command(name="character", aliases=["char", "chr"])
-    @cooldown(rate=5, per=2, type=BucketType.user)
     async def character(self, ctx: Context, *, name: str):
         """Character info from AniList"""
 
