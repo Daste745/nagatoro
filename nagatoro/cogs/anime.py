@@ -68,8 +68,6 @@ class Anime(Cog):
             }
         }
         """
-        user = (await anilist(query, {"username": username}))["data"]["User"]
-
         list_query = """
         query ($username: String, $type: MediaType) {
             MediaListCollection (userName: $username, type: $type) {
@@ -77,6 +75,9 @@ class Anime(Cog):
             }
         }
         """
+
+        await ctx.trigger_typing()
+        user = (await anilist(query, {"username": username}))["data"]["User"]
         anime_lists, manga_lists = [(await anilist(
             list_query,
             {"username": username, "type": i}
