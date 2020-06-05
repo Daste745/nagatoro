@@ -35,6 +35,128 @@ class Anime(Cog):
         if retry_after := bucket.update_rate_limit():
             raise CommandOnCooldown(self._cooldown, retry_after)
 
+    @command(name="anilist", aliases=["al"])
+    async def anilist(self, ctx: Context, *, username: str):
+        """AniList profile
+
+        Shows anime/manga stats and favorites.
+        """
+
+        query = """
+        query ($username: String) {
+            User (name: $username) {
+                name
+                avatar {large}
+                siteUrl
+                favourites {
+                    anime {
+                        nodes {title {romaji} siteUrl}
+                    }
+                    manga {
+                        nodes {title {romaji} siteUrl}
+                    }
+                    characters {
+                        nodes {name {full} siteUrl}
+                    }
+                    staff {
+                        nodes {name {full} siteUrl}
+                    }
+                    studios {
+                        nodes {name siteUrl}
+                    }
+                }
+            }
+        }
+        """
+        user = (await anilist(query, {"username": username}))["data"]["User"]
+
+        list_query = """
+        query ($username: String, $type: MediaType) {
+            MediaListCollection (userName: $username, type: $type) {
+                lists {status name entries {id}}
+            }
+        }
+        """
+        anime_lists, manga_lists = [(await anilist(
+            list_query,
+            {"username": username, "type": i}
+        ))["data"]["MediaListCollection"]["lists"]
+                                    for i in ["ANIME", "MANGA"]]
+
+        embed = Embed(ctx, title=user["name"],
+                      url=user["siteUrl"], footer="Via AniList")
+
+        embed.set_thumbnail(url=user["avatar"]["large"])
+
+        if anime_lists:
+            anime_list_body = ""
+            for i in anime_lists:
+                if i["status"]:
+                    status = i["status"] \
+                        .replace("COMPLETED", "✅") \
+                        .replace("PLANNING", "🗓️") \
+                        .replace("DROPPED", "🗑️") \
+                        .replace("CURRENT", "📺") \
+                        .replace("PAUSED", "⏸️") \
+                        .replace("REPEATING", "🔁")
+                else:
+                    status = "⚙️"
+
+                anime_list_body += f"{status} **{len(i['entries'])}** " \
+                                   f"{i['name']}\n"
+
+            embed.add_field(name="Anime", value=anime_list_body)
+
+        if manga_lists:
+            manga_list_body = ""
+            for i in manga_lists:
+                if i["status"]:
+                    status = i["status"] \
+                        .replace("COMPLETED", "✅") \
+                        .replace("PLANNING", "🗓️") \
+                        .replace("DROPPED", "🗑️️") \
+                        .replace("CURRENT", "📖") \
+                        .replace("PAUSED", "⏸️") \
+                        .replace("REPEATING", "🔁")
+                else:
+                    status = "⚙️"
+
+                manga_list_body += f"{status} **{len(i['entries'])}** " \
+                                   f"{i['name']}\n"
+
+            embed.add_field(name="Manga", value=manga_list_body)
+
+        if any(user["favourites"][i]["nodes"] for i in user["favourites"]):
+            favorites_body = ""
+            for i in user["favourites"]:
+                if not user["favourites"][i]["nodes"]:
+                    continue
+
+                # Section header
+                favorites_body += f"__{i.title()}__"
+
+                # Show total amount of favs if they exceed a limit (3)
+                if (favorites_count := len(user['favourites'][i]['nodes'])) > 3:
+                    favorites_body += \
+                        f" ({favorites_count})"
+                favorites_body += "\n"
+
+                for item in user["favourites"][i]["nodes"][:3]:
+                    # There are three types of names, so unify them.
+                    if i in ["anime", "manga"]:
+                        name = item['title']['romaji']
+                    elif i in ["characters", "staff"]:
+                        name = item['name']['full']
+                    else:
+                        name = item['name']
+
+                    favorites_body += f"[{name}]({item['siteUrl']})\n"
+
+            embed.add_field(name="Favorites", value=favorites_body,
+                            inline=False)
+
+        await ctx.send(embed=embed)
+
     @command(name="anime")
     async def anime(self, ctx: Context, *, title: str):
         """Anime info from AniList"""
