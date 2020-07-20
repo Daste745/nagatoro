@@ -4,7 +4,7 @@ from discord.ext.commands import Cog, Context, command, BucketType, \
 from discord.ext.commands.errors import CommandOnCooldown
 
 from nagatoro.objects import Embed
-from nagatoro.utils import anilist
+from nagatoro.utils import anilist, trace
 
 
 def clean_description(text: str) -> str:
@@ -397,6 +397,46 @@ class Anime(Cog):
         embed.add_field(name="Appears in", value="\n".join(appears_in))
 
         await ctx.send(embed=embed)
+
+    @command(name="trace")
+    async def trace(self, ctx: Context, image_url: str = None):
+        """Trace.moe image search
+
+        Uses the trace.moe image search to find what anime it's from.
+        This search engine recognizes only images/gifs from anime.
+        When searching with a gif, the first frame is used.
+        Tenor links don't work, because they don't provide a direct image URL.
+        All NSFW results are hidden.
+        """
+
+        if not image_url:
+            if not (attachments := ctx.message.attachments):
+                # TODO: Raise a MissingRequiredArgument or other error
+                return await ctx.send(
+                    "Please provide an image (url or attachment)")
+
+            image_url = attachments[0].url
+
+        image_name = image_url.split("/")[-1]
+        embed = Embed(ctx, title="Image search", footer="Via trace.moe",
+                      description=f"Searching with *{image_name}* ...",
+                      color=Color.blue())
+        message = await ctx.send(embed=embed)
+        search = await trace(image_url)
+        embed.description = ""
+
+        for result in search["docs"]:
+            if result["is_adult"]:
+                continue
+
+            embed.description += \
+                f"[{result['title_romaji']}]" \
+                f"(https://anilist.co/anime/{result['anilist_id']}) " \
+                f"episode {result['episode']} " \
+                f"({round(result['similarity'] * 100)}%)\n"
+
+        # TODO: Implement video previews
+        await message.edit(embed=embed)
 
 
 def setup(bot):
