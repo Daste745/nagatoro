@@ -423,8 +423,14 @@ class Anime(Cog):
                       color=Color.blue())
         message = await ctx.send(embed=embed)
         search = await trace(image_url)
-        embed.description = ""
 
+        if "errors" in search.keys():
+            embed.description = "Error while loading image. Try posting the " \
+                                "image directly in chat or check if you used " \
+                                "a valid URL."
+            return await message.edit(embed=embed)
+
+        embed.description = ""
         for result in search["docs"]:
             if result["is_adult"]:
                 continue
