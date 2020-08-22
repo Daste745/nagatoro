@@ -1,17 +1,32 @@
 from datetime import datetime
 from pony.orm import db_session
 from discord import Role, User
-from discord.errors import Forbidden
+from discord.errors import Forbidden, HTTPException
 from discord.ext.tasks import loop
-from discord.ext.commands import Cog, Context, command, group, cooldown, \
-    has_permissions, BucketType
+from discord.ext.commands import (
+    Cog,
+    Context,
+    command,
+    group,
+    cooldown,
+    has_permissions,
+    BucketType,
+)
 
 import nagatoro.objects.database as db
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
 from nagatoro.converters import Member, Timedelta
-from nagatoro.utils.db import get_warns, make_warn, get_guild, get_mutes, \
-    make_mute, get_mod_role, get_mute_role, is_muted
+from nagatoro.utils.db import (
+    get_warns,
+    make_warn,
+    get_guild,
+    get_mutes,
+    make_mute,
+    get_mod_role,
+    get_mute_role,
+    is_muted,
+)
 
 
 class Moderation(Cog):
@@ -30,10 +45,10 @@ class Moderation(Cog):
 
         if not (mod_role := await get_mod_role(self.bot, ctx.guild.id)):
             return await ctx.send(
-                "This guild doesn't have mod role set or it was deleted.")
+                "This guild doesn't have mod role set or it was deleted."
+            )
 
-        return await ctx.send(
-            f"Mod role for this server: **{mod_role.name}**")
+        return await ctx.send(f"Mod role for this server: **{mod_role.name}**")
 
     @mod_role.command(name="set")
     @has_permissions(manage_roles=True)
@@ -68,10 +83,10 @@ class Moderation(Cog):
 
         if not (mute_role := await get_mute_role(self.bot, ctx.guild.id)):
             return await ctx.send(
-                "This guild doesn't have mute role set or it was deleted.")
+                "This guild doesn't have mute role set or it was deleted."
+            )
 
-        return await ctx.send(
-            f"Mute role for this server: **{mute_role.name}**")
+        return await ctx.send(f"Mute role for this server: **{mute_role.name}**")
 
     @mute_role.command(name="set")
     @has_permissions(manage_roles=True)
@@ -102,8 +117,7 @@ class Moderation(Cog):
 
     @command(name="ban")
     @has_permissions(ban_members=True)
-    async def ban(self, ctx: Context, user: User, *,
-                  reason: str = None):
+    async def ban(self, ctx: Context, user: User, *, reason: str = None):
         """Ban a user or member without deleting their messages"""
 
         await ctx.guild.ban(user=user, reason=reason, delete_message_days=0)
@@ -147,8 +161,9 @@ class Moderation(Cog):
         await ctx.send(embed=embed)
 
         try:
-            await member.send(f"You have been warned in **{ctx.guild.name}**, "
-                              f"reason: *{reason}*")
+            await member.send(
+                f"You have been warned in **{ctx.guild.name}**, " f"reason: *{reason}*"
+            )
         except (Forbidden, AttributeError):
             pass
 
@@ -168,7 +183,8 @@ class Moderation(Cog):
             if warn.guild.id != ctx.guild.id:
                 return await ctx.send(
                     f"The warn with id `{id}` is from another server. "
-                    f"You can't change or delete it.")
+                    f"You can't change or delete it."
+                )
 
             warn.delete()
 
@@ -182,27 +198,31 @@ class Moderation(Cog):
         if not member:
             member = ctx.author
 
-        embed = Embed(ctx, title=f"{member.name}'s warns", description="",
-                      color=member.color)
+        embed = Embed(
+            ctx, title=f"{member.name}'s warns", description="", color=member.color
+        )
         await ctx.trigger_typing()
 
         with db_session:
             if not (warns := await get_warns(member.id, ctx.guild.id)):
                 return await ctx.send(
-                    f"{member.name} doesn't have any warns on this server.")
+                    f"{member.name} doesn't have any warns on this server."
+                )
 
             for i in reversed(warns[:15]):
                 moderator = self.bot.get_user(i.given_by)
-                embed.description += \
+                embed.description += (
                     f"`{i.id}` **{moderator}:** {i.when} - *{i.reason}*\n"
+                )
 
         await ctx.send(embed=embed)
 
     @group(name="mute", invoke_without_command=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
-    async def mute(self, ctx: Context, member: Member, time: Timedelta, *,
-                   reason: str = None):
+    async def mute(
+        self, ctx: Context, member: Member, time: Timedelta, *, reason: str = None
+    ):
         """Mute a member
 
         Note: Most emotes don't save properly as mute reasons.
@@ -220,20 +240,20 @@ class Moderation(Cog):
 
         mute_role = await get_mute_role(self.bot, ctx.guild.id)
         await member.add_roles(
-            mute_role,
-            reason=f"Muted by {ctx.author} for {time}, reason: {reason}"
+            mute_role, reason=f"Muted by {ctx.author} for {time}, reason: {reason}"
         )
 
         embed = Embed(ctx, title=f"Mute [{mute.id}]", color=member.color)
         embed.set_thumbnail(url=member.avatar_url)
-        embed.description = f"Muted {member.mention} for {time}\n" \
-                            f"Reason: *{reason}*"
+        embed.description = f"Muted {member.mention} for {time}\n" f"Reason: *{reason}*"
 
         await ctx.send(embed=embed)
 
         try:
-            await member.send(f"You have been muted in **{ctx.guild.name}** "
-                              f"for {time}, reason: *{reason}*")
+            await member.send(
+                f"You have been muted in **{ctx.guild.name}** "
+                f"for {time}, reason: *{reason}*"
+            )
         except (Forbidden, AttributeError):
             pass
 
@@ -253,7 +273,8 @@ class Moderation(Cog):
             if mute.guild.id != ctx.guild.id:
                 return await ctx.send(
                     f"The mute with id `{id}` is from another server. "
-                    f"You can't change or delete it.")
+                    f"You can't change or delete it."
+                )
 
             member = ctx.guild.get_member(mute.user.id)
 
@@ -272,8 +293,9 @@ class Moderation(Cog):
         """Unmute a member"""
 
         with db_session:
-            mute = await get_mutes(active_only=True, user_id=member.id,
-                                   guild_id=ctx.guild.id)
+            mute = await get_mutes(
+                active_only=True, user_id=member.id, guild_id=ctx.guild.id
+            )
             if not mute:
                 return await ctx.send(f"{member.name} is not muted.")
 
@@ -291,20 +313,23 @@ class Moderation(Cog):
         if not member:
             member = ctx.author
 
-        embed = Embed(ctx, title=f"{member.name}'s mutes", description="",
-                      color=member.color)
+        embed = Embed(
+            ctx, title=f"{member.name}'s mutes", description="", color=member.color
+        )
         await ctx.trigger_typing()
 
         with db_session:
             if not (mutes := await get_mutes(ctx.guild.id, member.id)):
                 return await ctx.send(
-                    f"{member.name} doesn't have any mutes on this server.")
+                    f"{member.name} doesn't have any mutes on this server."
+                )
 
             for i in reversed(mutes[:15]):
                 moderator = await self.bot.fetch_user(i.given_by)
-                embed.description += f"`{i.id}` **{moderator}**: {i.start} - " \
-                                     f"{i.end - i.start} - " \
-                                     f"*{i.reason or 'No reason'}* "
+                embed.description += (
+                    f"`{i.id}` **{moderator}**: {i.start} - "
+                    f"{i.end - i.start} - *{i.reason or 'No reason'}* "
+                )
                 if i.active:
                     embed.description += "🔴"
                 embed.description += "\n"
@@ -321,20 +346,20 @@ class Moderation(Cog):
 
         with db_session:
             if not (mutes := await get_mutes(ctx.guild.id, active_only=True)):
-                return await ctx.send(
-                    f"There are no active mutes in {ctx.guild.name}.")
+                return await ctx.send(f"There are no active mutes in {ctx.guild.name}.")
 
             # TODO: Split active mutes into different embeds when more than 10
             #       and add scrolling (◀️ ▶️)
             for i in reversed(mutes[:10]):
                 moderator = await self.bot.fetch_user(i.given_by)
                 user = await self.bot.fetch_user(i.user.id)
-                embed.add_field(name=f"{user} [{i.id}]",
-                                value=f"**Given at**: {i.start}\n"
-                                      f"**Duration**: {i.end - i.start}\n"
-                                      f"**Moderator**: {moderator.mention}\n"
-                                      f"**Reason**: *"
-                                      f"{i.reason or 'No reason'}*")
+                embed.add_field(
+                    name=f"{user} [{i.id}]",
+                    value=f"**Given at**: {i.start}\n"
+                    f"**Duration**: {i.end - i.start}\n"
+                    f"**Moderator**: {moderator.mention}\n"
+                    f"**Reason**: *{i.reason or 'No reason'}*",
+                )
 
         await ctx.send(embed=embed)
 
@@ -362,14 +387,17 @@ class Moderation(Cog):
 
                 try:
                     await member.send(f"Your mute in {guild.name} has ended.")
-                except (Forbidden, AttributeError):
+                except (Forbidden, HTTPException, AttributeError):
+                    # Forbidden - user has DM's turned off
+                    # HTTPException - user is probably a bot
                     pass
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
         with db_session:
-            mute = await get_mutes(guild_id=member.guild.id,
-                                   user_id=member.id, active_only=True)
+            mute = await get_mutes(
+                guild_id=member.guild.id, user_id=member.id, active_only=True
+            )
 
             if not mute:
                 return
