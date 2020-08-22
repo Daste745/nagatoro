@@ -42,7 +42,10 @@ class Moderation(Cog):
 
     @group(name="modrole", invoke_without_command=True)
     async def mod_role(self, ctx: Context):
-        """Check the moderator role"""
+        """Check the moderator role
+
+        This role permits users who have it to perform moderator actions, like muting or warning.
+        """
 
         if not (mod_role := await get_mod_role(self.bot, ctx.guild.id)):
             return await ctx.send(
@@ -55,7 +58,7 @@ class Moderation(Cog):
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mod_role_set(self, ctx: Context, role: Role):
-        """Set the moderator role for this server"""
+        """Set this server's moderator role"""
 
         with db_session:
             guild = await get_guild(ctx.guild.id)
@@ -67,9 +70,10 @@ class Moderation(Cog):
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mod_role_delete(self, ctx: Context):
-        """Remove the mod role for this server
+        """Remove this server's mod role
 
         It is recommended to use use this before deleting the role.
+        This command DOES NOT delete the role, just removes the mod role setting for this server.
         """
 
         with db_session:
@@ -80,7 +84,10 @@ class Moderation(Cog):
 
     @group(name="muterole", invoke_without_command=True)
     async def mute_role(self, ctx: Context):
-        """Check the mute role"""
+        """Check the mute role
+
+        This is the role given to muted users, it stays with them until the mute ends or they are unmuted manually.
+        """
 
         if not (mute_role := await get_mute_role(self.bot, ctx.guild.id)):
             return await ctx.send(
@@ -93,7 +100,7 @@ class Moderation(Cog):
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mute_role_set(self, ctx: Context, role: Role):
-        """Set the mute role for this server"""
+        """Set this server's mute role"""
 
         with db_session:
             guild = await get_guild(ctx.guild.id)
@@ -105,9 +112,10 @@ class Moderation(Cog):
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mute_role_delete(self, ctx: Context):
-        """Remove the mute role for this server
+        """Remove this server's mute role
 
         It is recommended to use use this before deleting the role.
+        This command DOES NOT delete the role, just removes the mute role setting for this server.
         """
 
         with db_session:
@@ -120,7 +128,12 @@ class Moderation(Cog):
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
     async def ban(self, ctx: Context, user: User, *, reason: str = None):
-        """Ban a user or member without deleting their messages"""
+        """Ban someone
+
+        You can use an ID to ban someone is outside the server.
+        To get a user's ID, enable Developer Mode under Appearance Settings, right click on the user's name and select "Copy ID".
+        This command does not delete their messages.
+        """
 
         await ctx.guild.ban(user=user, reason=reason, delete_message_days=0)
 
@@ -134,9 +147,10 @@ class Moderation(Cog):
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
     async def unban(self, ctx: Context, user: User):
-        """Unban a user using their ID
+        """Unban someone
 
-        To get a user's ID, enable Developer Mode under Appearance Settings.
+        Note: Only works with IDs.
+        To get a user's ID, enable Developer Mode under Appearance Settings, right click on the user's name and select "Copy ID".
         """
 
         if user.id not in [i.user.id for i in await ctx.guild.bans()]:
@@ -150,12 +164,13 @@ class Moderation(Cog):
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def warn(self, ctx: Context, member: Member, *, reason: str):
-        """Warn a member
+        """Warn someone
 
-        Note: Most emotes don't work with warn reasons.
+        Warns do not give any punishments apart fron an entry in the warn list.
+        Note: Some emojis get corrupted in the process of saving, so try not to use them until this issue is fixed.
         """
 
-        # FIXME: Database does not recognise emoji
+        # FIXME: Database does not save emoji properly
         warn = await make_warn(ctx, member.id, reason)
 
         embed = Embed(ctx, title=f"Warn [{warn.id}]", color=member.color)
@@ -176,7 +191,7 @@ class Moderation(Cog):
     async def warn_delete(self, ctx: Context, id: int):
         """Delete a warn from the database
 
-        Use the mute id given when muting or viewing user's mutes.
+        Use the warn id given when muting or viewing someone's warns (the number in square brackets, e.g. [32]).
         """
 
         with db_session:
@@ -196,7 +211,10 @@ class Moderation(Cog):
     @command(name="warns")
     @cooldown(rate=3, per=15, type=BucketType.guild)
     async def warns(self, ctx: Context, *, member: Member = None):
-        """See someone else's warns"""
+        """See someone's warns
+
+        If no member specified, this shows Your warns.
+        """
 
         if not member:
             member = ctx.author
@@ -227,9 +245,10 @@ class Moderation(Cog):
     async def mute(
         self, ctx: Context, member: Member, time: Timedelta, *, reason: str = None
     ):
-        """Mute a member
+        """Mute someone
 
-        Note: Most emotes don't save properly as mute reasons.
+        Muting someone gives them the mute role specified by the muterole command and removes the role after the specified time has passed.
+        Note: Some emojis get corrupted in the process of saving, so try not to use them until this issue is fixed.
         Note: Mutes are checked every 15 seconds,
         so muting someone for 5 seconds would probably turn
         into a 15 second mute.
@@ -258,7 +277,7 @@ class Moderation(Cog):
                 f"You have been muted in **{ctx.guild.name}** "
                 f"for {time}, reason: *{reason}*"
             )
-        except (Forbidden, AttributeError):
+        except (Forbidden, HTTPException, AttributeError):
             pass
 
     @mute.command(name="delete", aliases=["del", "remove"])
@@ -266,9 +285,9 @@ class Moderation(Cog):
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def mute_delete(self, ctx: Context, id: int):
-        """Delete a mute from the database and unmute the muted member
+        """Delete a mute and unmute someone
 
-        Use the mute id given when muting or viewing user's mutes.
+        Use the mute id given when muting or viewing someone's mutes (the number in square brackets, e.g. [64]).
         """
 
         with db_session:
@@ -296,7 +315,10 @@ class Moderation(Cog):
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def unmute(self, ctx: Context, *, member: Member):
-        """Unmute a member"""
+        """Unmute someone
+
+        Manually end someone's mute period.
+        """
 
         with db_session:
             mute = await get_mutes(
@@ -314,7 +336,10 @@ class Moderation(Cog):
     @group(name="mutes", invoke_without_command=True)
     @cooldown(rate=3, per=15, type=BucketType.guild)
     async def mutes(self, ctx: Context, *, member: Member = None):
-        """See someone else's mutes"""
+        """See someone's mutes
+
+        If no member specified, this shows Your mutes.
+        """
 
         if not member:
             member = ctx.author
@@ -397,8 +422,6 @@ class Moderation(Cog):
                 try:
                     await member.send(f"Your mute in {guild.name} has ended.")
                 except (Forbidden, HTTPException, AttributeError):
-                    # Forbidden - user has DM's turned off
-                    # HTTPException - user is probably a bot
                     pass
 
     @Cog.listener()
