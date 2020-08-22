@@ -1,20 +1,19 @@
 from discord import Color
-from discord.ext.commands import MinimalHelpCommand as BaseHelpCommand
+from discord.ext.commands import HelpCommand as BaseHelpCommand
 from nagatoro.objects import Embed
 
 
 class HelpCommand(BaseHelpCommand):
     def __init__(self):
-        super(HelpCommand, self).__init__()
+        super(HelpCommand, self).__init__(verify_checks=False)
 
-    def get_opening_note(self, description: str = None) -> str:
+    def get_opening_note(self):
         prefix = self.clean_prefix
-        help_name = self.invoked_with
+        command_name = self.invoked_with
 
         return (
-            f"Use `{prefix}{help_name} [command]` for info about a command.\n"
-            f"Use `{prefix}{help_name} [category]` for info about a category."
-            f"\n\n{description if description else ''}"
+            f"Use `{prefix}{command_name} [command]` for info about a command.\n"
+            f"Use `{prefix}{command_name} [category]` for info about a category."
         )
 
     def get_help_embed(self, title: str, description: str = None) -> Embed:
@@ -25,9 +24,19 @@ class HelpCommand(BaseHelpCommand):
             color=Color.blue(),
         )
 
+    def get_formatted_commands(self, commands):
+        return (
+            f"`{self.clean_prefix}{i.qualified_name}` - {i.short_doc}" for i in commands
+        )
+
     async def send_bot_help(self, mapping):
         ctx = self.context
-        embed = self.get_help_embed("Commands")
+        embed = Embed(
+            ctx,
+            title="Commands",
+            description=self.get_opening_note(),
+            color=Color.blue(),
+        )
 
         for cog, commands in mapping.items():
             if not cog:
@@ -47,15 +56,16 @@ class HelpCommand(BaseHelpCommand):
 
     async def send_cog_help(self, cog):
         ctx = self.context
-        embed = self.get_help_embed(f"{cog.qualified_name} Commands", cog.description)
+        embed = Embed(
+            ctx,
+            title=f"{cog.qualified_name} Commands",
+            description=cog.description,
+            color=Color.blue(),
+        )
 
-        commands = []
-        for command in cog.get_commands():
-            commands.append(
-                f"**{self.clean_prefix}{command.qualified_name}** - "
-                f"{command.short_doc}"
-            )
-
+        commands = self.get_formatted_commands(
+            await self.filter_commands(cog.get_commands())
+        )
         embed.add_field(name="Commands", value="\n".join(commands))
 
         await ctx.send(embed=embed)
