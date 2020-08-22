@@ -1,7 +1,7 @@
 import json
 from asyncio import TimeoutError
-from discord.ext.commands import Cog, Context, command, cooldown, \
-    BucketType
+from discord.errors import Forbidden
+from discord.ext.commands import Cog, Context, command, cooldown, BucketType
 
 from nagatoro.objects import Embed
 from nagatoro.utils import get_gif
@@ -35,20 +35,30 @@ class Action(Cog):
 
         message = await ctx.send(embed=embed)
 
-        await message.add_reaction("🔁")
+        if not ctx.channel.permissions_for(ctx.me).add_reactions:
+            # Do not create the refresh loop if bot can't add reactions
+            return
+
+        refresh_emoji = "🔁"
+        await message.add_reaction(refresh_emoji)
+
+        def check(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) == refresh_emoji
 
         while True:
             try:
-                await self.bot.wait_for(
-                    "reaction_add",
-                    timeout=20,
-                    check=lambda r, u: u == ctx.message.author
-                                       and str(r.emoji) == "🔁")
+                await self.bot.wait_for("reaction_add", timeout=30, check=check)
 
                 embed.set_image(
-                    url=await get_gif(ctx.invoked_with,
-                                      self.bot.config.tenor_key))
+                    url=await get_gif(ctx.invoked_with, self.bot.config.tenor_key)
+                )
                 await message.edit(embed=embed)
+
+                try:
+                    await message.remove_reaction(refresh_emoji, ctx.author)
+                except Forbidden:
+                    # No manage_messages permission
+                    pass
             except TimeoutError:
                 await message.clear_reactions()
                 break
