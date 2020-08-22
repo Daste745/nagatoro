@@ -20,18 +20,22 @@ class Action(Cog):
     @command(name="action", ignore_extra=True, aliases=action_commands)
     @cooldown(rate=3, per=15, type=BucketType.user)
     async def action(self, ctx: Context):
-        """Send an action gif"""
+        """Send an action gif
+
+        Pressing the 🔁 reaction reloads the image for a new one.
+        The option to refresh lasts 30 seconds and only you can use it.
+        """
 
         if ctx.invoked_with == "action":
             embed = Embed(ctx, title="Action", footer="Powered By Tenor")
-            embed.add_field(name="Available commands",
-                            value=", ".join(self.action.aliases))
+            embed.add_field(
+                name="Available commands", value=", ".join(self.action.aliases)
+            )
             return await ctx.send(embed=embed)
 
         await ctx.trigger_typing()
         embed = Embed(ctx, footer="Via Tenor", color=ctx.author.color)
-        embed.set_image(
-            url=await get_gif(ctx.invoked_with, self.bot.config.tenor_key))
+        embed.set_image(url=await get_gif(ctx.invoked_with, self.bot.config.tenor_key))
 
         message = await ctx.send(embed=embed)
 
