@@ -52,7 +52,9 @@ class Moderation(Cog):
                 "This guild doesn't have mod role set or it was deleted."
             )
 
-        return await ctx.send(f"Mod role for this server: **{mod_role.name}**")
+        return await ctx.send(
+            f"{ctx.guild.name}'s moderator role: **{mod_role.name}** (id: `{mod_role.id}`)"
+        )
 
     @mod_role.command(name="set")
     @has_permissions(manage_roles=True)
@@ -94,7 +96,9 @@ class Moderation(Cog):
                 "This guild doesn't have mute role set or it was deleted."
             )
 
-        return await ctx.send(f"Mute role for this server: **{mute_role.name}**")
+        return await ctx.send(
+            f"{ctx.guild.name}'s mute role: **{mute_role.name}** (id: `{mute_role.id}`)"
+        )
 
     @mute_role.command(name="set")
     @has_permissions(manage_roles=True)
