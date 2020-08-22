@@ -13,7 +13,7 @@ logger.setLevel(logging.INFO)
 with open("data/config.json") as file:
     config = Config.from_file(file)
 
-bot = nagatoro.Bot(config)
+bot = nagatoro.Bot(config, heartbeat_timeout=30)
 
 if __name__ == "__main__":
     bot.startup()
