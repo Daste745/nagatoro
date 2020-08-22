@@ -10,6 +10,7 @@ from discord.ext.commands import (
     group,
     cooldown,
     has_permissions,
+    bot_has_permissions,
     BucketType,
 )
 
@@ -116,6 +117,7 @@ class Moderation(Cog):
         await ctx.send(f"Removed the mute role from {ctx.guild.name}.")
 
     @command(name="ban")
+    @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
     async def ban(self, ctx: Context, user: User, *, reason: str = None):
         """Ban a user or member without deleting their messages"""
@@ -129,6 +131,7 @@ class Moderation(Cog):
         await ctx.send(ban_message)
 
     @command(name="unban", aliases=["pardon"])
+    @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
     async def unban(self, ctx: Context, user: User):
         """Unban a user using their ID
@@ -218,6 +221,7 @@ class Moderation(Cog):
         await ctx.send(embed=embed)
 
     @group(name="mute", invoke_without_command=True)
+    @bot_has_permissions(manage_roles=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def mute(
@@ -258,6 +262,7 @@ class Moderation(Cog):
             pass
 
     @mute.command(name="delete", aliases=["del", "remove"])
+    @bot_has_permissions(manage_roles=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def mute_delete(self, ctx: Context, id: int):
@@ -287,6 +292,7 @@ class Moderation(Cog):
             await ctx.send(f"Removed mute `{id}` from the database.")
 
     @command(name="unmute")
+    @bot_has_permissions(manage_roles=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def unmute(self, ctx: Context, *, member: Member):
