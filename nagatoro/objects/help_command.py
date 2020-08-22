@@ -16,12 +16,18 @@ class HelpCommand(BaseHelpCommand):
             f"Use `{prefix}{command_name} [category]` for info about a category."
         )
 
-    def get_help_embed(self, title: str, description: str = None) -> Embed:
-        return Embed(
-            self.context,
-            title=title,
-            description=self.get_opening_note(description),
-            color=Color.blue(),
+    def get_command_signature(self, command):
+        if command.aliases:
+            aliases = "|".join(i for i in command.aliases)
+            name = f"[{command.name}|{aliases}]"
+        else:
+            name = command.name
+
+        if command.full_parent_name:
+            name = f"{command.full_parent_name} {name}"
+
+        return f"{self.clean_prefix}{name}" + (
+            f" {command.signature}" if command.signature else ""
         )
 
     def get_formatted_commands(self, commands):
@@ -71,7 +77,28 @@ class HelpCommand(BaseHelpCommand):
         await ctx.send(embed=embed)
 
     async def send_group_help(self, group):
-        ...
+        ctx = self.context
+        embed = Embed(
+            ctx,
+            title=f"`{self.get_command_signature(group)}`",
+            description=group.help,
+            color=Color.blue(),
+        )
+
+        commands = self.get_formatted_commands(
+            await self.filter_commands(group.commands)
+        )
+        embed.add_field(name="Commands", value="\n".join(commands))
+
+        await ctx.send(embed=embed)
 
     async def send_command_help(self, command):
-        ...
+        ctx = self.context
+        embed = Embed(
+            ctx,
+            title=f"`{self.get_command_signature(command)}`",
+            description=command.help,
+            color=Color.blue(),
+        )
+
+        await ctx.send(embed=embed)
