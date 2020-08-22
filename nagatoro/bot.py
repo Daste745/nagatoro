@@ -6,17 +6,17 @@ from discord.ext.commands import Context, errors as cerrors
 
 from nagatoro.cogs.management import Management
 from nagatoro.utils import get_prefixes
-from nagatoro.objects import Embed
+from nagatoro.objects import Embed, HelpCommand
 
 
 class Bot(commands.Bot):
     def __init__(self, config, **kwargs):
-        super().__init__(command_prefix=get_prefixes, **kwargs)
+        super().__init__(
+            command_prefix=get_prefixes, help_command=HelpCommand(), **kwargs
+        )
         self.case_insensitive = True
         self.config = config
         self.start_timestamp = time()
-        # TODO: Make custom help command.
-        # self.remove_command("help")
 
     def startup(self):
         Management.load_cogs(bot=self)
