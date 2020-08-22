@@ -1,7 +1,7 @@
 from datetime import datetime
 from pony.orm import db_session
 from discord import Role, User
-from discord.errors import Forbidden
+from discord.errors import Forbidden, HTTPException
 from discord.ext.tasks import loop
 from discord.ext.commands import Cog, Context, command, group, cooldown, \
     has_permissions, BucketType
@@ -362,7 +362,9 @@ class Moderation(Cog):
 
                 try:
                     await member.send(f"Your mute in {guild.name} has ended.")
-                except (Forbidden, AttributeError):
+                except (Forbidden, HTTPException, AttributeError):
+                    # Forbidden - user has DM's turned off
+                    # HTTPException - user is probably a bot
                     pass
 
     @Cog.listener()
