@@ -19,13 +19,6 @@ from nagatoro.utils.db import get_guild, set_prefix
 from nagatoro.checks import is_moderator
 
 
-def get_size(bytes: int):
-    for unit in ["", "K", "M", "G", "T", "P"]:
-        if bytes < 1024:
-            return f"{bytes:.2f}{unit}"
-        bytes /= 1024
-
-
 class Management(Cog, command_attrs=dict(ignore_extra=True)):
     """Bot settings and info"""
 
