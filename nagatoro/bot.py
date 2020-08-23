@@ -1,12 +1,13 @@
+import os
 import logging
 from time import time
+
 from discord import Color
 from discord.ext import commands
 from discord.ext.commands import Context, errors as cerrors
 
-from nagatoro.cogs.management import Management
 from nagatoro.utils import get_prefixes
-from nagatoro.objects import Embed, HelpCommand
+from nagatoro.objects import Config, Embed, HelpCommand
 
 
 class Bot(commands.Bot):
@@ -21,6 +22,27 @@ class Bot(commands.Bot):
     def startup(self):
         Management.load_cogs(bot=self)
         self.run(self.config.token)
+
+    def load_cogs(self) -> None:
+        path = "nagatoro/cogs/"
+        extensions = [
+            path.replace("/", ".") + file.replace(".py", "")
+            for file in os.listdir(path)
+            if os.path.isfile(f"{path}{file}")
+        ]
+
+        for extension in extensions:
+            try:
+                self.load_extension(extension)
+            except cerrors.ExtensionAlreadyLoaded:
+                pass
+
+    def reload_cogs(self) -> None:
+        for extension in list(self.extensions):
+            try:
+                self.reload_extension(extension)
+            except cerrors.ExtensionAlreadyLoaded:
+                pass
 
     async def on_ready(self):
         logging.info(f"Bot started as {self.user}.")

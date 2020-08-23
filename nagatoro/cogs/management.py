@@ -29,30 +29,16 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     def cog_unload(self):
         self.wake_database.cancel()
 
-    @staticmethod
-    def load_cogs(bot: Bot):
-        path = "nagatoro/cogs/"
-        extensions = [path.replace("/", ".") + i.replace(".py", "")
-                      for i in os.listdir(path)
-                      if os.path.isfile(f"{path}{i}")]
-        for extension in extensions:
-            try:
-                bot.load_extension(extension)
-            except ExtensionAlreadyLoaded:
-                pass
-
     @command(name="reload", aliases=["r"], hidden=True)
     @is_owner()
     async def reload(self, ctx: Context):
         """Reload all cogs and commands"""
 
-        for extension in list(self.bot.extensions):
-            try:
-                self.bot.reload_extension(extension)
-            except ExtensionAlreadyLoaded:
-                pass
-
-        await ctx.send(f"Reloaded **{len(self.bot.commands)}** commands.")
+        ctx.bot.reload_cogs()
+        await ctx.send(
+            f"Reloaded **{len(ctx.bot.commands)}** commands "
+            f"from **{len(ctx.bot.cogs)}** modules."
+        )
 
     @command(name="ping")
     async def ping(self, ctx: Context):
