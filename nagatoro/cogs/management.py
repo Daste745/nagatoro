@@ -1,10 +1,17 @@
-import os
 from time import time
 from datetime import timedelta
+
 from discord import Color
-from discord.ext.commands import Cog, Context, Bot, command, group, is_owner, \
-    ExtensionAlreadyLoaded, cooldown, BucketType
 from discord.ext.tasks import loop
+from discord.ext.commands import (
+    Cog,
+    Context,
+    command,
+    group,
+    is_owner,
+    cooldown,
+    BucketType,
+)
 from pony.orm import db_session
 
 from nagatoro.objects import Embed
@@ -56,8 +63,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         """Time from the start of the bot"""
 
         current_timestamp = time()
-        timestamp_difference = round(current_timestamp -
-                                     self.bot.start_timestamp)
+        timestamp_difference = round(current_timestamp - self.bot.start_timestamp)
         uptime = timedelta(seconds=timestamp_difference)
         embed = Embed(ctx, title="Uptime", description=str(uptime))
 
@@ -69,8 +75,12 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     async def prefix(self, ctx: Context):
         """Bot prefix"""
 
-        embed = Embed(ctx, title=f"Prefixes for {ctx.guild.name}",
-                      description="", color=Color.blue())
+        embed = Embed(
+            ctx,
+            title=f"Prefixes for {ctx.guild.name}",
+            description="",
+            color=Color.blue(),
+        )
 
         for i in (await ctx.bot.command_prefix(ctx.bot, ctx.message))[1:]:
             embed.description += f"- **{i}**\n"
