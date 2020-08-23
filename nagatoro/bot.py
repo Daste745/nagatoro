@@ -11,17 +11,16 @@ from nagatoro.objects import Config, Embed, HelpCommand
 
 
 class Bot(commands.Bot):
-    def __init__(self, config, **kwargs):
+    def __init__(self, config: Config, **kwargs):
         super().__init__(
-            command_prefix=get_prefixes, help_command=HelpCommand(), **kwargs
+            command_prefix=get_prefixes,
+            help_command=HelpCommand(),
+            # heartbeat_timeout=30,  # Leaving this untouched, experimentally
+            case_insensitive=True,
+            **kwargs,
         )
-        self.case_insensitive = True
         self.config = config
         self.start_timestamp = time()
-
-    def startup(self):
-        Management.load_cogs(bot=self)
-        self.run(self.config.token)
 
     def load_cogs(self) -> None:
         path = "nagatoro/cogs/"

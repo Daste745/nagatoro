@@ -1,6 +1,7 @@
 import logging
+import asyncio
 
-import nagatoro
+from nagatoro import Bot
 from nagatoro.objects import Config
 
 
@@ -13,7 +14,21 @@ logger.setLevel(logging.INFO)
 with open("data/config.json") as file:
     config = Config.from_file(file)
 
-bot = nagatoro.Bot(config, heartbeat_timeout=30)
+bot = Bot(config)
+
+
+async def run():
+    bot.load_cogs()
+    await bot.login(token=bot.config.token)
+    await bot.connect()
+
 
 if __name__ == "__main__":
-    bot.startup()
+    loop = asyncio.get_event_loop()
+
+    try:
+        loop.run_until_complete(run())
+    except KeyboardInterrupt:
+        loop.run_until_complete(bot.logout())
+    finally:
+        loop.close()
