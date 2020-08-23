@@ -46,8 +46,7 @@ class Bot(commands.Bot):
     async def on_ready(self):
         logging.info(f"Bot started as {self.user}.")
         logging.info(f"Loaded cogs: {', '.join(self.cogs)}")
-        logging.info(
-            f"Loaded commands: {', '.join([i.name for i in self.commands])}")
+        logging.info(f"Loaded commands: {', '.join([i.name for i in self.commands])}")
 
     async def on_command_error(self, ctx: Context, exception: Exception):
         title = "Error"
@@ -56,8 +55,12 @@ class Bot(commands.Bot):
             raise exception
         except cerrors.CommandNotFound:
             return
-        except (cerrors.MissingRequiredArgument, cerrors.TooManyArguments,
-                cerrors.BadArgument, cerrors.BadUnionArgument):
+        except (
+            cerrors.MissingRequiredArgument,
+            cerrors.TooManyArguments,
+            cerrors.BadArgument,
+            cerrors.BadUnionArgument,
+        ):
             # Send the help message
             return await ctx.send_help(ctx.invoked_with)
         except (cerrors.NotOwner, cerrors.MissingPermissions):
@@ -73,10 +76,6 @@ class Bot(commands.Bot):
         except Exception:
             logging.error(f"{type(exception)}, {exception}")
 
-        embed = Embed(
-            ctx,
-            title=title,
-            description=str(exception),
-            color=Color.red())
+        embed = Embed(ctx, title=title, description=str(exception), color=Color.red())
 
         await ctx.send(embed=embed)
