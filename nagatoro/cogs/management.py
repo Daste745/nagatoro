@@ -1,9 +1,5 @@
 import os
-import platform
-from psutil import virtual_memory
-from cpuinfo import get_cpu_info
 from time import time
-from discord import __version__ as discord_version
 from datetime import timedelta
 from discord import Color
 from discord.ext.commands import Cog, Context, Bot, command, group, is_owner, \
@@ -81,40 +77,6 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         await ctx.send(embed=embed)
         return uptime
-
-    @command(name="info")
-    @cooldown(rate=1, per=15, type=BucketType.user)
-    async def info(self, ctx: Context):
-        """Bot info"""
-
-        # TODO: Make branch info operational on other systems.
-        git_branch = os.popen(
-            r"git branch | awk '{print $2}' | sed '/^\s*$/d'").read()
-        app_info = await self.bot.application_info()
-
-        embed = Embed(ctx, title=app_info.name, color=Color(0x56517b))
-        if self.bot.config.testing:
-            embed.description = f"Development version, git: **{git_branch}**"
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
-
-        embed.add_fields(
-            ("Ping", f"{round(self.bot.latency * 1000)}ms"),
-            ("Uptime",
-             str(timedelta(seconds=round(time() - self.bot.start_timestamp)))),
-            ("Commands", f"{len(self.bot.commands)} commands"),
-            ("Creator", str(app_info.owner)),
-            ("Library", f"discord.py {discord_version}"),
-            ("Python version",
-             f"{platform.python_implementation()} {platform.python_version()}"),
-            ("System", f"{platform.system()} {platform.release()}"),
-            ("Processor", get_cpu_info()["brand"]),
-            ("Memory",
-             f"{get_size(virtual_memory().used)}/"
-             f"{get_size(virtual_memory().total)} "
-             f"({virtual_memory().percent}%)")
-        )
-
-        await ctx.send(embed=embed)
 
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
