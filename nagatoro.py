@@ -1,5 +1,7 @@
 import logging
+
 import asyncio
+from discord import Activity, ActivityType
 
 from nagatoro import Bot
 from nagatoro.objects import Config
@@ -18,6 +20,10 @@ bot = Bot(config)
 
 
 async def run():
+    if not bot.config.testing:
+        bot.activity = Activity(
+            name=f"{bot.config.prefix}help", type=ActivityType.watching
+        )
     bot.load_cogs()
     await bot.login(token=bot.config.token)
     await bot.connect()
