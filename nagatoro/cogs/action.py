@@ -7,8 +7,10 @@ from nagatoro.objects import Embed
 from nagatoro.utils import get_gif
 
 
-with open("data/action_config.json", "r") as f:
-    action_commands = json.load(f)["commands"]
+action_description = """
+        Pressing the 🔁 reaction reloads the image for a new one.
+        The option to refresh lasts 30 seconds and only you can use it.
+        """
 
 
 class Action(Cog):
@@ -17,7 +19,18 @@ class Action(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(name="action", ignore_extra=True, aliases=action_commands)
+        # Create all action commands
+        commands = []
+        with open("data/action_config.json", "r") as f:
+            for name in json.load(f)["commands"]:
+                desciption = f"Send a '{name}' gif from Tenor\n{action_description}"
+                cmd = self.action.copy()
+                cmd.update(name=name, help=desciption, cog=self)
+                commands.append(cmd)
+
+        self.__cog_commands__ = tuple(commands)
+
+    @command(name="action", ignore_extra=True)
     @cooldown(rate=3, per=15, type=BucketType.user)
     async def action(self, ctx: Context):
         """Send an action gif
@@ -25,13 +38,6 @@ class Action(Cog):
         Pressing the 🔁 reaction reloads the image for a new one.
         The option to refresh lasts 30 seconds and only you can use it.
         """
-
-        if ctx.invoked_with == "action":
-            embed = Embed(ctx, title="Action", footer="Powered By Tenor")
-            embed.add_field(
-                name="Available commands", value=", ".join(self.action.aliases)
-            )
-            return await ctx.send(embed=embed)
 
         await ctx.trigger_typing()
         embed = Embed(ctx, footer="Via Tenor", color=ctx.author.color)
