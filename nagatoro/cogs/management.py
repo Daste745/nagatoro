@@ -15,8 +15,9 @@ from discord.ext.commands import (
 from pony.orm import db_session
 
 from nagatoro.objects import Embed
-from nagatoro.utils.db import get_guild, set_prefix
+from nagatoro.utils.db import get_guild
 from nagatoro.checks import is_moderator
+from nagatoro.db import Guild
 
 
 class Management(Cog, command_attrs=dict(ignore_extra=True)):
@@ -66,7 +67,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
     async def prefix(self, ctx: Context):
-        """Bot prefix"""
+        """Custom bot prefix"""
 
         embed = Embed(
             ctx,
@@ -82,19 +83,31 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
     @prefix.command(name="set")
     @is_moderator()
-    @cooldown(rate=2, per=10, type=BucketType.user)
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def prefix_set(self, ctx: Context, prefix: str):
-        """Set the prefix for this server"""
+        """Set a custom prefix for this server"""
 
-        await set_prefix(ctx.guild.id, prefix)
-        return await ctx.send(f"Set custom prefix to `{prefix}`")
+        guild = await Guild.get(id=ctx.guild.id)
+        guild.prefix = prefix
+        await guild.save()
+
+        await ctx.send(f"Set custom prefix to `{prefix}`")
 
     @prefix.command(name="delete", aliases=["unset", "remove", "del"])
     @is_moderator()
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def prefix_delete(self, ctx: Context):
         """Delete the prefix from this server"""
 
-        await set_prefix(ctx.guild.id, None)
+        guild = await Guild.get(id=ctx.guild.id)
+        if not guild.prefix:
+            return await ctx.send(
+                f"**{ctx.guild.name}** " f"doesn't have a custom prefix."
+            )
+
+        guild.prefix = None
+        await guild.save()
+
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
 
     # This is just a hack to keep the database busy

@@ -3,7 +3,6 @@ from tortoise.models import Model
 from tortoise.fields import (
     IntField,
     BigIntField,
-    CharField,
     TextField,
     DatetimeField,
     BooleanField,
@@ -15,7 +14,7 @@ from tortoise.fields import (
 
 class Guild(Model):
     id = BigIntField(pk=True)
-    prefix = CharField(max_length=32)
+    prefix = TextField(null=True)
     moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
     mutes: ReverseRelation["Mute"]
