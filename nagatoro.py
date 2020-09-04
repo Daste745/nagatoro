@@ -5,6 +5,7 @@ from discord import Activity, ActivityType
 
 from nagatoro import Bot
 from nagatoro.objects import Config
+from nagatoro.db import init_database
 
 
 logger = logging.getLogger()
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     try:
+        loop.run_until_complete(init_database())
         loop.run_until_complete(run())
     except KeyboardInterrupt:
         loop.run_until_complete(bot.logout())
