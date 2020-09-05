@@ -1,15 +1,23 @@
 from math import sqrt, floor, ceil
 from datetime import datetime, timedelta
-from asyncio import TimeoutError
-from pony.orm import db_session, select
-from discord import Message, Color
-from discord.ext.commands import Cog, Context, command, group, cooldown, \
-    BucketType, BadArgument
 
-import nagatoro.objects.database as db
+from asyncio import TimeoutError
+from discord import Message, Color
+from discord.errors import Forbidden
+from discord.ext.commands import (
+    Cog,
+    Context,
+    command,
+    group,
+    cooldown,
+    BucketType,
+    BadArgument,
+)
+
 from nagatoro.converters import Member
 from nagatoro.objects import Embed
-from nagatoro.utils.db import get_profile
+from nagatoro.utils import aenumerate
+from nagatoro.db import User, Mute, Warn
 
 
 class Profile(Cog):
@@ -26,71 +34,55 @@ class Profile(Cog):
         if not member:
             member = ctx.author
 
-        with db_session:
-            profile = await get_profile(member.id)
-            # Calculate current level progress from proportions:
-            # (exp - curr lvl req) * 100 / (curr lvl req - next lvl req)
-            current_level_exp = (profile.level * 4) ** 2
-            next_level_exp = ((profile.level + 1) * 4) ** 2
-            progress = round((profile.exp - current_level_exp) * 100 /
-                             (next_level_exp - current_level_exp))
+        user, _ = await User.get_or_create(id=member.id)
+        # Calculate current level progress:
+        # (exp - curr lvl req) * 100 / (curr lvl req - next lvl req)
+        current_level_exp = (user.level * 4) ** 2
+        next_level_exp = ((user.level + 1) * 4) ** 2
+        progress = round(
+            (user.exp - current_level_exp) * 100 / (next_level_exp - current_level_exp)
+        )
+        # Find position of profile in global user ranking
+        rank = (await User.all().order_by("-exp")).index(user)
 
-            embed = Embed(
-                ctx, title=f"{member.name}'s profile", color=member.color)
-            embed.set_thumbnail(url=member.avatar_url)
+        embed = Embed(ctx, title=f"{member.name}'s profile", color=member.color)
+        embed.set_thumbnail(url=member.avatar_url)
 
-            mutes = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Mute)
-                           and i.guild.id == ctx.guild.id).without_distinct()
-            warns = select(i for i in profile.user.punishments
-                           if isinstance(i, db.Warn)
-                           and i.guild.id == ctx.guild.id).without_distinct()
-            # Find position of profile in global user ranking
-            rank = list(db.Profile.select().order_by(db.desc(db.Profile.exp))
-                        ).index(profile)
+        embed.add_fields(
+            ("Rank", str(rank + 1)),
+            ("Level", f"{user.level}"),
+            ("Experience", f"{user.exp}/{next_level_exp} ({progress}%)"),
+            ("Balance", f"{user.balance} coins"),
+        )
 
-            embed.add_fields(
-                ("Global rank", str(rank + 1)),
-                ("Level", f"{profile.level}"),
-                ("Experience", f"{profile.exp}/{next_level_exp} "
-                               f"({progress}%)"),
-                ("Balance", f"{profile.balance} coins")
-            )
-
-            if mutes:
-                embed.add_field(name="Mutes", value=str(len(mutes)))
-            if warns:
-                embed.add_field(name="Warns", value=str(len(warns)))
+        if mutes := await Mute.filter(guild__id=ctx.guild.id, user__id=member.id):
+            embed.add_field(name="Mutes", value=str(len(mutes)))
+        if warns := await Warn.filter(guild__id=ctx.guild.id, user__id=member.id):
+            embed.add_field(name="Warns", value=str(len(warns)))
 
         await ctx.send(embed=embed)
 
     @command(name="balance", aliases=["bal", "money"])
+    @cooldown(rate=5, per=10, type=BucketType.user)
     async def balance(self, ctx: Context, *, member: Member = None):
         """Coin balance"""
 
         if not member:
             member = ctx.author
 
-        with db_session:
-            profile = await get_profile(member.id)
-            embed = Embed(ctx, title=f"{member.name}'s balance",
-                          description=f"Balance: **{profile.balance} coins**",
-                          color=member.color)
-
-        await ctx.send(embed=embed)
+        user, _ = await User.get_or_create(id=member.id)
+        await ctx.send(f"{member.name}'s balance: **{user.balance}**")
 
     @command(name="level", aliases=["lvl"])
+    @cooldown(rate=5, per=10, type=BucketType.user)
     async def level(self, ctx: Context, *, member: Member = None):
         """User's level"""
 
         if not member:
             member = ctx.author
 
-        profile = await get_profile(member.id)
-        embed = Embed(ctx, title=f"{member.name}'s level", color=member.color,
-                      description=f"Level: **{profile.level}**")
-
-        await ctx.send(embed=embed)
+        user, _ = await User.get_or_create(id=member.id)
+        await ctx.send(f"{member.name}'s level: **{user.level}**")
 
     @group(name="ranking", aliases=["top"], invoke_without_command=True)
     @cooldown(rate=2, per=30, type=BucketType.guild)
@@ -104,169 +96,183 @@ class Profile(Cog):
     async def ranking_level(self, ctx: Context):
         """User ranking, by level"""
 
+        embed = Embed(ctx, title="Level Ranking", description="", color=Color.blue())
+
         await ctx.trigger_typing()
-        with db_session:
-            top_users = \
-                db.Profile.select().order_by(db.desc(db.Profile.exp))[:10]
+        async for pos, i in aenumerate(User.all().order_by("-exp").limit(10), start=1):
+            embed.description += f"{pos}. **{i.id}**: {i.level} ({i.exp} exp)\n"
 
-            embed = Embed(ctx, title="Level ranking", description="",
-                          color=Color.blue())
-            for i, profile in enumerate(top_users, start=1):
-                user = await self.bot.fetch_user(profile.user.id)
-                embed.description += \
-                    f"{i}. **{user.name}**: {profile.level} " \
-                    f"({profile.exp} exp)\n"
-
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @ranking.command(name="balance", aliases=["bal", "money"])
     @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking_balance(self, ctx: Context):
         """User ranking, sorted by balance"""
 
+        embed = Embed(ctx, title="Balance Ranking", description="", color=Color.blue())
+
         await ctx.trigger_typing()
-        with db_session:
-            top_users = \
-                db.Profile.select().order_by(db.desc(db.Profile.balance))[:10]
+        async for pos, i in aenumerate(
+            User.all().order_by("-balance").limit(10), start=1
+        ):
+            embed.description += f"{pos}. **{i.id}**: {i.balance} coins\n"
 
-            embed = Embed(ctx, title="Balance ranking", description="",
-                          color=Color.blue())
-            for i, profile in enumerate(top_users, start=1):
-                user = await self.bot.fetch_user(profile.user.id)
-                embed.description += \
-                    f"{i}. **{user.name}**: {profile.balance} coins\n"
-
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @command(name="transfer", aliases=["give", "pay"])
     @cooldown(rate=2, per=10, type=BucketType.user)
     async def transfer(self, ctx: Context, amount: int, *, member: Member):
-        """Give coins to someone"""
+        """Give coins to someone
+
+        You can't give money to yourself or any bots.
+        Transfer amount should be more than 0.
+        """
 
         if member == ctx.author:
-            raise BadArgument("You can't transfer money to yourself.")
+            raise BadArgument("Can't transfer money to yourself.")
+        if member.bot:
+            raise BadArgument("Can't transfer money to bots.")
         if amount <= 0:
             raise BadArgument("Transfer amount can't be zero or negative.")
 
-        with db_session:
-            if balance := (await get_profile(ctx.author.id)).balance < amount:
-                raise BadArgument(f"Not enough funds, you have only "
-                                  f"{balance} coins.")
+        user, _ = await User.get_or_create(id=ctx.author.id)
 
-        embed = Embed(ctx, title="Transfer")
-        embed.description = f"You are about to give **{amount}** coin(s) " \
-                            f"to {member.mention}, are you sure?"
+        if user.balance < amount:
+            raise BadArgument(
+                f"Not enough funds, you only have "
+                f"{user.balance} coins ({amount - user.balance} missing)."
+            )
+
+        embed = Embed(
+            ctx,
+            title="Transfer",
+            description=f"You are about to give **{amount}** "
+            f"coin(s) to {member.mention}, are you sure?",
+        )
         message = await ctx.send(embed=embed)
         await message.add_reaction("✅")
 
         try:
-            await self.bot.wait_for("reaction_add", timeout=30,
-                                    check=lambda r, u: u == ctx.message.author
-                                                       and str(r.emoji) == "✅")
+            await self.bot.wait_for(
+                "reaction_add",
+                timeout=30,
+                check=lambda r, u: u == ctx.message.author and str(r.emoji) == "✅",
+            )
         except TimeoutError:
             embed.description = "Transfer cancelled."
             return await message.edit(embed=embed)
-        finally:
+
+        target_user, _ = await User.get_or_create(id=member.id)
+        user.balance -= amount
+        target_user.balance += amount
+        await user.save()
+        await target_user.save()
+
+        try:
             await message.clear_reactions()
+        except Forbidden:
+            pass
 
-        with db_session:
-            profile = await get_profile(ctx.author.id)
-            target_profile = await get_profile(member.id)
-            profile.balance -= amount
-            target_profile.balance += amount
+        embed.description = f"Transferred **{amount}** coin(s) " f"to {member.mention}"
+        await message.edit(embed=embed)
 
-            embed.description = f"Transferred **{amount}** coin(s) " \
-                                f"to {member.mention}"
-            await message.edit(embed=embed)
-
-    @command(name="daily")
+    @command(name="daily", aliases=["dly"])
     async def daily(self, ctx: Context, member: Member = None):
         """Daily coin reward
 
-        Mention someone to give your reward to them.
+        Mention someone to give your them your reward.
         Can be used once every 23 hours.
-        Streak gives you more coins over time, but will be lost
-        after 2 days of inactivity.
+        Streak gives you more coins over time, but will be lost after 2 days of inactivity.
         """
 
         if member and member.bot:
             return await ctx.send("You can't give points to a bot!")
 
-        with db_session:
-            profile = await get_profile(ctx.author.id)
+        user, _ = await User.get_or_create(id=ctx.author.id)
 
-            if profile.last_daily and \
-                    profile.last_daily + timedelta(hours=23) > datetime.now():
-                next_daily = timedelta(hours=23) - \
-                             (datetime.now() - profile.last_daily)
-                return await ctx.send(
-                    f"Your next daily will be available in "
-                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
-                    f"Current streak: **{profile.daily_streak}**.")
+        # timedelta(hours=23) >
+        if (
+            user.last_daily
+            and user.last_daily + timedelta(hours=23) > datetime.utcnow()
+        ):
+            next_daily = timedelta(hours=23) - (datetime.utcnow() - user.last_daily)
+            return await ctx.send(
+                f"Your next daily will be available in "
+                f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
+                f"Current streak: **{user.daily_streak}**."
+            )
 
-            target_profile = await get_profile(member.id) \
-                if member else profile
+        if user.daily_streak and datetime.now() - user.last_daily < timedelta(days=2):
+            # Increase daily streak if last daily was taken in the last 2 days
+            user.daily_streak += 1
+        else:
+            user.daily_streak = 1
 
-            if profile.daily_streak and \
-                    datetime.now() - profile.last_daily < timedelta(days=2):
-                profile.daily_streak += 1
-            else:
-                profile.daily_streak = 1
+        bonus = floor(sqrt(user.daily_streak) * 20)
+        user.last_daily = datetime.utcnow()
 
-            profile.last_daily = datetime.now()
-            bonus = floor(sqrt(profile.daily_streak) * 20)
-            target_profile.balance += 100 + bonus
+        if member:
+            target_user, _ = await User.get_or_create(id=member.id)
+        else:
+            target_user = user
+        target_user.balance += 100 + bonus
 
-            embed = Embed(ctx, title="Daily", color=ctx.author.color)
-            if target_profile == profile:
-                embed.description = \
-                    f"You got **{100 + bonus}** daily points.\n" \
-                    f"Streak: **{profile.daily_streak}**."
-            else:
-                embed.description = \
-                    f"You gave your **{100 + bonus}** daily points " \
-                    f"to {member.mention}\n" \
-                    f"Streak: **{profile.daily_streak}**"
+        await user.save()
+        await target_user.save()
 
-            await ctx.send(embed=embed)
+        embed = Embed(ctx, title="Daily", color=ctx.author.color)
+        if user == target_user:
+            embed.description = (
+                f"You got **{100 + bonus}** daily points.\n"
+                f"Streak: **{user.daily_streak}**."
+            )
+        else:
+            embed.description = (
+                f"You gave your **{100 + bonus}** daily points "
+                f"to {member.mention}\n"
+                f"Streak: **{user.daily_streak}**"
+            )
+
+        await ctx.send(embed=embed)
 
     @Cog.listener()
     async def on_message(self, message: Message):
-        if self.bot.config.testing:
+        if (
+            self.bot.config.testing
+            or message.author.bot
+            or len(message.content) <= 5
+            or "spam" in message.channel.name.lower()
+        ):
+            # TODO: Make better spam filter.
             return
-        if message.author.bot:
-            return
-        # TODO: Make better spam filter.
-        if len(message.content) <= 5:
-            return
-        if "spam" in message.channel.name.lower():
-            return
+
         ctx = await self.bot.get_context(message)
         if ctx.valid:
             return
 
-        with db_session:
-            profile = await get_profile(ctx.author.id)
-            profile.exp += 1
+        user, _ = await User.get_or_create(id=ctx.author.id)
+        user.exp += 1
+        await user.save()
 
-            # Level up
-            if profile.level != (new_level := floor(sqrt(profile.exp) / 4)):
-                profile.level = new_level
-                bonus = floor(sqrt(profile.level) * 100)
-                profile.balance += bonus
+        if user.level != (new_level := floor(sqrt(user.exp) / 4)):
+            user.level = new_level
+            bonus = floor(sqrt(user.level) * 100)
+            user.balance += bonus
+            await user.save()
 
-                if profile.level < 5:
-                    return
+            if user.level < 5:
+                return
 
-                embed = Embed(ctx, title="Level up!")
-                embed.set_thumbnail(url=ctx.author.avatar_url)
-                embed.description = \
-                    f"Congratulations, {ctx.author.mention}! " \
-                    f"You have advanced to **level {profile.level}** " \
-                    f"and got a bonus of **{bonus} points**."
+            embed = Embed(ctx, title="Level up!")
+            embed.set_thumbnail(url=ctx.author.avatar_url)
+            embed.description = (
+                f"Congratulations, {ctx.author.mention}! "
+                f"You have advanced to **level {user.level}** "
+                f"and got a bonus of **{bonus} points**."
+            )
 
-                level_up_message = await ctx.send(embed=embed)
-                await level_up_message.delete(delay=30)
+            level_up_message = await ctx.send(embed=embed)
+            await level_up_message.delete(delay=30)
 
 
 def setup(bot):
