@@ -29,7 +29,7 @@ class User(Model):
     exp = IntField(default=0)
     level = IntField(default=0)
     balance = IntField(default=0)
-    daily_streak = DatetimeField(null=True)
+    daily_streak = IntField(default=0)
     last_daily = DatetimeField(null=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
@@ -46,7 +46,7 @@ class User(Model):
 
 class Mute(Model):
     id = IntField(pk=True)
-    moderator = IntField()
+    moderator = BigIntField()
     reason = TextField(null=True)
     start = DatetimeField(auto_now_add=True)
     end = DatetimeField()
@@ -64,7 +64,7 @@ class Mute(Model):
 
 class Warn(Model):
     id = IntField(pk=True)
-    moderator = IntField()
+    moderator = BigIntField()
     reason = TextField(null=True)
     when = DatetimeField(auto_now_add=True)
     user: ForeignKeyRelation[User] = ForeignKeyField(
