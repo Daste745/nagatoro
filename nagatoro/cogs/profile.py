@@ -55,10 +55,14 @@ class Profile(Cog):
             ("Balance", f"{user.balance} coins"),
         )
 
-        if mutes := await Mute.filter(guild__id=ctx.guild.id, user__id=member.id):
-            embed.add_field(name="Mutes", value=str(len(mutes)))
-        if warns := await Warn.filter(guild__id=ctx.guild.id, user__id=member.id):
-            embed.add_field(name="Warns", value=str(len(warns)))
+        if mutes := await Mute.filter(
+            guild__id=ctx.guild.id, user__id=member.id
+        ).count():
+            embed.add_field(name="Mutes", value=str(mutes))
+        if warns := await Warn.filter(
+            guild__id=ctx.guild.id, user__id=member.id
+        ).count():
+            embed.add_field(name="Warns", value=str(warns))
 
         await ctx.send(embed=embed)
 
@@ -190,7 +194,6 @@ class Profile(Cog):
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
-        # timedelta(hours=23) >
         if (
             user.last_daily
             and user.last_daily + timedelta(hours=23) > datetime.utcnow()
