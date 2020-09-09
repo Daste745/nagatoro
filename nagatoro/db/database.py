@@ -23,6 +23,12 @@ class Guild(Model):
     class Meta:
         table = "guilds"
 
+    def __str__(self):
+        return (
+            f"<Guild id:{self.id} prefix:{self.prefix} "
+            f"modrole:{self.moderator_role} muterole:{self.mute_role}>"
+        )
+
 
 class User(Model):
     id = BigIntField(pk=True)
@@ -61,6 +67,13 @@ class Mute(Model):
     class Meta:
         table = "mutes"
 
+    def __str__(self):
+        return (
+            f"<Mute id:{self.id} moderator:{self.moderator} "
+            f"reason:'{self.reason}' start:{self.start} end:{self.end} "
+            f"active:{self.active} user:{self.user.id} guild:{self.guild.id}>"
+        )
+
 
 class Warn(Model):
     id = IntField(pk=True)
@@ -76,6 +89,13 @@ class Warn(Model):
 
     class Meta:
         table = "warns"
+
+    def __str__(self):
+        return (
+            f"<Warn id:{self.id} moderator:{self.moderator} "
+            f"reason:'{self.reason}' datetime:{self.when} "
+            f"user:{self.user.id} guild:{self.guild.id}>"
+        )
 
 
 async def init_database():
