@@ -1,6 +1,4 @@
 aiohttp
 discord.py
-PyMySQL
-pony
 tortoise-orm
 aiomysql
