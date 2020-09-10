@@ -88,10 +88,16 @@ class Social(Cog):
         user, _ = await User.get_or_create(id=member.id)
         await ctx.send(f"{member.name}'s level: **{user.level}**")
 
-    @group(name="ranking", aliases=["top"], invoke_without_command=True)
+    @group(name="ranking", aliases=["top", "baltop"], invoke_without_command=True)
     @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking(self, ctx: Context):
-        """User ranking"""
+        """User ranking
+
+        Use 'baltop' for quicker access to the balance ranking
+        """
+
+        if ctx.invoked_with == "baltop":
+            return await self.ranking_balance.__call__(ctx)
 
         await self.ranking_level.__call__(ctx)
 
