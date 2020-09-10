@@ -1,6 +1,3 @@
-from time import time
-from datetime import timedelta
-
 from discord import Color
 from discord.ext.commands import (
     Cog,
@@ -33,29 +30,6 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
             f"Reloaded **{len(ctx.bot.commands)}** commands "
             f"from **{len(ctx.bot.cogs)}** modules."
         )
-
-    @command(name="ping")
-    async def ping(self, ctx: Context):
-        """Shows the bot's ping to the web socket"""
-
-        embed = Embed(ctx, title="Ping")
-        ping = round(self.bot.latency * 1000)
-
-        embed.description = f":ping_pong:‎‎{ping}ms"
-        await ctx.send(embed=embed)
-        return ping
-
-    @command(name="uptime")
-    async def uptime(self, ctx: Context):
-        """Time from the start of the bot"""
-
-        current_timestamp = time()
-        timestamp_difference = round(current_timestamp - self.bot.start_timestamp)
-        uptime = timedelta(seconds=timestamp_difference)
-        embed = Embed(ctx, title="Uptime", description=str(uptime))
-
-        await ctx.send(embed=embed)
-        return uptime
 
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
