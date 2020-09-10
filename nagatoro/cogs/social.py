@@ -20,8 +20,8 @@ from nagatoro.utils import aenumerate
 from nagatoro.db import User, Mute, Warn
 
 
-class Profile(Cog):
-    """Profile commands"""
+class Social(Cog):
+    """Social commands"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -279,4 +279,4 @@ class Profile(Cog):
 
 
 def setup(bot):
-    bot.add_cog(Profile(bot))
+    bot.add_cog(Social(bot))
