@@ -88,10 +88,16 @@ class Social(Cog):
         user, _ = await User.get_or_create(id=member.id)
         await ctx.send(f"{member.name}'s level: **{user.level}**")
 
-    @group(name="ranking", aliases=["top"], invoke_without_command=True)
+    @group(name="ranking", aliases=["top", "baltop"], invoke_without_command=True)
     @cooldown(rate=2, per=30, type=BucketType.guild)
     async def ranking(self, ctx: Context):
-        """User ranking"""
+        """User ranking
+
+        Use 'baltop' for quicker access to the balance ranking
+        """
+
+        if ctx.invoked_with == "baltop":
+            return await self.ranking_balance.__call__(ctx)
 
         await self.ranking_level.__call__(ctx)
 
@@ -104,7 +110,8 @@ class Social(Cog):
 
         await ctx.trigger_typing()
         async for pos, i in aenumerate(User.all().order_by("-exp").limit(10), start=1):
-            embed.description += f"{pos}. **{i.id}**: {i.level} ({i.exp} exp)\n"
+            user = await self.bot.fetch_user(i.id)
+            embed.description += f"{pos}. **{user.name}**: {i.level} ({i.exp} exp)\n"
 
         await ctx.send(embed=embed)
 
@@ -119,7 +126,8 @@ class Social(Cog):
         async for pos, i in aenumerate(
             User.all().order_by("-balance").limit(10), start=1
         ):
-            embed.description += f"{pos}. **{i.id}**: {i.balance} coins\n"
+            user = await self.bot.fetch_user(i.id)
+            embed.description += f"{pos}. **{user.name}**: {i.balance} coins\n"
 
         await ctx.send(embed=embed)
 
