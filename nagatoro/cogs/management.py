@@ -2,7 +2,6 @@ from time import time
 from datetime import timedelta
 
 from discord import Color
-from discord.ext.tasks import loop
 from discord.ext.commands import (
     Cog,
     Context,
@@ -12,10 +11,8 @@ from discord.ext.commands import (
     cooldown,
     BucketType,
 )
-from pony.orm import db_session
 
 from nagatoro.objects import Embed
-from nagatoro.utils.db import get_guild
 from nagatoro.checks import is_moderator
 from nagatoro.db import Guild
 
@@ -25,10 +22,6 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
     def __init__(self, bot):
         self.bot = bot
-        self.wake_database.start()
-
-    def cog_unload(self):
-        self.wake_database.cancel()
 
     @command(name="reload", aliases=["r"], hidden=True)
     @is_owner()
@@ -109,15 +102,6 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         await guild.save()
 
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
-
-    # This is just a hack to keep the database busy
-    # and to not let it block the bot thread after ~20 minutes of inactivity
-    # TODO: Use proper async ORM.
-    @loop(minutes=10)
-    async def wake_database(self):
-        with db_session:
-            temp = await get_guild(123)
-            temp.delete()
 
 
 def setup(bot):
