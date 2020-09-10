@@ -98,11 +98,10 @@ class Warn(Model):
         )
 
 
-async def init_database():
+async def init_database(db_url: str):
     # logging.info("Initializing database connection...")
     await Tortoise.init(
-        db_url="mysql://nagatoro:nagatoro@localhost/nagatoro",
-        modules={"models": [__name__]},
+        db_url=db_url, modules={"models": [__name__]},
     )
     await Tortoise.generate_schemas()
     # logging.info("Successfully connected to database")
