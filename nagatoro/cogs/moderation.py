@@ -14,20 +14,10 @@ from discord.ext.commands import (
     BucketType,
 )
 
-import nagatoro.objects.database as db
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
 from nagatoro.converters import Member, Timedelta
-from nagatoro.utils.db import (
-    get_warns,
-    make_warn,
-    get_guild,
-    get_mutes,
-    make_mute,
-    get_mod_role,
-    get_mute_role,
-    is_muted,
-)
+from nagatoro.db import Guild, User, Mute, Warn
 
 
 class Moderation(Cog):
@@ -41,46 +31,49 @@ class Moderation(Cog):
         self.check_mutes.cancel()
 
     @group(name="modrole", invoke_without_command=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
     async def mod_role(self, ctx: Context):
         """Check the moderator role
 
         This role permits users who have it to perform moderator actions, like muting or warning.
         """
 
-        if not (mod_role := await get_mod_role(self.bot, ctx.guild.id)):
-            return await ctx.send(
-                "This guild doesn't have mod role set or it was deleted."
-            )
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        moderator_role = ctx.guild.get_role(guild.moderator_role)
+
+        if not guild.moderator_role:
+            return await ctx.send("The moderator role is not set on this server.")
+        if not moderator_role:
+            return await ctx.send("The moderator role on this server doesn't exist.")
 
         return await ctx.send(
-            f"{ctx.guild.name}'s moderator role: **{mod_role.name}** (id: `{mod_role.id}`)"
+            f"{ctx.guild.name}'s moderator role: **{moderator_role.name}** (id: `{moderator_role.id}`)"
         )
 
     @mod_role.command(name="set")
     @has_permissions(manage_roles=True)
-    @cooldown(rate=1, per=30, type=BucketType.guild)
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def mod_role_set(self, ctx: Context, role: Role):
         """Set this server's moderator role"""
 
-        with db_session:
-            guild = await get_guild(ctx.guild.id)
-            guild.mod_role = role.id
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        guild.moderator_role = role.id
+        await guild.save()
 
         await ctx.send(f"Set the mod role to **{role.name}**.")
 
-    @mod_role.command(name="delete", aliases=["del", "remove"])
+    @mod_role.command(name="delete", aliases=["del", "remove", "rm"])
     @has_permissions(manage_roles=True)
-    @cooldown(rate=1, per=30, type=BucketType.guild)
+    @cooldown(rate=2, per=30, type=BucketType.guild)
     async def mod_role_delete(self, ctx: Context):
         """Remove this server's mod role
 
-        It is recommended to use use this before deleting the role.
         This command DOES NOT delete the role, just removes the mod role setting for this server.
         """
 
-        with db_session:
-            guild = await get_guild(ctx.guild.id)
-            guild.mod_role = None
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        guild.moderator_role = None
+        await guild.save()
 
         await ctx.send(f"Removed the mod role from {ctx.guild.name}.")
 
@@ -91,10 +84,13 @@ class Moderation(Cog):
         This is the role given to muted users, it stays with them until the mute ends or they are unmuted manually.
         """
 
-        if not (mute_role := await get_mute_role(self.bot, ctx.guild.id)):
-            return await ctx.send(
-                "This guild doesn't have mute role set or it was deleted."
-            )
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        mute_role = ctx.guild.get_role(guild.mute_role)
+
+        if not guild.mute_role:
+            return await ctx.send("The mute role is not set on this server.")
+        if not mute_role:
+            return await ctx.send("The mute role on this server doesn't exist.")
 
         return await ctx.send(
             f"{ctx.guild.name}'s mute role: **{mute_role.name}** (id: `{mute_role.id}`)"
@@ -106,25 +102,24 @@ class Moderation(Cog):
     async def mute_role_set(self, ctx: Context, role: Role):
         """Set this server's mute role"""
 
-        with db_session:
-            guild = await get_guild(ctx.guild.id)
-            guild.mute_role = role.id
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        guild.mute_role = role.id
+        await guild.save()
 
         await ctx.send(f"Set the mute role to **{role.name}**.")
 
-    @mute_role.command(name="delete", aliases=["del", "remove"])
+    @mute_role.command(name="delete", aliases=["del", "remove", "rm"])
     @has_permissions(manage_roles=True)
     @cooldown(rate=1, per=30, type=BucketType.guild)
     async def mute_role_delete(self, ctx: Context):
         """Remove this server's mute role
 
-        It is recommended to use use this before deleting the role.
         This command DOES NOT delete the role, just removes the mute role setting for this server.
         """
 
-        with db_session:
-            guild = await get_guild(ctx.guild.id)
-            guild.mute_role = None
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        guild.mute_role = None
+        await guild.save()
 
         await ctx.send(f"Removed the mute role from {ctx.guild.name}.")
 
@@ -139,11 +134,16 @@ class Moderation(Cog):
         This command does not delete their messages.
         """
 
-        await ctx.guild.ban(user=user, reason=reason, delete_message_days=0)
+        await ctx.guild.ban(
+            user=user,
+            reason=f"Moderator: {ctx.author}, reason: {reason}",
+            delete_message_days=0,
+        )
 
-        ban_message = f"Banned {user}"
         if reason:
-            ban_message += f", reason: *{reason}*."
+            ban_message = f"Banned {user}, reason: *{reason}*."
+        else:
+            ban_message = f"Banned {user}"
 
         await ctx.send(ban_message)
 
@@ -171,11 +171,13 @@ class Moderation(Cog):
         """Warn someone
 
         Warns do not give any punishments apart fron an entry in the warn list.
-        Note: Some emojis get corrupted in the process of saving, so try not to use them until this issue is fixed.
         """
 
-        # FIXME: Database does not save emoji properly
-        warn = await make_warn(ctx, member.id, reason)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        user, _ = await User.get_or_create(id=member.id)
+        warn = await Warn.create(
+            moderator=ctx.author.id, guild=guild, user=user, reason=reason
+        )
 
         embed = Embed(ctx, title=f"Warn [{warn.id}]", color=member.color)
         embed.description = f"Warned {member.mention}, reason: *{reason}*"
@@ -184,12 +186,13 @@ class Moderation(Cog):
 
         try:
             await member.send(
-                f"You have been warned in **{ctx.guild.name}**, " f"reason: *{reason}*"
+                f"You have been warned in **{ctx.guild.name}**, "
+                f"reason: *{warn.reason}*"
             )
-        except (Forbidden, AttributeError):
+        except (Forbidden, HTTPException, AttributeError):
             pass
 
-    @warn.command(name="delete", aliases=["del", "remove"])
+    @warn.command(name="delete", aliases=["del", "remove", "rm"])
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
     async def warn_delete(self, ctx: Context, id: int):
@@ -198,19 +201,19 @@ class Moderation(Cog):
         Use the warn id given when muting or viewing someone's warns (the number in square brackets, e.g. [32]).
         """
 
-        with db_session:
-            if not (warn := db.Warn[id]):
-                return await ctx.send(f"A Warn with ID **{id}** doesn't exist.")
+        if not (warn := await Warn.get_or_none(id=id)):
+            return await ctx.send(f"A Warn with ID **{id}** doesn't exist.")
 
-            if warn.guild.id != ctx.guild.id:
-                return await ctx.send(
-                    f"The warn with id `{id}` is from another server. "
-                    f"You can't change or delete it."
-                )
+        await warn.fetch_related("guild")
+        if warn.guild.id != ctx.guild.id:
+            return await ctx.send(
+                f"The warn with id `{id}` is from another server. "
+                f"You can't change or delete it."
+            )
 
-            warn.delete()
+        await warn.delete()
 
-            await ctx.send(f"Removed warn `{id}` from the database.")
+        await ctx.send(f"Removed warn `{id}` from the database.")
 
     @command(name="warns")
     @cooldown(rate=3, per=15, type=BucketType.guild)
@@ -226,19 +229,22 @@ class Moderation(Cog):
         embed = Embed(
             ctx, title=f"{member.name}'s warns", description="", color=member.color
         )
+
         await ctx.trigger_typing()
+        warns = Warn.filter(user__id=member.id, guild__id=ctx.guild.id)
 
-        with db_session:
-            if not (warns := await get_warns(member.id, ctx.guild.id)):
-                return await ctx.send(
-                    f"{member.name} doesn't have any warns on this server."
-                )
+        if not await warns.count():
+            return await ctx.send(
+                f"{member.name} doesn't have any warns on this server."
+            )
 
-            for i in reversed(warns[:15]):
-                moderator = self.bot.get_user(i.given_by)
-                embed.description += (
-                    f"`{i.id}` **{moderator}:** {i.when} - *{i.reason}*\n"
-                )
+        async for i in warns:
+            moderator = ctx.bot.get_user(i.moderator)
+            # TODO: Format time and use timezones (settings)
+            embed.description += (
+                f"`{i.id}` {str(i.when.time())[:-10]} "
+                f"{i.when.date()} **{moderator}**: *{i.reason}*\n"
+            )
 
         await ctx.send(embed=embed)
 
@@ -252,20 +258,31 @@ class Moderation(Cog):
         """Mute someone
 
         Muting someone gives them the mute role specified by the muterole command and removes the role after the specified time has passed.
-        Note: Some emojis get corrupted in the process of saving, so try not to use them until this issue is fixed.
-        Note: Mutes are checked every 15 seconds,
-        so muting someone for 5 seconds would probably turn
-        into a 15 second mute.
+        Note: Mutes are checked every 10 seconds, so times are not perfect.
         """
 
-        if await is_muted(member.id, ctx.guild.id):
-            # TODO: Mute time extension
-            return await ctx.send(f"{member.name} is already muted.")
+        mute = await Mute.filter(
+            user__id=member.id, guild__id=ctx.guild.id, active=True
+        ).first()
+        if mute:
+            mute.end += time
+            await mute.save()
+            return await ctx.send(f"Extended {member.name}'s mute by {time}.")
+            # NOTE: Extensions don't add a mute entry, they just make the
+            # active mute longer.
+            # return await ctx.send(f"{member.name} is already muted.")
 
-        # FIXME: Database does not recognise emoji
-        mute = await make_mute(ctx, member.id, time, reason)
+        user, _ = await User.get_or_create(id=member.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        mute = await Mute.create(
+            moderator=ctx.author.id,
+            user=user,
+            guild=guild,
+            reason=reason,
+            end=datetime.utcnow() + time,
+        )
 
-        mute_role = await get_mute_role(self.bot, ctx.guild.id)
+        mute_role = ctx.guild.get_role(guild.mute_role)
         await member.add_roles(
             mute_role, reason=f"Muted by {ctx.author} for {time}, reason: {reason}"
         )
@@ -284,7 +301,7 @@ class Moderation(Cog):
         except (Forbidden, HTTPException, AttributeError):
             pass
 
-    @mute.command(name="delete", aliases=["del", "remove"])
+    @mute.command(name="delete", aliases=["del", "remove", "rm"])
     @bot_has_permissions(manage_roles=True)
     @is_moderator()
     @cooldown(rate=4, per=10, type=BucketType.user)
@@ -294,25 +311,26 @@ class Moderation(Cog):
         Use the mute id given when muting or viewing someone's mutes (the number in square brackets, e.g. [64]).
         """
 
-        with db_session:
-            if not (mute := db.Mute[id]):
-                return await ctx.send(f"A Mute with ID **{id}** doesn't exist.")
+        if not (mute := await Mute.get_or_none(id=id)):
+            return await ctx.send(f"A Mute with ID **{id}** doesn't exist.")
 
-            if mute.guild.id != ctx.guild.id:
-                return await ctx.send(
-                    f"The mute with id `{id}` is from another server. "
-                    f"You can't change or delete it."
-                )
+        await mute.fetch_related("guild")
+        if mute.guild.id != ctx.guild.id:
+            return await ctx.send(
+                f"The mute with id `{id}` is from another server. "
+                f"You can't change or delete it."
+            )
 
-            member = ctx.guild.get_member(mute.user.id)
-
-            if member in ctx.guild.members:
+        await mute.fetch_related("user")
+        if (member := ctx.guild.get_member(mute.user.id)) in ctx.guild.members:
+            if mute.guild.mute_role:
+                # Don't try to remove the mute role if it was unset in settings
                 mute_role = ctx.guild.get_role(mute.guild.mute_role)
                 await member.remove_roles(mute_role)
 
-            mute.delete()
+        await mute.delete()
 
-            await ctx.send(f"Removed mute `{id}` from the database.")
+        await ctx.send(f"Removed mute `{id}` from the database.")
 
     @command(name="unmute")
     @bot_has_permissions(manage_roles=True)
@@ -324,18 +342,21 @@ class Moderation(Cog):
         Manually end someone's mute period.
         """
 
-        with db_session:
-            mute = await get_mutes(
-                active_only=True, user_id=member.id, guild_id=ctx.guild.id
-            )
-            if not mute:
-                return await ctx.send(f"{member.name} is not muted.")
+        mute = await Mute.filter(
+            user__id=member.id, guild__id=ctx.guild.id, active=True
+        ).first()
+        if not mute:
+            return await ctx.send(f"{member.name} is not muted.")
 
+        await mute.fetch_related("guild")
+        if mute.guild.mute_role:
             mute_role = ctx.guild.get_role(mute.guild.mute_role)
             await member.remove_roles(mute_role)
-            mute.active = False
 
-            await ctx.send(f"Unmuted {member.name}")
+        mute.active = False
+        await mute.save()
+
+        await ctx.send(f"Unmuted **{member.name}**.")
 
     @group(name="mutes", invoke_without_command=True)
     @cooldown(rate=3, per=15, type=BucketType.guild)
@@ -353,21 +374,23 @@ class Moderation(Cog):
         )
         await ctx.trigger_typing()
 
-        with db_session:
-            if not (mutes := await get_mutes(ctx.guild.id, member.id)):
-                return await ctx.send(
-                    f"{member.name} doesn't have any mutes on this server."
-                )
+        mutes = Mute.filter(user__id=member.id, guild__id=ctx.guild.id)
+        if not await mutes.count():
+            return await ctx.send(
+                f"{member.name} doesn't have any mutes on this server."
+            )
 
-            for i in reversed(mutes[:15]):
-                moderator = await self.bot.fetch_user(i.given_by)
-                embed.description += (
-                    f"`{i.id}` **{moderator}**: {i.start} - "
-                    f"{i.end - i.start} - *{i.reason or 'No reason'}* "
-                )
-                if i.active:
-                    embed.description += "🔴"
-                embed.description += "\n"
+        async for i in mutes:
+            moderator = await self.bot.fetch_user(i.moderator)
+            embed.description += (
+                f"`{i.id}` {str(i.start.time())[:-10]} "
+                f"{i.start.date()} ({str(i.end - i.start)[:-7]}) "
+                f"**{moderator}**: *{i.reason or 'No reason'}* "
+            )
+            # TODO: Format time and use timezones
+            if i.active:
+                embed.description += "🔴"
+            embed.description += "\n"
 
         await ctx.send(embed=embed)
 
@@ -379,49 +402,47 @@ class Moderation(Cog):
         embed = Embed(ctx, title="Active mutes")
         await ctx.trigger_typing()
 
-        with db_session:
-            if not (mutes := await get_mutes(ctx.guild.id, active_only=True)):
-                return await ctx.send(f"There are no active mutes in {ctx.guild.name}.")
+        mutes = Mute.filter(guild__id=ctx.guild.id, active=True)
+        if not await mutes.count():
+            return await ctx.send(f"There are no active mutes in **{ctx.guild.name}**.")
 
-            # TODO: Split active mutes into different embeds when more than 10
-            #       and add scrolling (◀️ ▶️)
-            for i in reversed(mutes[:10]):
-                moderator = await self.bot.fetch_user(i.given_by)
-                user = await self.bot.fetch_user(i.user.id)
-                embed.add_field(
-                    name=f"{user} [{i.id}]",
-                    value=f"**Given at**: {i.start}\n"
-                    f"**Duration**: {i.end - i.start}\n"
-                    f"**Moderator**: {moderator.mention}\n"
-                    f"**Reason**: *{i.reason or 'No reason'}*",
-                )
+        # TODO: Split active mutes into different embeds when more than 10
+        #       and add scrolling (◀️ ▶️)
+        async for i in mutes.prefetch_related("user"):
+            moderator = ctx.guild.get_member(i.moderator)
+            user = ctx.guild.get_member(i.user.id)
+
+            description = (
+                f"**Given at**: {str(i.start.time())[:-10]} {str(i.start.date())[5:]}\n"
+                f"**Duration**: {str(i.end - i.start)[:-7]}\n"
+                f"**Moderator**: {moderator.mention}"
+            )
+            if i.reason:
+                description += f"\n**Reason**: *{i.reason}*"
+
+            embed.add_field(name=f"{user} [{i.id}]", value=description, inline=False)
 
         await ctx.send(embed=embed)
 
     @loop(seconds=10)
     async def check_mutes(self):
-        with db_session:
-            mutes = await get_mutes(active_only=True)
+        async for i in Mute.filter(active=True).prefetch_related("guild", "user"):
+            print(i)
+            if i.end >= datetime.utcnow():
+                continue
 
-            if not mutes:
-                return
+            guild = self.bot.get_guild(i.guild.id)
+            mute_role = guild.get_role(i.guild.mute_role)
+            member = guild.get_member(i.user.id)
 
-            for i in mutes:
-                if i.end >= datetime.now():
-                    continue
+            if member in guild.members:
+                try:
+                    await member.remove_roles(mute_role, reason="Mute ended.")
+                except Forbidden:
+                    pass
 
-                # Mute ended, remove role and notify in DM's
-
-                guild = self.bot.get_guild(i.guild.id)
-                mute_role = guild.get_role(i.guild.mute_role)
-                member = guild.get_member(i.user.id)
-
-                if member in guild.members:
-                    try:
-                        await member.remove_roles(mute_role, reason="Mute ended.")
-                    except Forbidden:
-                        pass
                 i.active = False
+                await i.save()
 
                 try:
                     await member.send(f"Your mute in {guild.name} has ended.")
@@ -431,16 +452,17 @@ class Moderation(Cog):
     @Cog.listener()
     async def on_member_join(self, member: Member):
         with db_session:
-            mute = await get_mutes(
-                guild_id=member.guild.id, user_id=member.id, active_only=True
+            mute = await Mute.get_or_none(
+                user__id=member.id, guild__id=member.guild.id, active=True
             )
 
             if not mute:
                 return
 
             # User joined the guild, has an active mute
-            # and doesn't have the mute role, add it
+            # and doesn't have the mute role, so add it
 
+            await mute.fetch_related("guild")
             guild = self.bot.get_guild(member.guild.id)
             mute_role = guild.get_role(mute.guild.mute_role)
 
