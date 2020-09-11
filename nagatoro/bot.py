@@ -68,7 +68,7 @@ class Bot(commands.Bot):
             cerrors.BadUnionArgument,
         ):
             # Send the help message
-            return await ctx.send_help(ctx.invoked_with)
+            return await ctx.send_help(ctx.command)
         except (cerrors.NotOwner, cerrors.MissingPermissions):
             title = "Insufficient permissions"
         except cerrors.BotMissingPermissions:
