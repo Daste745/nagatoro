@@ -44,9 +44,15 @@ class Bot(commands.Bot):
                 pass
 
     async def on_ready(self):
-        logging.info(f"Bot started as {self.user}.")
+        logging.info(f"Bot started as {self.user} with prefix {self.config.prefix}")
         logging.info(f"Loaded cogs: {', '.join(self.cogs)}")
         logging.info(f"Loaded commands: {', '.join([i.name for i in self.commands])}")
+
+    async def on_message(self, message):
+        if not message.guild:
+            return
+
+        await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):
         title = "Error"
