@@ -427,7 +427,6 @@ class Moderation(Cog):
     @loop(seconds=10)
     async def check_mutes(self):
         async for i in Mute.filter(active=True).prefetch_related("guild", "user"):
-            print(i)
             if i.end >= datetime.utcnow():
                 continue
 
@@ -438,7 +437,7 @@ class Moderation(Cog):
             if member in guild.members:
                 try:
                     await member.remove_roles(mute_role, reason="Mute ended.")
-                except Forbidden:
+                except (Forbidden, HTTPException):
                     pass
 
                 i.active = False
