@@ -32,11 +32,13 @@ Thanks to AniList's API, you can see info about you favorite anime, manga, studi
 ![Anime](https://cdn.discordapp.com/attachments/483273472555089930/714651179405279292/unknown.png) | ![Studio](https://cdn.discordapp.com/attachments/483273472555089930/714651416211226704/unknown.png)
 :-:|:-:
 
-# Running your own fork
-You need to make a config file, that will be located in `data/config.json`.
-Look into `nagatoro/objects/config.py` to see what is needed to be put in there.
-You can use different types of databases, but they need to support the BIGINT
-type. Modify the config.json/config.py/database.py file according to pony.orm documentation
-if you wish to use different database.
-Install the requirements provided in requirements.txt via pip, and make sure you
-are running at least python version 3.8.
+# Running Nagatoro
+- Make sure you have python version 3.8 or higher installed. You can check by running `python --version` or `python3 --version`.
+- In the `data` directory, rename `config.example.json` to `config.json`.
+- Create a Discord application and input its token into the config.
+- Get a Tenor API key and add it to the config.
+- Put credentials to a MySQL database in the config.
+- (optional) Set `"testing": true` if you have multiple bot instances (production and testing) running at the same time. `"testing": true` disables counting experience, checking custom prefixes and setting the status. Ideally, you should have a separate database for your testing environment, but I used to have a single db for some time. This option will be deprecated in the future.
+- (optional) Create a virtual environment: `python3.8 -m venv`, which you will need to activate every time before running the bot or installing dependencies: `source venv/bin/activate`.
+- Install all dependencies: `python3.8 -m pip install -r requirements.txt --upgrade --user`
+- Run the bot: `python3.8 nagatoro.py`
