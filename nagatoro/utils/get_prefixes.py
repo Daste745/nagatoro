@@ -6,7 +6,7 @@ from nagatoro.db import Guild
 async def get_prefixes(bot, message):
     prefixes = [bot.config.prefix]
 
-    if not bot.config.testing and not message.guild:
+    if not bot.config.testing and message.guild:
         guild, _ = await Guild.get_or_create(id=message.guild.id)
         if guild.prefix:
             prefixes.append(guild.prefix)
