@@ -15,11 +15,11 @@ logger.setLevel(logging.INFO)
 # formatter = logging.Formatter(
 #     "[%(levelname)s] %(asctime)s - %(name)s: %(message)s")
 
-# TODO: Use environmental variables instead of a config file
-config = Config("data/config.json")
-
-db_url = f"mysql://{config.db_user}:{config.db_passwd}@{config.db_url}/{config.db_name}"
-bot = Bot(config)
+bot = Bot(Config())
+db_url = (
+    f"mysql://{bot.config.db_user}:{bot.config.db_passwd}"
+    f"@{bot.config.db_url}/{bot.config.db_name}"
+)
 
 
 async def run():

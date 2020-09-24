@@ -1,17 +1,18 @@
-import json
+from os import getenv
+
+from dotenv import load_dotenv
 
 
 class Config:
-    def __init__(self, file_path: str):
-        with open(file_path) as f:
-            data = json.load(f)
+    def __init__(self):
+        load_dotenv()
 
-        self.prefix: str = data.get("prefix", None)
-        self.token: str = data.get("token", None)
-        self.status: str = data.get("status", None)
-        self.status_type: int = data.get("status_type", 0)
-        self.db_url: str = data.get("db_url", None)
-        self.db_user: str = data.get("db_user", None)
-        self.db_passwd: str = data.get("db_passwd", None)
-        self.db_name: str = data.get("db_name", None)
-        self.tenor_key: str = data.get("tenor_key", None)
+        self.prefix: str = getenv("PREFIX", None)
+        self.token: str = getenv("TOKEN", None)
+        self.status: str = getenv("STATUS", None)
+        self.status_type: int = int(getenv("STATUS_TYPE", 0))
+        self.db_url: str = getenv("DB_URL", None)
+        self.db_user: str = getenv("DB_USER", None)
+        self.db_passwd: str = getenv("DB_PASSWD", None)
+        self.db_name: str = getenv("DB_NAME", None)
+        self.tenor_key: str = getenv("TENOR_KEY", None)

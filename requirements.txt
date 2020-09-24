@@ -2,3 +2,4 @@ aiohttp
 discord.py
 tortoise-orm
 aiomysql
+python-dotenv
