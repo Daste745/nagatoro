@@ -75,4 +75,7 @@ class Action(Cog):
 
 
 def setup(bot):
+    if not bot.config.tenor_key:
+        return
+
     bot.add_cog(Action(bot))
