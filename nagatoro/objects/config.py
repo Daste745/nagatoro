@@ -6,7 +6,6 @@ class Config:
         with open(file_path) as f:
             data = json.load(f)
 
-        self.testing: bool = data.get("testing", False)
         self.prefix: str = data.get("prefix", None)
         self.token: str = data.get("token", None)
         self.status: str = data.get("status", None)

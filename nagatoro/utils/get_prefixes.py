@@ -9,7 +9,7 @@ async def get_prefixes(bot, message):
     if prefix := bot.config.prefix:
         prefixes.append(prefix)
 
-    if not bot.config.testing and message.guild:
+    if message.guild:
         guild, _ = await Guild.get_or_create(id=message.guild.id)
         if guild.prefix:
             prefixes.append(guild.prefix)
