@@ -249,8 +249,7 @@ class Social(Cog):
     @Cog.listener()
     async def on_message(self, message: Message):
         if (
-            self.bot.config.testing
-            or message.author.bot
+            message.author.bot
             or len(message.content) <= 5
             or "spam" in message.channel.name.lower()
         ):

@@ -2,7 +2,7 @@ import logging
 
 import asyncio
 from tortoise import Tortoise
-from discord import Activity, ActivityType
+from discord import Activity
 
 from nagatoro import Bot
 from nagatoro.objects import Config
@@ -15,21 +15,18 @@ logger.setLevel(logging.INFO)
 # formatter = logging.Formatter(
 #     "[%(levelname)s] %(asctime)s - %(name)s: %(message)s")
 
-with open("data/config.json") as file:
-    # TODO: Use environmental variables instead of a config file
-    config = Config.from_file(file)
-
-db_url = f"mysql://{config.db_user}:{config.db_passwd}@{config.db_url}/{config.db_name}"
-bot = Bot(config)
+bot = Bot(Config())
+db_url = (
+    f"mysql://{bot.config.db_user}:{bot.config.db_passwd}"
+    f"@{bot.config.db_url}/{bot.config.db_name}"
+)
 
 
 async def run():
     await init_database(db_url)
 
-    if not bot.config.testing:
-        bot.activity = Activity(
-            name=f"{bot.config.prefix}help", type=ActivityType.watching
-        )
+    if status := bot.config.status:
+        bot.activity = Activity(name=status, type=bot.config.status_type)
     bot.load_cogs()
     await bot.login(token=bot.config.token)
     await bot.connect()

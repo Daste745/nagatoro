@@ -1,28 +1,18 @@
-import json
-from typing import IO
+from os import getenv
+
+from dotenv import load_dotenv
 
 
 class Config:
-    def __init__(self, testing: bool, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str, tenor_key: str):
-        self.testing = testing
-        self.prefix = prefix
-        self.token = token
-        self.db_url = db_url
-        self.db_user = db_user
-        self.db_passwd = db_passwd
-        self.db_name = db_name
-        self.tenor_key = tenor_key
+    def __init__(self):
+        load_dotenv()
 
-    @classmethod
-    def from_file(cls, file: IO):
-        data = json.load(file)
-        return Config(
-            testing=data["testing"] if data["testing"] else False,
-            prefix=data["prefix"],
-            token=data["token"],
-            db_url=data["db_url"],
-            db_user=data["db_user"],
-            db_passwd=data["db_passwd"],
-            db_name=data["db_name"],
-            tenor_key=data["tenor_key"]
-        )
+        self.prefix: str = getenv("PREFIX", None)
+        self.token: str = getenv("TOKEN", None)
+        self.status: str = getenv("STATUS", None)
+        self.status_type: int = int(getenv("STATUS_TYPE", 0))
+        self.db_url: str = getenv("DB_URL", None)
+        self.db_user: str = getenv("DB_USER", None)
+        self.db_passwd: str = getenv("DB_PASSWD", None)
+        self.db_name: str = getenv("DB_NAME", None)
+        self.tenor_key: str = getenv("TENOR_KEY", None)
