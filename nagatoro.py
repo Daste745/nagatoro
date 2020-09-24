@@ -15,9 +15,8 @@ logger.setLevel(logging.INFO)
 # formatter = logging.Formatter(
 #     "[%(levelname)s] %(asctime)s - %(name)s: %(message)s")
 
-with open("data/config.json") as file:
-    # TODO: Use environmental variables instead of a config file
-    config = Config.from_file(file)
+# TODO: Use environmental variables instead of a config file
+config = Config("data/config.json")
 
 db_url = f"mysql://{config.db_user}:{config.db_passwd}@{config.db_url}/{config.db_name}"
 bot = Bot(config)

@@ -1,28 +1,16 @@
 import json
-from typing import IO
 
 
 class Config:
-    def __init__(self, testing: bool, prefix: str, token: str, db_url: str, db_user: str, db_passwd: str, db_name: str, tenor_key: str):
-        self.testing = testing
-        self.prefix = prefix
-        self.token = token
-        self.db_url = db_url
-        self.db_user = db_user
-        self.db_passwd = db_passwd
-        self.db_name = db_name
-        self.tenor_key = tenor_key
+    def __init__(self, file_path: str):
+        with open(file_path) as f:
+            data = json.load(f)
 
-    @classmethod
-    def from_file(cls, file: IO):
-        data = json.load(file)
-        return Config(
-            testing=data["testing"] if data["testing"] else False,
-            prefix=data["prefix"],
-            token=data["token"],
-            db_url=data["db_url"],
-            db_user=data["db_user"],
-            db_passwd=data["db_passwd"],
-            db_name=data["db_name"],
-            tenor_key=data["tenor_key"]
-        )
+        self.testing: bool = data.get("testing", False)
+        self.prefix: str = data.get("prefix", None)
+        self.token: str = data.get("token", None)
+        self.db_url: str = data.get("db_url", None)
+        self.db_user: str = data.get("db_user", None)
+        self.db_passwd: str = data.get("db_passwd", None)
+        self.db_name: str = data.get("db_name", None)
+        self.tenor_key: str = data.get("tenor_key", None)
