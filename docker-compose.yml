@@ -1,0 +1,7 @@
+version: '3'
+services:
+    nagatoro:
+        build: .
+        volumes:
+            - ./xd:/app/data
+        
