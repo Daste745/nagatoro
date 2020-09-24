@@ -2,7 +2,7 @@ import logging
 
 import asyncio
 from tortoise import Tortoise
-from discord import Activity, ActivityType
+from discord import Activity
 
 from nagatoro import Bot
 from nagatoro.objects import Config
@@ -25,10 +25,8 @@ bot = Bot(config)
 async def run():
     await init_database(db_url)
 
-    if not bot.config.testing:
-        bot.activity = Activity(
-            name=f"{bot.config.prefix}help", type=ActivityType.watching
-        )
+    if status := bot.config.status:
+        bot.activity = Activity(name=status, type=bot.config.status_type)
     bot.load_cogs()
     await bot.login(token=bot.config.token)
     await bot.connect()
