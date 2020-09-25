@@ -6,3 +6,5 @@
 /data/config.json
 /data/nagatoro.log
 .env
+
+.vscode/

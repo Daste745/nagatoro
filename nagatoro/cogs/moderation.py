@@ -1,5 +1,4 @@
 from datetime import datetime
-from pony.orm import db_session
 from discord import Role, User
 from discord.errors import Forbidden, HTTPException
 from discord.ext.tasks import loop
