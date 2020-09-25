@@ -1,7 +1,6 @@
-version: '3'
+version: "3"
 services:
-    nagatoro:
-        build: .
-        volumes:
-            - ./xd:/app/data
-        
+  nagatoro:
+    build: .
+    volumes:
+      - ./nagatoro-data:/app/data
