@@ -1,5 +1,5 @@
 aiohttp
-discord.py
+discord.py~=1.4.1
 tortoise-orm
 aiomysql
 python-dotenv
