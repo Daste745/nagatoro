@@ -33,12 +33,39 @@ Thanks to AniList's API, you can see info about you favorite anime, manga, studi
 :-:|:-:
 
 # Running Nagatoro
-- Make sure you have python version 3.8 or higher installed. You can check by running `python --version` or `python3 --version`.
-- In the `data` directory, rename `config.example.json` to `config.json`.
-- Create a Discord application and input its token into the config.
-- Get a Tenor API key and add it to the config.
-- Put credentials to a MySQL database in the config.
-- (optional) Set `"testing": true` if you have multiple bot instances (production and testing) running at the same time. `"testing": true` disables counting experience, checking custom prefixes and setting the status. Ideally, you should have a separate database for your testing environment, but I used to have a single db for some time. This option will be deprecated in the future.
-- (optional) Create a virtual environment: `python3.8 -m venv`, which you will need to activate every time before running the bot or installing dependencies: `source venv/bin/activate`.
+### With Docker
+Make sure you have `docker` and `docker-compose` installed.
+There are two ways to run Nagatoro through docker:
+##### 1: Build the image:
+- Clone the repository
+- Rename `.env.example` to `.env` and populate it with approperiate configuration variables
+- Run `docker-compose up -d` - this should build the image and run the app
+- To check logs, use `docker-compose logs`
+
+##### 2: Use the latest public image
+- Make a folder called `nagatoro`
+- Inside the folder create a file named `docker-compose.yml` with this content:
+```
+version: "3"
+
+services:
+  nagatoro:
+    image: ghcr.io/stefankar1000/nagatoro/nagatoro:latest
+    restart: unless-stopped
+    environment:
+      - TOKEN=bot_token
+      - PREFIX=prefix
+      - ...
+```
+- Add other variables in the `environment` section, same as in .env.example
+- Start with `docker-compose up -d` and check logs with `docker-compose logs`
+- To update the image to its latest version, use `docker-compose pull` and restart with `docker-compose up -d`
+
+### Manual
+- Make sure you have python version 3.8 or higher installed. You can check by running `python3 --version`
+- Rename `.env.example` to `.env` and fill in all required configuration values
+- Create a Discord application and input its token into the config
+- (optional) Get a Tenor API key and add it to the config
+- Put credentials to a MySQL database in the config
 - Install all dependencies: `python3.8 -m pip install -r requirements.txt --upgrade --user`
 - Run the bot: `python3.8 nagatoro.py`
