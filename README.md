@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="nagatoro.png" width="128">
+    <img src="https://raw.githubusercontent.com/Stefankar1000/nagatoro/master/nagatoro.png" width="128">
     <br>
     <b>Nagatoro</b>
     <br>
