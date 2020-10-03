@@ -1,31 +1,29 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Stefankar1000/nagatoro/master/nagatoro.png" width="128">
+    <img src="https://raw.githubusercontent.com/Stefankar1000/nagatoro/master/nagatoro.png" width="128" alt="Nagatoro's avatar">
     <br>
     <b>Nagatoro</b>
     <br>
-    <i>A modular bot for various tasks</i>
-    <br>
-    <br>
-    <a href="https://discordapp.com/oauth2/authorize?client_id=672485626179747864&scope=bot&permissions=8262"><sub>Invite Nagatoro to your server<sub></a>
+    <a href="https://discordapp.com/oauth2/authorize?client_id=672485626179747864&scope=bot&permissions=8262"><sub>Invite Nagatoro to your server</sub></a>
 </p>
 
 <br>
 <br>
 
-## Global profiles and rankings
+# Features
+### Global profiles and rankings
 
-You earn experience through typing, then you level up and gain coin rewards. You can trade coins, and in the future™️, you will be able to buy profile or bot perks with them.
+Earn experience through typing and level up and gain coin rewards. 
 
 ![Profile](https://cdn.discordapp.com/attachments/483273472555089930/714646948283547729/unknown.png)
 
-## Moderation
+### Moderation
 
-As a moderator, you are able to give users warn and mute punishments.
+As a moderator, you can mute and warn members on your server.
 
 ![Muting](https://cdn.discordapp.com/attachments/483273472555089930/714647821189513226/unknown.png) | ![Warning](https://cdn.discordapp.com/attachments/483273472555089930/714648476495118416/unknown.png)
 :-:|:-:
 
-## AniList integration
+### AniList integration
 
 Thanks to AniList's API, you can see info about you favorite anime, manga, studio and much more on the fly. More features are coming soon™️.
 
