@@ -1,6 +1,9 @@
 version: "3"
+
 services:
   nagatoro:
     build: .
-    volumes:
-      - ./nagatoro-data:/app/data
+    restart: unless-stopped
+    env_file:
+      - ./.env
+
