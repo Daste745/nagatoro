@@ -1,4 +1,3 @@
-import json
 from asyncio import TimeoutError
 from discord.errors import Forbidden
 from discord.ext.commands import Cog, Context, command, cooldown, BucketType
@@ -6,6 +5,23 @@ from discord.ext.commands import Cog, Context, command, cooldown, BucketType
 from nagatoro.objects import Embed
 from nagatoro.utils import get_gif
 
+
+available_commands = [
+    "hug",
+    "pat",
+    "smile",
+    "cuddle",
+    "snuggle",
+    "kiss",
+    "pout",
+    "slap",
+    "bite",
+    "lick",
+    "tickle",
+    "poke",
+    "meow",
+    "goodnight",
+]
 
 action_description = """
         Pressing the 🔁 reaction reloads the image for a new one.
@@ -19,14 +35,13 @@ class Action(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        # Create all action commands
         commands = []
-        with open("data/action_config.json", "r") as f:
-            for name in json.load(f)["commands"]:
-                desciption = f"Send a '{name}' gif from Tenor\n{action_description}"
-                cmd = self.action.copy()
-                cmd.update(name=name, help=desciption, cog=self)
-                commands.append(cmd)
+        # Create all action commands
+        for name in available_commands:
+            desciption = f"Send a '{name}' gif from Tenor\n{action_description}"
+            cmd = self.action.copy()
+            cmd.update(name=name, help=desciption, cog=self)
+            commands.append(cmd)
 
         self.__cog_commands__ = tuple(commands)
 

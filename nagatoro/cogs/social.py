@@ -111,7 +111,7 @@ class Social(Cog):
         await ctx.trigger_typing()
         async for pos, i in aenumerate(User.all().order_by("-exp").limit(10), start=1):
             user = await self.bot.fetch_user(i.id)
-            embed.description += f"{pos}. **{user.name}**: {i.level} ({i.exp} exp)\n"
+            embed.description += f"{pos}. **{user}**: {i.level} ({i.exp} exp)\n"
 
         await ctx.send(embed=embed)
 
@@ -127,7 +127,7 @@ class Social(Cog):
             User.all().order_by("-balance").limit(10), start=1
         ):
             user = await self.bot.fetch_user(i.id)
-            embed.description += f"{pos}. **{user.name}**: {i.balance} coins\n"
+            embed.description += f"{pos}. **{user}**: {i.balance} coins\n"
 
         await ctx.send(embed=embed)
 
