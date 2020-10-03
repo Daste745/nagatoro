@@ -449,23 +449,22 @@ class Moderation(Cog):
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
-        with db_session:
-            mute = await Mute.get_or_none(
-                user__id=member.id, guild__id=member.guild.id, active=True
-            )
+        mute = await Mute.get_or_none(
+            user__id=member.id, guild__id=member.guild.id, active=True
+        )
 
-            if not mute:
-                return
+        if not mute:
+            return
 
-            # User joined the guild, has an active mute
-            # and doesn't have the mute role, so add it
+        # User joined the guild, has an active mute
+        # and doesn't have the mute role, so add it
 
-            await mute.fetch_related("guild")
-            guild = self.bot.get_guild(member.guild.id)
-            mute_role = guild.get_role(mute.guild.mute_role)
+        await mute.fetch_related("guild")
+        guild = self.bot.get_guild(member.guild.id)
+        mute_role = guild.get_role(mute.guild.mute_role)
 
-            if member in guild.members and mute_role not in member.roles:
-                await member.add_roles(mute_role)
+        if member in guild.members and mute_role not in member.roles:
+            await member.add_roles(mute_role)
 
     @check_mutes.before_loop
     async def before_check_mutes(self):
