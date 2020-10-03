@@ -6,8 +6,9 @@
     <a href="https://discordapp.com/oauth2/authorize?client_id=672485626179747864&scope=bot&permissions=8262"><sub>Invite Nagatoro to your server</sub></a>
 </p>
 
-<br>
-<br>
+![License](https://img.shields.io/github/license/stefankar1000/nagatoro?style=flat-square)
+[![Issues](https://img.shields.io/github/issues/stefankar1000/nagatoro?style=flat-square)](https://github.com/stefankar1000/nagatoro/issues)
+[![Discord](https://img.shields.io/discord/675787405889896478?logo=discord&style=flat-square)](https://discord.gg/qDzU7gd)
 
 # Features
 ### Global profiles and rankings
