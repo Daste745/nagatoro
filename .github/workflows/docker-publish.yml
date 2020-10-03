@@ -1,4 +1,4 @@
-name: Docker Publish
+name: Docker Package Publish
 on:
   push:
     tags:
@@ -8,28 +8,20 @@ env:
   IMAGE_NAME: nagatoro
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME --cache-from=ghcr.io/$github.actor/nagatoro
-
   publish:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: build
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
+      - name: Build Docker Image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME --cache-from=ghcr.io/$github.actor/nagatoro
 
-      - name: Log into registry
+      - name: Log Into Github Containter Repository
         run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Publish image
+      - name: Publish Image
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
