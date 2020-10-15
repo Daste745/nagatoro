@@ -65,11 +65,11 @@ class Bot(commands.Bot):
         except (
             cerrors.MissingRequiredArgument,
             cerrors.TooManyArguments,
-            cerrors.BadArgument,
-            cerrors.BadUnionArgument,
         ):
             # Send the help message
             return await ctx.send_help(ctx.command)
+        except (cerrors.BadArgument, cerrors.BadUnionArgument):
+            title = "Bad argument(s)"
         except (cerrors.NotOwner, cerrors.MissingPermissions):
             title = "Insufficient permissions"
         except cerrors.BotMissingPermissions:
