@@ -2,7 +2,7 @@ import os
 import logging
 from time import time
 
-from discord import Color
+from discord import Color, Intents
 from discord.ext import commands
 from discord.ext.commands import Context, errors as cerrors
 
@@ -17,6 +17,7 @@ class Bot(commands.Bot):
             help_command=HelpCommand(),
             # heartbeat_timeout=30,  # Leaving this untouched, experimentally
             case_insensitive=True,
+            intents=Intents(guilds=True, messages=True, members=True),
             **kwargs,
         )
         self.config = config
