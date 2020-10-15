@@ -131,27 +131,25 @@ class Social(Cog):
 
         await ctx.send(embed=embed)
 
-    @command(name="transfer", aliases=["give", "pay"])
+    @command(name="pay", aliases=["give", "transfer"])
     @cooldown(rate=2, per=10, type=BucketType.user)
-    async def transfer(self, ctx: Context, amount: int, *, member: Member):
+    async def pay(self, ctx: Context, amount: int, *, member: Member):
         """Give coins to someone
 
         You can't give money to yourself or any bots.
         Transfer amount should be more than 0.
         """
 
-        if member == ctx.author:
-            raise BadArgument("Can't transfer money to yourself.")
-        if member.bot:
-            raise BadArgument("Can't transfer money to bots.")
+        if member == ctx.author or member.bot:
+            return await ctx.send("You can give money to other users only.")
         if amount <= 0:
-            raise BadArgument("Transfer amount can't be zero or negative.")
+            return await ctx.send("You need to pay at least 1 coin.")
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
         if user.balance < amount:
-            raise BadArgument(
-                f"Not enough funds, you only have "
+            return await ctx.send(
+                f"Not enough funds, you have "
                 f"{user.balance} coins ({amount - user.balance} missing)."
             )
 
