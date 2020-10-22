@@ -273,6 +273,11 @@ class Moderation(Cog):
 
         user, _ = await User.get_or_create(id=member.id)
         guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        if not guild.mute_role:
+            return await ctx.send(
+                f"**{ctx.guild}** has no mute role set. "
+                f"See help for the `muterole` command for more info."
+            )
         mute = await Mute.create(
             moderator=ctx.author.id,
             user=user,
