@@ -20,7 +20,7 @@ class Guild(Model):
     mute_role = BigIntField(null=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
-    disabled_channels = JSONField(null=True)
+    disabled_channels = JSONField(default=[])
 
     class Meta:
         table = "guilds"
