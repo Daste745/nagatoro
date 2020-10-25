@@ -5,6 +5,7 @@ from discord.ext.commands import (
     command,
     group,
     is_owner,
+    has_guild_permissions,
     cooldown,
     BucketType,
 )
@@ -77,23 +78,49 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
 
-    @command(name="disable_channel")
-    @is_moderator()
-    @cooldown(rate=2, per=10, type=BucketType.user)
+    @group(name="disable", invoke_without_command=True)
+    async def disable(self, ctx: Context):
+        """Disable bot functionality"""
+
+        await ctx.send_help(self.disable)
+
+    @group(name="enable", invoke_without_command=True)
+    async def enable(self, ctx: Context):
+        """Enable bot functionality"""
+
+        await ctx.send_help(self.enable)
+
+    @disable.command(name="channel")
+    @has_guild_permissions(manage_channels=True)
+    @cooldown(rate=5, per=10, type=BucketType.user)
     async def disable_channel(self, ctx: Context, channel: TextChannel):
-        """Disable channel from bot reacting"""
+        """Don't respond to messages in this channel"""
 
-        g, _ = await Guild.get_or_create(id=ctx.guild.id)
-        status = f"Enable <#{channel.id}>"
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
 
-        if channel.id in g.disabled_channels:
-            g.disabled_channels.remove(channel.id)
-        else:
-            g.disabled_channels.append(channel.id)
-            status = f"Disabled <#{channel.id}>"
+        if channel.id in guild.disabled_channels:
+            return await ctx.send(f"**{channel}** is already disabled.")
 
-        await g.save()
-        return await ctx.send(status)
+        guild.disabled_channels.append(channel.id)
+        await guild.save()
+
+        await ctx.send(f"Disabled **{channel}**.")
+
+    @enable.command(name="channel")
+    @has_guild_permissions(manage_channels=True)
+    @cooldown(rate=5, per=10, type=BucketType.user)
+    async def enable_channel(self, ctx: Context, channel: TextChannel):
+        """Don't respond to messages in this channel"""
+
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+
+        if channel.id not in guild.disabled_channels:
+            return await ctx.send(f"**{channel}** isn't disabled.")
+
+        guild.disabled_channels.remove(channel.id)
+        await guild.save()
+
+        await ctx.send(f"Enabled **{channel}**.")
 
 
 def setup(bot):
