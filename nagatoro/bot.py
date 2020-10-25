@@ -51,13 +51,13 @@ class Bot(commands.Bot):
         logging.info(f"Loaded commands: {', '.join([i.name for i in self.commands])}")
 
     async def on_message(self, message):
-        if message.author.bot:
+        if message.author.bot or not message.guild:
             return
-        if not message.guild:
+
+        guild, _ = await Guild.get_or_create(id=message.guild.id)
+        if message.channel.id in guild.disabled_channels:
             return
-        g, _ = await Guild.get_or_create(id=message.guild.id)
-        if message.channel.id in g.disabled_channels:
-            return
+
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):
