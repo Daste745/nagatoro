@@ -9,6 +9,7 @@ from tortoise.fields import (
     ForeignKeyField,
     ForeignKeyRelation,
     ReverseRelation,
+    JSONField,
 )
 
 
@@ -19,6 +20,7 @@ class Guild(Model):
     mute_role = BigIntField(null=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
+    disabled_channels = JSONField(null=True)
 
     class Meta:
         table = "guilds"
@@ -101,7 +103,8 @@ class Warn(Model):
 async def init_database(db_url: str):
     # logging.info("Initializing database connection...")
     await Tortoise.init(
-        db_url=db_url, modules={"models": [__name__]},
+        db_url=db_url,
+        modules={"models": [__name__]},
     )
     await Tortoise.generate_schemas()
     # logging.info("Successfully connected to database")

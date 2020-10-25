@@ -1,4 +1,4 @@
-from discord import Color
+from discord import Color, TextChannel
 from discord.ext.commands import (
     Cog,
     Context,
@@ -76,6 +76,24 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         await guild.save()
 
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
+
+    @command(name="disable_channel")
+    @is_moderator()
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def disable_channel(self, ctx: Context, channel: TextChannel):
+        """Disable channel from bot reacting"""
+
+        g, _ = await Guild.get_or_create(id=ctx.guild.id)
+        status = f"Enable <#{channel.id}>"
+
+        if channel.id in g.disabled_channels:
+            g.disabled_channels.remove(channel.id)
+        else:
+            g.disabled_channels.append(channel.id)
+            status = f"Disabled <#{channel.id}>"
+
+        await g.save()
+        return await ctx.send(status)
 
 
 def setup(bot):
