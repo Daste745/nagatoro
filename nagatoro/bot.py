@@ -54,10 +54,6 @@ class Bot(commands.Bot):
         if message.author.bot or not message.guild:
             return
 
-        guild, _ = await Guild.get_or_create(id=message.guild.id)
-        if message.channel.id in guild.disabled_channels:
-            return
-
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):

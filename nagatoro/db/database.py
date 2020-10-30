@@ -9,7 +9,6 @@ from tortoise.fields import (
     ForeignKeyField,
     ForeignKeyRelation,
     ReverseRelation,
-    JSONField,
 )
 
 
@@ -18,9 +17,9 @@ class Guild(Model):
     prefix = TextField(null=True)
     moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
+    level_up_messages = BooleanField(default=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
-    disabled_channels = JSONField(default=[])
 
     class Meta:
         table = "guilds"
