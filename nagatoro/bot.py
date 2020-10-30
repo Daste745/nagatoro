@@ -8,6 +8,7 @@ from discord.ext.commands import Context, errors as cerrors
 
 from nagatoro.utils import get_prefixes
 from nagatoro.objects import Config, Embed, HelpCommand
+from nagatoro.db import Guild
 
 
 class Bot(commands.Bot):
@@ -50,7 +51,7 @@ class Bot(commands.Bot):
         logging.info(f"Loaded commands: {', '.join([i.name for i in self.commands])}")
 
     async def on_message(self, message):
-        if not message.guild:
+        if message.author.bot or not message.guild:
             return
 
         await self.process_commands(message)

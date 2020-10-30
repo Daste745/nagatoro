@@ -273,6 +273,11 @@ class Moderation(Cog):
 
         user, _ = await User.get_or_create(id=member.id)
         guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        if not guild.mute_role:
+            return await ctx.send(
+                f"**{ctx.guild}** has no mute role set. "
+                f"See help for the `muterole` command for more info."
+            )
         mute = await Mute.create(
             moderator=ctx.author.id,
             user=user,
@@ -429,23 +434,32 @@ class Moderation(Cog):
             if i.end >= datetime.utcnow():
                 continue
 
-            guild = self.bot.get_guild(i.guild.id)
-            mute_role = guild.get_role(i.guild.mute_role)
-            member = guild.get_member(i.user.id)
+            async def end_mute(mute: Mute):
+                mute.active = False
+                await mute.save()
 
-            if member in guild.members:
-                try:
-                    await member.remove_roles(mute_role, reason="Mute ended.")
-                except (Forbidden, HTTPException):
-                    pass
+            try:
+                guild = self.bot.get_guild(i.guild.id)
+                assert guild
+                mute_role = guild.get_role(i.guild.mute_role)
+                assert mute_role
+                member = guild.get_member(i.user.id)
+                assert member
+            except (AttributeError, AssertionError):
+                await end_mute(i)
+                continue
 
-                i.active = False
-                await i.save()
+            try:
+                await member.remove_roles(mute_role, reason="Mute ended.")
+            except (Forbidden, HTTPException):
+                pass
 
-                try:
-                    await member.send(f"Your mute in {guild.name} has ended.")
-                except (Forbidden, HTTPException, AttributeError):
-                    pass
+            await end_mute(i)
+
+            try:
+                await member.send(f"Your mute in {guild.name} has ended.")
+            except (Forbidden, HTTPException, AttributeError):
+                pass
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
@@ -461,7 +475,9 @@ class Moderation(Cog):
 
         await mute.fetch_related("guild")
         guild = self.bot.get_guild(member.guild.id)
-        mute_role = guild.get_role(mute.guild.mute_role)
+
+        if not (mute_role := guild.get_role(mute.guild.mute_role)):
+            return
 
         if member in guild.members and mute_role not in member.roles:
             await member.add_roles(mute_role)

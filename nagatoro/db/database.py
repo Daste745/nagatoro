@@ -17,6 +17,7 @@ class Guild(Model):
     prefix = TextField(null=True)
     moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
+    level_up_messages = BooleanField(default=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
 
@@ -101,7 +102,8 @@ class Warn(Model):
 async def init_database(db_url: str):
     # logging.info("Initializing database connection...")
     await Tortoise.init(
-        db_url=db_url, modules={"models": [__name__]},
+        db_url=db_url,
+        modules={"models": [__name__]},
     )
     await Tortoise.generate_schemas()
     # logging.info("Successfully connected to database")
