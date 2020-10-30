@@ -1,10 +1,11 @@
-from discord import Color
+from discord import Color, TextChannel
 from discord.ext.commands import (
     Cog,
     Context,
     command,
     group,
     is_owner,
+    has_guild_permissions,
     cooldown,
     BucketType,
 )
@@ -76,6 +77,37 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         await guild.save()
 
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
+
+    @command(name="level-up-messages", usage="[disable|enable]")
+    @has_guild_permissions(manage_channels=True)
+    @cooldown(rate=5, per=10, type=BucketType.user)
+    async def level_up_messages(self, ctx: Context, action: str):
+        """Toggle level up messages on this server
+
+        Level up messages are not sent until you reach level 6.
+        """
+
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+
+        if action == "disable":
+            if not guild.level_up_messages:
+                return await ctx.send(
+                    f"Level up messages on **{ctx.guild}** are already disabled."
+                )
+
+            guild.level_up_messages = False
+            await ctx.send(f"Disabled level up messages on **{ctx.guild}**")
+
+        elif action == "enable":
+            if guild.level_up_messages:
+                return await ctx.send(
+                    f"Level up messages on **{ctx.guild}** are already enabled."
+                )
+
+            guild.level_up_messages = True
+            await ctx.send(f"Enabled level up messages on **{ctx.guild}**")
+
+        await guild.save()
 
 
 def setup(bot):

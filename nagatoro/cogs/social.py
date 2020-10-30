@@ -11,13 +11,12 @@ from discord.ext.commands import (
     group,
     cooldown,
     BucketType,
-    BadArgument,
 )
 
 from nagatoro.converters import Member
 from nagatoro.objects import Embed
 from nagatoro.utils import aenumerate
-from nagatoro.db import User, Mute, Warn
+from nagatoro.db import Guild, User, Mute, Warn
 
 
 class Social(Cog):
@@ -271,16 +270,27 @@ class Social(Cog):
             if user.level < 5:
                 return
 
-            embed = Embed(ctx, title="Level up!")
-            embed.set_thumbnail(url=ctx.author.avatar_url)
-            embed.description = (
-                f"Congratulations, {ctx.author.mention}! "
-                f"You have advanced to **level {user.level}** "
-                f"and got a bonus of **{bonus} points**."
+            # Level up message, don't send if the guild has them turned off
+            guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+            if not guild.level_up_messages:
+                return
+
+            await ctx.send(
+                f"Congrats **{ctx.author.name}**, you levelled up to **level "
+                f"{user.level}** and got a bonus of **{bonus} points**."
             )
 
-            level_up_message = await ctx.send(embed=embed)
-            await level_up_message.delete(delay=30)
+            # TODO: Let the admin choose if they want embed or text level ups
+            # embed = Embed(ctx, title="Level up!")
+            # embed.set_thumbnail(url=ctx.author.avatar_url)
+            # embed.description = (
+            #     f"Congratulations, {ctx.author.mention}! "
+            #     f"You have advanced to **level {user.level}** "
+            #     f"and got a bonus of **{bonus} points**."
+            # )
+            #
+            # level_up_message = await ctx.send(embed=embed)
+            # await level_up_message.delete(delay=30)
 
 
 def setup(bot):
