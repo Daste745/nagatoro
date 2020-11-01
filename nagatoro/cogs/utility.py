@@ -1,4 +1,5 @@
 from typing import Union
+
 from discord import Color
 from discord.ext.commands import Cog, Context, command
 
@@ -23,12 +24,12 @@ class Utility(Cog):
         if len(role.members) > 1:
             embed.add_field(name="Members", value=str(len(role.members)))
 
-        embed.add_field(name="Mentionable",
-                        value="Yes" if role.mentionable else "No")
+        embed.add_field(name="Mentionable", value="Yes" if role.mentionable else "No")
 
         if role.color != Color.default():
-            embed.add_field(name="Color",
-                            value=f"{role.color}, rgb{role.color.to_rgb()}")
+            embed.add_field(
+                name="Color", value=f"{role.color}, rgb{role.color.to_rgb()}"
+            )
 
         embed.add_field(name="Created at", value=role.created_at)
 
@@ -44,10 +45,7 @@ class Utility(Cog):
         title = str(user) if not user.bot else f"{user} :robot:"
         embed = Embed(ctx, title=title, color=user.color)
         embed.set_thumbnail(url=user.avatar_url)
-        embed.add_fields(
-            ("ID", user.id),
-            ("Created at", user.created_at)
-        )
+        embed.add_fields(("ID", user.id), ("Created at", user.created_at))
 
         await ctx.send(embed=embed)
 
@@ -75,7 +73,7 @@ class Utility(Cog):
             ("Region", ctx.guild.region),
             ("Members", str(ctx.guild.member_count)),
             ("Text channels", str(len(ctx.guild.text_channels))),
-            ("Voice channels", str(len(ctx.guild.voice_channels)))
+            ("Voice channels", str(len(ctx.guild.voice_channels))),
         )
 
         await ctx.send(embed=embed)
