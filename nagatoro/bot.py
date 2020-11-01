@@ -8,7 +8,9 @@ from discord.ext.commands import Context, errors as cerrors
 
 from nagatoro.utils import get_prefixes
 from nagatoro.objects import Config, Embed, HelpCommand
-from nagatoro.db import Guild
+
+
+log = logging.getLogger(__name__)
 
 
 class Bot(commands.Bot):
@@ -24,7 +26,7 @@ class Bot(commands.Bot):
         self.config = config
         self.start_timestamp = time()
 
-    def load_cogs(self) -> None:
+    def load_cogs(self):
         path = "nagatoro/cogs/"
         extensions = [
             path.replace("/", ".") + file.replace(".py", "")
@@ -38,17 +40,19 @@ class Bot(commands.Bot):
             except cerrors.ExtensionAlreadyLoaded:
                 pass
 
-    def reload_cogs(self) -> None:
+        log.info(f"Loaded {len(self.cogs)} cogs: {', '.join(self.cogs)}")
+
+    def reload_cogs(self):
         for extension in list(self.extensions):
             try:
                 self.reload_extension(extension)
             except cerrors.ExtensionAlreadyLoaded:
                 pass
 
+        log.info(f"Reloaded {len(self.extensions)} cogs")
+
     async def on_ready(self):
-        logging.info(f"Bot started as {self.user} with prefix {self.config.prefix}")
-        logging.info(f"Loaded cogs: {', '.join(self.cogs)}")
-        logging.info(f"Loaded commands: {', '.join([i.name for i in self.commands])}")
+        log.info(f"Bot ready as {self.user} with prefix {self.config.prefix}")
 
     async def on_message(self, message):
         if message.author.bot or not message.guild:
@@ -82,7 +86,7 @@ class Bot(commands.Bot):
         except cerrors.CommandOnCooldown:
             title = "Cooldown"
         except Exception:
-            logging.error(f"{type(exception)}, {exception}")
+            log.exception(exception)
 
         embed = Embed(ctx, title=title, description=str(exception), color=Color.red())
 

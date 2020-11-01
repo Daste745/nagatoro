@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import asyncio
 from tortoise import Tortoise
@@ -9,11 +10,11 @@ from nagatoro.objects import Config
 from nagatoro.db import init_database
 
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-# TODO: Implement custom logging format.
-# formatter = logging.Formatter(
-#     "[%(levelname)s] %(asctime)s - %(name)s: %(message)s")
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(funcName)s:%(message)s",
+)
 
 bot = Bot(Config())
 db_url = (
