@@ -199,9 +199,12 @@ class Social(Cog):
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
+        # NOTE: Comparing normal datetimes causes errors, so use .timestamp()
+        # TODO: Move these timestamp comparisons to the models as functions
         if (
             user.last_daily
-            and user.last_daily + timedelta(hours=23) > datetime.utcnow()
+            and (user.last_daily + timedelta(hours=23)).timestamp()
+            > datetime.utcnow().timestamp()
         ):
             next_daily = timedelta(hours=23) - (datetime.utcnow() - user.last_daily)
             return await ctx.send(
@@ -210,7 +213,9 @@ class Social(Cog):
                 f"Current streak: **{user.daily_streak}**."
             )
 
-        if user.daily_streak and datetime.now() - user.last_daily < timedelta(days=2):
+        if user.daily_streak and timedelta(
+            seconds=datetime.utcnow().timestamp() - user.last_daily.timestamp()
+        ) < timedelta(days=2):
             # Increase daily streak if last daily was taken in the last 2 days
             user.daily_streak += 1
         else:

@@ -287,6 +287,7 @@ class Moderation(Cog):
         )
 
         mute_role = ctx.guild.get_role(guild.mute_role)
+        # TODO: Check if member has lower permissions required to mute them
         await member.add_roles(
             mute_role, reason=f"Muted by {ctx.author} for {time}, reason: {reason}"
         )
@@ -431,7 +432,7 @@ class Moderation(Cog):
     @loop(seconds=10)
     async def check_mutes(self):
         async for i in Mute.filter(active=True).prefetch_related("guild", "user"):
-            if i.end >= datetime.utcnow():
+            if i.end.timestamp() >= datetime.utcnow().timestamp():
                 continue
 
             async def end_mute(mute: Mute):
