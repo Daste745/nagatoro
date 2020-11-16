@@ -20,7 +20,12 @@ class Bot(commands.Bot):
             help_command=HelpCommand(),
             # heartbeat_timeout=30,  # Leaving this untouched, experimentally
             case_insensitive=True,
-            intents=Intents(guilds=True, messages=True, members=True),
+            intents=Intents(
+                guilds=True,
+                messages=True,
+                members=True,
+                reactions=True,
+            ),
             **kwargs,
         )
         self.config = config
