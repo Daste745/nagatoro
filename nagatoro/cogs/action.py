@@ -1,5 +1,5 @@
 from asyncio import TimeoutError
-from discord.errors import Forbidden
+from discord.errors import Forbidden, NotFound
 from discord.ext.commands import Cog, Context, command, cooldown, BucketType
 
 from nagatoro.objects import Embed
@@ -85,8 +85,12 @@ class Action(Cog):
                     # No manage_messages permission
                     pass
             except TimeoutError:
-                await message.clear_reactions()
                 break
+
+        try:
+            await message.clear_reactions()
+        except (Forbidden, NotFound):
+            pass
 
 
 def setup(bot):
