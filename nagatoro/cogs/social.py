@@ -207,11 +207,15 @@ class Social(Cog):
             > datetime.utcnow().timestamp()
         ):
             next_daily = timedelta(hours=23) - (datetime.utcnow() - user.last_daily)
-            return await ctx.send(
-                f"Your next daily will be available in "
-                f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
-                f"Current streak: **{user.daily_streak}**."
-            )
+            try:
+                await ctx.send(
+                    f"Your next daily will be available in "
+                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
+                    f"Current streak: **{user.daily_streak}**."
+                )
+            except Forbidden:
+                pass
+            return
 
         if user.daily_streak and timedelta(
             seconds=datetime.utcnow().timestamp() - user.last_daily.timestamp()
