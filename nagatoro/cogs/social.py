@@ -1,4 +1,4 @@
-from math import sqrt, floor
+from math import sqrt, floor, ceil
 from datetime import datetime
 
 from asyncio import TimeoutError
@@ -199,14 +199,16 @@ class Social(Cog):
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
-        if not user.daily_available:
-            hours_til_next_daily = round(
-                (user.next_daily - datetime.utcnow()).seconds / 3600
+        def hours_til_next_daily() -> int:
+            return ceil(
+                (user.next_daily.timestamp() - datetime.utcnow().timestamp()) / 3600
             )
+
+        if not user.daily_available:
             try:
                 await ctx.send(
                     f"Your next daily will be available in "
-                    f"**{hours_til_next_daily} hour(s)**. Current streak: "
+                    f"**{hours_til_next_daily()} hour(s)**. Current streak: "
                     f"**{user.daily_streak}**."
                 )
             except Forbidden:
@@ -232,15 +234,12 @@ class Social(Cog):
         if user != target_user:
             await target_user.save()
 
-        hours_til_next_daily = round(
-            (user.next_daily - datetime.utcnow()).seconds / 3600
-        )
         embed = Embed(ctx, title="Daily", color=ctx.author.color)
         if user == target_user:
             embed.description = (
                 f"You received **{100 + bonus}** daily points\n"
                 f"Streak: **{user.daily_streak}** {expired}\n"
-                f"Come back in **{hours_til_next_daily} hour(s)** "
+                f"Come back in **{hours_til_next_daily()} hour(s)** "
                 f"to continue your streak!"
             )
         else:
@@ -248,7 +247,7 @@ class Social(Cog):
                 f"You gave your **{100 + bonus}** daily points "
                 f"to {member.mention}\n"
                 f"Streak: **{user.daily_streak}** {expired}\n"
-                f"Come back in **{hours_til_next_daily} hour(s)** "
+                f"Come back in **{hours_til_next_daily()} hour(s)** "
                 f"to continue your streak!"
             )
 
@@ -297,10 +296,6 @@ class Social(Cog):
                 )
             except Forbidden:
                 pass
-            await ctx.send(
-                f"Congrats **{ctx.author.name}**, you levelled up to **level "
-                f"{user.level}** and got a bonus of **{bonus} points**."
-            )
 
             # TODO: Let the admin choose if they want embed or text level ups
             # embed = Embed(ctx, title="Level up!")

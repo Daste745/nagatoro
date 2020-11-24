@@ -57,14 +57,17 @@ class User(Model):
         if not self.last_daily:
             return True
 
-        return datetime.utcnow() > self.next_daily
+        return datetime.utcnow().timestamp() > self.next_daily.timestamp()
 
     @property
     def daily_streak_expired(self):
         if not self.last_daily:
             return None
 
-        return datetime.utcnow() > self.last_daily + timedelta(days=2)
+        return (
+            datetime.utcnow().timestamp()
+            > (self.last_daily + timedelta(days=2)).timestamp()
+        )
 
     class Meta:
         table = "users"
