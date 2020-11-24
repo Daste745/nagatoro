@@ -63,6 +63,12 @@ class Bot(commands.Bot):
         if message.author.bot or not message.guild:
             return
 
+        permissions = message.channel.permissions_for(message.guild.me)
+        if not permissions.send_messages:
+            # Every command retuns with a message, so ignore channels
+            # where the bot can't send messages.
+            return
+
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):
@@ -93,6 +99,11 @@ class Bot(commands.Bot):
         except Exception:
             log.exception(exception)
 
-        embed = Embed(ctx, title=title, description=str(exception), color=Color.red())
+        embed = Embed(
+            ctx,
+            title=title,
+            description=str(exception),
+            color=Color.red(),
+        )
 
         await ctx.send(embed=embed)
