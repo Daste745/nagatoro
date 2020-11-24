@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from tortoise import Tortoise
 from tortoise.models import Model
 from tortoise.fields import (
@@ -40,6 +42,29 @@ class User(Model):
     last_daily = DatetimeField(null=True)
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
+
+    @property
+    def next_daily(self):
+        if not self.last_daily:
+            return None
+
+        return datetime.fromtimestamp(
+            (self.last_daily + timedelta(hours=23)).timestamp()
+        )
+
+    @property
+    def daily_available(self):
+        if not self.last_daily:
+            return True
+
+        return datetime.utcnow() > self.next_daily
+
+    @property
+    def daily_streak_expired(self):
+        if not self.last_daily:
+            return None
+
+        return datetime.utcnow() > self.last_daily + timedelta(days=2)
 
     class Meta:
         table = "users"

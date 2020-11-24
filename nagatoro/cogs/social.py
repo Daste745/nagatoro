@@ -1,5 +1,5 @@
-from math import sqrt, floor, ceil
-from datetime import datetime, timedelta
+from math import sqrt, floor
+from datetime import datetime
 
 from asyncio import TimeoutError
 from discord import Message, Color
@@ -199,31 +199,25 @@ class Social(Cog):
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
-        # NOTE: Comparing normal datetimes causes errors, so use .timestamp()
-        # TODO: Move these timestamp comparisons to the models as functions
-        if (
-            user.last_daily
-            and (user.last_daily + timedelta(hours=23)).timestamp()
-            > datetime.utcnow().timestamp()
-        ):
-            next_daily = timedelta(hours=23) - (datetime.utcnow() - user.last_daily)
+        if not user.daily_available:
+            hours_til_next_daily = round(
+                (user.next_daily - datetime.utcnow()).seconds / 3600
+            )
             try:
                 await ctx.send(
                     f"Your next daily will be available in "
-                    f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
-                    f"Current streak: **{user.daily_streak}**."
+                    f"**{hours_til_next_daily} hour(s)**. Current streak: "
+                    f"**{user.daily_streak}**."
                 )
             except Forbidden:
                 pass
             return
 
-        if user.daily_streak and timedelta(
-            seconds=datetime.utcnow().timestamp() - user.last_daily.timestamp()
-        ) < timedelta(days=2):
-            # Increase daily streak if last daily was taken in the last 2 days
-            user.daily_streak += 1
-        else:
+        expired = "(lost streak)" if user.daily_streak_expired else ""
+        if user.daily_streak_expired:
             user.daily_streak = 1
+        else:
+            user.daily_streak += 1
 
         bonus = floor(sqrt(user.daily_streak) * 20)
         user.last_daily = datetime.utcnow()
@@ -235,22 +229,33 @@ class Social(Cog):
         target_user.balance += 100 + bonus
 
         await user.save()
-        await target_user.save()
+        if user != target_user:
+            await target_user.save()
 
+        hours_til_next_daily = round(
+            (user.next_daily - datetime.utcnow()).seconds / 3600
+        )
         embed = Embed(ctx, title="Daily", color=ctx.author.color)
         if user == target_user:
             embed.description = (
-                f"You got **{100 + bonus}** daily points.\n"
-                f"Streak: **{user.daily_streak}**."
+                f"You received **{100 + bonus}** daily points\n"
+                f"Streak: **{user.daily_streak}** {expired}\n"
+                f"Come back in **{hours_til_next_daily} hour(s)** "
+                f"to continue your streak!"
             )
         else:
             embed.description = (
                 f"You gave your **{100 + bonus}** daily points "
                 f"to {member.mention}\n"
-                f"Streak: **{user.daily_streak}**"
+                f"Streak: **{user.daily_streak}** {expired}\n"
+                f"Come back in **{hours_til_next_daily} hour(s)** "
+                f"to continue your streak!"
             )
 
-        await ctx.send(embed=embed)
+        try:
+            await ctx.send(embed=embed)
+        except Forbidden:
+            pass
 
     @Cog.listener()
     async def on_message(self, message: Message):
