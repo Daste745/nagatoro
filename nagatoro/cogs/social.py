@@ -289,6 +289,14 @@ class Social(Cog):
             if not guild.level_up_messages:
                 return
 
+            try:
+                await ctx.send(
+                    f"Congrats **{ctx.author.name}**, "
+                    f"you levelled up to **level {user.level}** "
+                    f"and got a bonus of **{bonus} points**."
+                )
+            except Forbidden:
+                pass
             await ctx.send(
                 f"Congrats **{ctx.author.name}**, you levelled up to **level "
                 f"{user.level}** and got a bonus of **{bonus} points**."
