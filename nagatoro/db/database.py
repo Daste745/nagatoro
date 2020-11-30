@@ -17,7 +17,6 @@ from tortoise.fields import (
 class Guild(Model):
     id = BigIntField(pk=True)
     prefix = TextField(null=True)
-    moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
     level_up_messages = BooleanField(default=True)
     moderators: ReverseRelation["Moderator"]

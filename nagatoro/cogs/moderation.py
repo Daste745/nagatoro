@@ -91,53 +91,6 @@ class Moderation(Cog):
 
         await ctx.send(f"Removed **{member}** from **{ctx.guild}**'s moderators.")
 
-    @group(name="modrole", invoke_without_command=True)
-    @cooldown(rate=5, per=30, type=BucketType.guild)
-    async def mod_role(self, ctx: Context):
-        """Check the moderator role
-
-        This role permits users who have it to perform moderator actions, like muting or warning.
-        """
-
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        moderator_role = ctx.guild.get_role(guild.moderator_role)
-
-        if not guild.moderator_role:
-            return await ctx.send("The moderator role is not set on this server.")
-        if not moderator_role:
-            return await ctx.send("The moderator role on this server doesn't exist.")
-
-        return await ctx.send(
-            f"{ctx.guild.name}'s moderator role: **{moderator_role.name}** (id: `{moderator_role.id}`)"
-        )
-
-    @mod_role.command(name="set")
-    @has_permissions(manage_roles=True)
-    @cooldown(rate=2, per=30, type=BucketType.guild)
-    async def mod_role_set(self, ctx: Context, role: Role):
-        """Set this server's moderator role"""
-
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        guild.moderator_role = role.id
-        await guild.save()
-
-        await ctx.send(f"Set the mod role to **{role.name}**.")
-
-    @mod_role.command(name="delete", aliases=["del", "remove", "rm"])
-    @has_permissions(manage_roles=True)
-    @cooldown(rate=2, per=30, type=BucketType.guild)
-    async def mod_role_delete(self, ctx: Context):
-        """Remove this server's mod role
-
-        This command DOES NOT delete the role, just removes the mod role setting for this server.
-        """
-
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        guild.moderator_role = None
-        await guild.save()
-
-        await ctx.send(f"Removed the mod role from {ctx.guild.name}.")
-
     @group(name="muterole", invoke_without_command=True)
     async def mute_role(self, ctx: Context):
         """Check the mute role
