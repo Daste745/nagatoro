@@ -8,6 +8,7 @@ from discord.ext.commands import Context, errors as cerrors
 
 from nagatoro.utils import get_prefixes
 from nagatoro.objects import Config, Embed, HelpCommand
+from nagatoro.checks.is_moderator import NotModerator
 
 
 log = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ class Bot(commands.Bot):
             return await ctx.send_help(ctx.command)
         except (cerrors.BadArgument, cerrors.BadUnionArgument):
             title = "Bad argument(s)"
-        except (cerrors.NotOwner, cerrors.MissingPermissions):
+        except (cerrors.NotOwner, cerrors.MissingPermissions, NotModerator):
             title = "Insufficient permissions"
         except cerrors.BotMissingPermissions:
             title = "Missing bot permissions"
