@@ -16,7 +16,7 @@ from discord.ext.commands import (
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
 from nagatoro.converters import Member, Timedelta
-from nagatoro.db import Guild, User, Mute, Warn
+from nagatoro.db import Guild, User, Moderator, Mute, Warn
 
 
 class Moderation(Cog):
@@ -28,6 +28,68 @@ class Moderation(Cog):
 
     def cog_unload(self):
         self.check_mutes.cancel()
+
+    @group(name="moderators", aliases=["mods"], invoke_without_command=True)
+    @cooldown(rate=3, per=30, type=BucketType.guild)
+    async def moderators(self, ctx: Context):
+        """See who moderates this server
+
+        Everyone on this list can use moderation commands like `mute` and `warn`.
+        """
+
+        moderators = Moderator.filter(guild__id=ctx.guild.id).prefetch_related("user")
+        if await moderators.count() == 0:
+            return await ctx.send(
+                f"There are no moderators on this server. "
+                f"See `{self.bot.config.prefix}help moderators` for more info."
+            )
+
+        embed = Embed(ctx, title=f"Moderators of {ctx.guild}", description="")
+
+        await ctx.trigger_typing()
+        async for i in moderators:
+            user = await self.bot.fetch_user(i.user.id)
+            embed.description += f"**{user}** {f'({i.title})' if i.title else ''}\n"
+
+        await ctx.send(embed=embed)
+
+    @moderators.command(name="add")
+    @has_permissions(manage_roles=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_add(self, ctx: Context, member: Member, *, title: str = None):
+        """Add someone to the list of moderators"""
+
+        if await Moderator.get_or_none(
+            user__id=member.id,
+            guild__id=ctx.guild.id,
+        ):
+            return await ctx.send(f"**{member}** is already a moderator!")
+
+        user, _ = await User.get_or_create(id=member.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        await Moderator.create(guild=guild, user=user, title=title)
+
+        await ctx.send(f"Saved **{member}** as a moderator of **{ctx.guild}**.")
+
+    @moderators.command(name="delete", aliases=["del"])
+    @has_permissions(manage_roles=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_delete(self, ctx: Context, member: Member):
+        """Remove someone from the list of moderators"""
+
+        if not (
+            moderator := await Moderator.get_or_none(
+                user__id=member.id, guild__id=ctx.guild.id
+            )
+        ):
+            return await ctx.send(
+                f"**{member}** is not a moderator, "
+                f"you can't delete them from the list!"
+            )
+
+        await moderator.delete()
+
+        await ctx.send(f"Removed **{member}** from **{ctx.guild}**'s moderators.")
 
     @group(name="modrole", invoke_without_command=True)
     @cooldown(rate=5, per=30, type=BucketType.guild)

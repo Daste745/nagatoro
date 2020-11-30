@@ -28,10 +28,7 @@ class Guild(Model):
         table = "guilds"
 
     def __str__(self):
-        return (
-            f"<Guild id:{self.id} prefix:{self.prefix} "
-            f"modrole:{self.moderator_role} muterole:{self.mute_role}>"
-        )
+        return f"<Guild id:{self.id} prefix:{self.prefix} muterole:{self.mute_role}>"
 
 
 class User(Model):
