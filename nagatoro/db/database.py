@@ -20,6 +20,7 @@ class Guild(Model):
     moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
     level_up_messages = BooleanField(default=True)
+    moderators: ReverseRelation["Moderator"]
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
 
@@ -77,6 +78,20 @@ class User(Model):
             f"<User id:{self.id} exp:{self.exp} "
             f"level:{self.level} bal:{self.balance}>"
         )
+
+
+class Moderator(Model):
+    id = IntField(pk=True)
+    user: ForeignKeyRelation[User] = ForeignKeyField(
+        "models.User", related_name="moderator_on"
+    )
+    guild: ForeignKeyRelation[Guild] = ForeignKeyField(
+        "models.Guild", related_name="moderators"
+    )
+    title = TextField(null=True)
+
+    class Meta:
+        table = "moderators"
 
 
 class Mute(Model):
