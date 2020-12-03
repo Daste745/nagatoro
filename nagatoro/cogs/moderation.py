@@ -57,7 +57,10 @@ class Moderation(Cog):
     @has_permissions(manage_roles=True)
     @cooldown(rate=5, per=30, type=BucketType.guild)
     async def moderators_add(self, ctx: Context, member: Member, *, title: str = None):
-        """Add someone to the list of moderators"""
+        """Add someone to the list of moderators
+
+        `title` is optional and can be used to differentiate between moderator postions.
+        """
 
         if await Moderator.get_or_none(
             user__id=member.id,
