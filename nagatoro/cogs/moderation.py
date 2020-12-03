@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import List
+
 from discord import Role, User
 from discord.errors import Forbidden, HTTPException
 from discord.ext.tasks import loop
@@ -16,7 +18,7 @@ from discord.ext.commands import (
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
 from nagatoro.converters import Member, Timedelta
-from nagatoro.db import Guild, User, Mute, Warn
+from nagatoro.db import Guild, User, Moderator, Mute, Warn
 
 
 class Moderation(Cog):
@@ -29,52 +31,106 @@ class Moderation(Cog):
     def cog_unload(self):
         self.check_mutes.cancel()
 
-    @group(name="modrole", invoke_without_command=True)
-    @cooldown(rate=5, per=30, type=BucketType.guild)
-    async def mod_role(self, ctx: Context):
-        """Check the moderator role
+    @group(name="moderators", aliases=["mods"], invoke_without_command=True)
+    @cooldown(rate=3, per=30, type=BucketType.guild)
+    async def moderators(self, ctx: Context):
+        """See who moderates this server
 
-        This role permits users who have it to perform moderator actions, like muting or warning.
+        Everyone on this list can use moderation commands like `mute` and `warn`.
         """
 
+        moderators = Moderator.filter(guild__id=ctx.guild.id).prefetch_related("user")
+        if await moderators.count() == 0:
+            return await ctx.send(
+                f"There are no moderators on this server. "
+                f"See `{self.bot.config.prefix}help moderators` for more info."
+            )
+
+        embed = Embed(ctx, title=f"Moderators of {ctx.guild}", description="")
+
+        await ctx.trigger_typing()
+        async for i in moderators:
+            user = await self.bot.fetch_user(i.user.id)
+            embed.description += f"**{user}** {f'({i.title})' if i.title else ''}\n"
+
+        await ctx.send(embed=embed)
+
+    @moderators.command(name="add")
+    @has_permissions(manage_roles=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_add(self, ctx: Context, member: Member, *, title: str = None):
+        """Add someone to the list of moderators
+
+        `title` is optional and can be used to differentiate between moderator postions.
+        """
+
+        if await Moderator.get_or_none(
+            user__id=member.id,
+            guild__id=ctx.guild.id,
+        ):
+            return await ctx.send(f"**{member}** is already a moderator!")
+
+        user, _ = await User.get_or_create(id=member.id)
         guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        moderator_role = ctx.guild.get_role(guild.moderator_role)
+        await Moderator.create(guild=guild, user=user, title=title)
 
-        if not guild.moderator_role:
-            return await ctx.send("The moderator role is not set on this server.")
-        if not moderator_role:
-            return await ctx.send("The moderator role on this server doesn't exist.")
+        await ctx.send(f"Saved **{member}** as a moderator of **{ctx.guild}**.")
 
-        return await ctx.send(
-            f"{ctx.guild.name}'s moderator role: **{moderator_role.name}** (id: `{moderator_role.id}`)"
+    @moderators.command(name="add-role")
+    @has_permissions(manage_roles=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_add_role(self, ctx: Context, role: Role, *, title: str = None):
+        """Add members from a role as moderators
+
+        Members who are already moderators are ignored.
+        Roles with more than 25 members are disallowed.
+        `title` is optional and can be used to differentiate between moderator postions.
+        """
+
+        if len(role.members) > 25:
+            return await ctx.send("I can't add more than 25 moderators at once!")
+
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        moderators = await Moderator.filter(guild=guild).prefetch_related("user")
+        moderator_ids = [i.user.id for i in moderators]
+        new_moderators: List[Member] = []
+
+        await ctx.trigger_typing()
+        for i in role.members:
+            if i.id in moderator_ids:
+                continue
+
+            user, _ = await User.get_or_create(id=i.id)
+            await Moderator.create(guild=guild, user=user, title=title)
+            new_moderators.append(i)
+
+        if len(new_moderators) == 0:
+            return await ctx.send("No new moderators were added.")
+
+        await ctx.send(
+            f"Added **{len(new_moderators)}** new moderators: "
+            f"{', '.join(i.name for i in new_moderators)}"
         )
 
-    @mod_role.command(name="set")
+    @moderators.command(name="delete", aliases=["del"])
     @has_permissions(manage_roles=True)
-    @cooldown(rate=2, per=30, type=BucketType.guild)
-    async def mod_role_set(self, ctx: Context, role: Role):
-        """Set this server's moderator role"""
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_delete(self, ctx: Context, member: Member):
+        """Remove someone from the list of moderators"""
 
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        guild.moderator_role = role.id
-        await guild.save()
+        if not (
+            moderator := await Moderator.get_or_none(
+                user__id=member.id, guild__id=ctx.guild.id
+            )
+        ):
+            return await ctx.send(
+                f"**{member}** is not a moderator, "
+                f"you can't delete them from the list!"
+            )
 
-        await ctx.send(f"Set the mod role to **{role.name}**.")
+        await moderator.delete()
 
-    @mod_role.command(name="delete", aliases=["del", "remove", "rm"])
-    @has_permissions(manage_roles=True)
-    @cooldown(rate=2, per=30, type=BucketType.guild)
-    async def mod_role_delete(self, ctx: Context):
-        """Remove this server's mod role
-
-        This command DOES NOT delete the role, just removes the mod role setting for this server.
-        """
-
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-        guild.moderator_role = None
-        await guild.save()
-
-        await ctx.send(f"Removed the mod role from {ctx.guild.name}.")
+        await ctx.send(f"Removed **{member}** from **{ctx.guild}**'s moderators.")
 
     @group(name="muterole", invoke_without_command=True)
     async def mute_role(self, ctx: Context):
@@ -287,6 +343,7 @@ class Moderation(Cog):
         )
 
         mute_role = ctx.guild.get_role(guild.mute_role)
+        # TODO: Check if member has lower permissions required to mute them
         await member.add_roles(
             mute_role, reason=f"Muted by {ctx.author} for {time}, reason: {reason}"
         )
@@ -431,7 +488,7 @@ class Moderation(Cog):
     @loop(seconds=10)
     async def check_mutes(self):
         async for i in Mute.filter(active=True).prefetch_related("guild", "user"):
-            if i.end >= datetime.utcnow():
+            if i.end.timestamp() >= datetime.utcnow().timestamp():
                 continue
 
             async def end_mute(mute: Mute):

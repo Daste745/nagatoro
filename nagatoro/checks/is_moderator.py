@@ -1,20 +1,25 @@
 from discord.ext.commands import Context, check
-from discord.ext.commands.errors import MissingRole, CommandError
+from discord.ext.commands.errors import CheckFailure
 
-from nagatoro.db import Guild
+from nagatoro.db import Moderator
+
+
+class NotModerator(CheckFailure):
+    """Exception raised when the command invoker isn't on the moderator list."""
+
+    def __init__(self):
+        super().__init__(
+            "You are not a moderator on this server. See the `moderators` command."
+        )
 
 
 def is_moderator():
     async def predicate(ctx: Context):
-        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
-
-        if guild.moderator_role not in [i.id for i in ctx.author.roles]:
-            moderator_role = ctx.guild.get_role(guild.moderator_role)
-
-            if not moderator_role:
-                raise CommandError("Mod role was not set for this server.")
-            else:
-                raise MissingRole(moderator_role.name)
+        moderator = await Moderator.get_or_none(
+            user__id=ctx.author.id, guild__id=ctx.guild.id
+        )
+        if not moderator:
+            raise NotModerator()
         else:
             return True
 

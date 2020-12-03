@@ -1,5 +1,5 @@
 from math import sqrt, floor, ceil
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from asyncio import TimeoutError
 from discord import Message, Color
@@ -199,22 +199,27 @@ class Social(Cog):
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
-        if (
-            user.last_daily
-            and user.last_daily + timedelta(hours=23) > datetime.utcnow()
-        ):
-            next_daily = timedelta(hours=23) - (datetime.utcnow() - user.last_daily)
-            return await ctx.send(
-                f"Your next daily will be available in "
-                f"**{ceil(next_daily.seconds / 3600)} hour(s)**. "
-                f"Current streak: **{user.daily_streak}**."
+        def hours_til_next_daily() -> int:
+            return ceil(
+                (user.next_daily.timestamp() - datetime.utcnow().timestamp()) / 3600
             )
 
-        if user.daily_streak and datetime.now() - user.last_daily < timedelta(days=2):
-            # Increase daily streak if last daily was taken in the last 2 days
-            user.daily_streak += 1
-        else:
+        if not user.daily_available:
+            try:
+                await ctx.send(
+                    f"Your next daily will be available in "
+                    f"**{hours_til_next_daily()} hour(s)**. Current streak: "
+                    f"**{user.daily_streak}**."
+                )
+            except Forbidden:
+                pass
+            return
+
+        expired = "(lost streak)" if user.daily_streak_expired else ""
+        if user.daily_streak_expired:
             user.daily_streak = 1
+        else:
+            user.daily_streak += 1
 
         bonus = floor(sqrt(user.daily_streak) * 20)
         user.last_daily = datetime.utcnow()
@@ -226,22 +231,30 @@ class Social(Cog):
         target_user.balance += 100 + bonus
 
         await user.save()
-        await target_user.save()
+        if user != target_user:
+            await target_user.save()
 
         embed = Embed(ctx, title="Daily", color=ctx.author.color)
         if user == target_user:
             embed.description = (
-                f"You got **{100 + bonus}** daily points.\n"
-                f"Streak: **{user.daily_streak}**."
+                f"You received **{100 + bonus}** daily points\n"
+                f"Streak: **{user.daily_streak}** {expired}\n"
+                f"Come back in **{hours_til_next_daily()} hour(s)** "
+                f"to continue your streak!"
             )
         else:
             embed.description = (
                 f"You gave your **{100 + bonus}** daily points "
                 f"to {member.mention}\n"
-                f"Streak: **{user.daily_streak}**"
+                f"Streak: **{user.daily_streak}** {expired}\n"
+                f"Come back in **{hours_til_next_daily()} hour(s)** "
+                f"to continue your streak!"
             )
 
-        await ctx.send(embed=embed)
+        try:
+            await ctx.send(embed=embed)
+        except Forbidden:
+            pass
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -275,10 +288,14 @@ class Social(Cog):
             if not guild.level_up_messages:
                 return
 
-            await ctx.send(
-                f"Congrats **{ctx.author.name}**, you levelled up to **level "
-                f"{user.level}** and got a bonus of **{bonus} points**."
-            )
+            try:
+                await ctx.send(
+                    f"Congrats **{ctx.author.name}**, "
+                    f"you levelled up to **level {user.level}** "
+                    f"and got a bonus of **{bonus} points**."
+                )
+            except Forbidden:
+                pass
 
             # TODO: Let the admin choose if they want embed or text level ups
             # embed = Embed(ctx, title="Level up!")

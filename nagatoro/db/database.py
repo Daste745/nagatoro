@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from tortoise import Tortoise
 from tortoise.models import Model
 from tortoise.fields import (
@@ -15,9 +17,9 @@ from tortoise.fields import (
 class Guild(Model):
     id = BigIntField(pk=True)
     prefix = TextField(null=True)
-    moderator_role = BigIntField(null=True)
     mute_role = BigIntField(null=True)
     level_up_messages = BooleanField(default=True)
+    moderators: ReverseRelation["Moderator"]
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
 
@@ -25,10 +27,7 @@ class Guild(Model):
         table = "guilds"
 
     def __str__(self):
-        return (
-            f"<Guild id:{self.id} prefix:{self.prefix} "
-            f"modrole:{self.moderator_role} muterole:{self.mute_role}>"
-        )
+        return f"<Guild id:{self.id} prefix:{self.prefix} muterole:{self.mute_role}>"
 
 
 class User(Model):
@@ -41,6 +40,32 @@ class User(Model):
     mutes: ReverseRelation["Mute"]
     warns: ReverseRelation["Warn"]
 
+    @property
+    def next_daily(self):
+        if not self.last_daily:
+            return None
+
+        return datetime.fromtimestamp(
+            (self.last_daily + timedelta(hours=23)).timestamp()
+        )
+
+    @property
+    def daily_available(self):
+        if not self.last_daily:
+            return True
+
+        return datetime.utcnow().timestamp() > self.next_daily.timestamp()
+
+    @property
+    def daily_streak_expired(self):
+        if not self.last_daily:
+            return None
+
+        return (
+            datetime.utcnow().timestamp()
+            > (self.last_daily + timedelta(days=2)).timestamp()
+        )
+
     class Meta:
         table = "users"
 
@@ -49,6 +74,20 @@ class User(Model):
             f"<User id:{self.id} exp:{self.exp} "
             f"level:{self.level} bal:{self.balance}>"
         )
+
+
+class Moderator(Model):
+    id = IntField(pk=True)
+    user: ForeignKeyRelation[User] = ForeignKeyField(
+        "models.User", related_name="moderator_on"
+    )
+    guild: ForeignKeyRelation[Guild] = ForeignKeyField(
+        "models.Guild", related_name="moderators"
+    )
+    title = TextField(null=True)
+
+    class Meta:
+        table = "moderators"
 
 
 class Mute(Model):
