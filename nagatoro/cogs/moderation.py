@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import List
+
 from discord import Role, User
 from discord.errors import Forbidden, HTTPException
 from discord.ext.tasks import loop
@@ -73,6 +75,42 @@ class Moderation(Cog):
         await Moderator.create(guild=guild, user=user, title=title)
 
         await ctx.send(f"Saved **{member}** as a moderator of **{ctx.guild}**.")
+
+    @moderators.command(name="add-role")
+    @has_permissions(manage_roles=True)
+    @cooldown(rate=5, per=30, type=BucketType.guild)
+    async def moderators_add_role(self, ctx: Context, role: Role, *, title: str = None):
+        """Add members from a role as moderators
+
+        Members who are already moderators are ignored.
+        Roles with more than 25 members are disallowed.
+        `title` is optional and can be used to differentiate between moderator postions.
+        """
+
+        if len(role.members) > 25:
+            return await ctx.send("I can't add more than 25 moderators at once!")
+
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
+        moderators = await Moderator.filter(guild=guild).prefetch_related("user")
+        moderator_ids = [i.user.id for i in moderators]
+        new_moderators: List[Member] = []
+
+        await ctx.trigger_typing()
+        for i in role.members:
+            if i.id in moderator_ids:
+                continue
+
+            user, _ = await User.get_or_create(id=i.id)
+            await Moderator.create(guild=guild, user=user, title=title)
+            new_moderators.append(i)
+
+        if len(new_moderators) == 0:
+            return await ctx.send("No new moderators were added.")
+
+        await ctx.send(
+            f"Added **{len(new_moderators)}** new moderators: "
+            f"{', '.join(i.name for i in new_moderators)}"
+        )
 
     @moderators.command(name="delete", aliases=["del"])
     @has_permissions(manage_roles=True)
