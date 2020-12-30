@@ -17,7 +17,7 @@ from discord.ext.commands import (
 
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
-from nagatoro.converters import Member, Timedelta
+from nagatoro.converters import Member, Timedelta, User as UserC
 from nagatoro.db import Guild, User, Moderator, Mute, Warn
 
 
@@ -181,7 +181,7 @@ class Moderation(Cog):
     @command(name="ban")
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
-    async def ban(self, ctx: Context, user: User, *, reason: str = None):
+    async def ban(self, ctx: Context, user: UserC, *, reason: str = None):
         """Ban someone
 
         You can use an ID to ban someone is outside the server.
@@ -205,7 +205,7 @@ class Moderation(Cog):
     @command(name="unban", aliases=["pardon"])
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
-    async def unban(self, ctx: Context, user: User):
+    async def unban(self, ctx: Context, user: UserC):
         """Unban someone
 
         Note: Only works with IDs.
