@@ -1,13 +1,13 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Stefankar1000/nagatoro/master/nagatoro.png" width="128" alt="Nagatoro's avatar">
+    <img src="https://raw.githubusercontent.com/daste745/nagatoro/master/nagatoro.png" width="128" alt="Nagatoro's avatar">
     <br>
     <b>Nagatoro</b>
     <br>
     <a href="https://discordapp.com/oauth2/authorize?client_id=672485626179747864&scope=bot&permissions=8262"><sub>Invite Nagatoro to your server</sub></a>
 </p>
 
-![License](https://img.shields.io/github/license/stefankar1000/nagatoro?style=flat-square)
-[![Issues](https://img.shields.io/github/issues/stefankar1000/nagatoro?style=flat-square)](https://github.com/stefankar1000/nagatoro/issues)
+[![License](https://img.shields.io/github/license/daste745/nagatoro?style=flat-square)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/daste745/nagatoro?style=flat-square)](https://github.com/daste745/nagatoro/issues)
 [![Discord](https://img.shields.io/discord/675787405889896478?logo=discord&style=flat-square)](https://discord.gg/qDzU7gd)
 
 # Features
@@ -49,7 +49,7 @@ version: "3"
 
 services:
   nagatoro:
-    image: ghcr.io/stefankar1000/nagatoro/nagatoro:latest
+    image: ghcr.io/daste745/nagatoro/nagatoro:latest
     restart: unless-stopped
     environment:
       - TOKEN=bot_token
