@@ -1,12 +1,16 @@
-from discord.ext.commands import when_mentioned_or, when_mentioned
+from typing import Optional
 
-from nagatoro.db import Guild
+from discord.ext.commands import when_mentioned_or, when_mentioned
 
 
 async def get_prefixes(bot, message):
-    guild, _ = await Guild.get_or_create(id=message.guild.id)
+    prefix: Optional[str] = bot.config.prefix
 
-    if bot.config.prefix or (guild and guild.prefix):
-        return when_mentioned_or(guild.prefix or bot.config.prefix)(bot, message)
+    cache_key = f"{message.guild.id}:prefix"
+    if bot.cache.exists(cache_key):
+        prefix = bot.cache.get(cache_key).decode()
+
+    if prefix:
+        return when_mentioned_or(prefix)(bot, message)
     else:
         return when_mentioned(bot, message)

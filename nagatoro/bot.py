@@ -9,6 +9,7 @@ from discord.ext.commands import Context, errors as cerrors
 from nagatoro.utils import get_prefixes
 from nagatoro.objects import Config, Embed, HelpCommand
 from nagatoro.checks.is_moderator import NotModerator
+from nagatoro.db import init_redis, Guild
 
 
 log = logging.getLogger(__name__)
@@ -31,6 +32,9 @@ class Bot(commands.Bot):
         )
         self.config = config
         self.start_timestamp = time()
+
+        # Redis cache
+        self.cache = init_redis(self.config, db=0)
 
     def load_cogs(self):
         path = "nagatoro/cogs/"
@@ -56,6 +60,19 @@ class Bot(commands.Bot):
                 pass
 
         log.info(f"Reloaded {len(self.extensions)} cogs")
+
+    async def generate_prefix_cache(self) -> int:
+        cached_prefixes: int = 0
+
+        async for guild in Guild.all():
+            if not guild.prefix:
+                self.cache.delete(f"{guild.id}:prefix")
+            else:
+                self.cache.set(f"{guild.id}:prefix", guild.prefix)
+                cached_prefixes += 1
+
+        log.info(f"Cached {cached_prefixes} prefix(es).")
+        return cached_prefixes
 
     async def on_ready(self):
         log.info(f"Bot ready as {self.user} with prefix {self.config.prefix}")

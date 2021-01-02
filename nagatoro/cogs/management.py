@@ -32,6 +32,13 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
             f"from **{len(ctx.bot.cogs)}** modules."
         )
 
+    @command(name="cache", hidden=True)
+    @is_owner()
+    async def cache(self, ctx: Context):
+        cached_prefixes = await self.bot.generate_prefix_cache()
+
+        await ctx.send(f"Cached **{cached_prefixes}** prefix(es).")
+
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
     async def prefix(self, ctx: Context):
@@ -58,6 +65,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         guild = await Guild.get(id=ctx.guild.id)
         guild.prefix = prefix
         await guild.save()
+        await self.bot.generate_prefix_cache()
 
         await ctx.send(f"Set custom prefix to `{prefix}`")
 
@@ -75,6 +83,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         guild.prefix = None
         await guild.save()
+        await self.bot.generate_prefix_cache()
 
         await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
 

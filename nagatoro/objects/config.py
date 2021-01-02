@@ -18,4 +18,9 @@ class Config:
         self.db_passwd: Optional[str] = getenv("DB_PASSWD", None)
         self.db_name: Optional[str] = getenv("DB_NAME", None)
 
+        self.redis_url: str = getenv("REDIS_URL", "localhost")
+        self.redis_port: str = getenv("REDIS_PORT", "6379")
+        self.redis_user: Optional[str] = getenv("REDIS_USER", None)
+        self.redis_passwd: Optional[str] = getenv("REDIS_PASSWD", None)
+
         self.tenor_key: Optional[str] = getenv("TENOR_KEY", None)
