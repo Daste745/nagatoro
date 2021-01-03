@@ -32,33 +32,24 @@ Thanks to AniList's API, you can see info about you favorite anime, manga, studi
 :-:|:-:
 
 # Running Nagatoro
-### With Docker
+### Docker
 Make sure you have `docker` and `docker-compose` installed.
+
 There are two ways to run Nagatoro through docker:
-##### 1: Build the image:
+##### Build the image:
 - Clone the repository
 - Rename `.env.example` to `.env` and populate it with approperiate configuration variables
-- Run `docker-compose up -d` - this should build the image and run the app
-- To check logs, use `docker-compose logs`
+- Run `docker-compose up -d` - this should build the image and start the application stack
 
-##### 2: Use the latest public image
+#### Or Use the latest public image:
 - Make a folder called `nagatoro`
-- Inside the folder create a file named `docker-compose.yml` with this content:
-```
-version: "3"
+- Copy the [`docker-compose.yml`](./docker-compose.yml) file to this directory
+- Under `services>nagatoro` replace the line containing `build .` with `image: ghcr.io/daste745/nagatoro/nagatoro:latest` to use the latest public image, without needing to build it every time
+- Copy [`env.example`](./.env.example), rename it to `.env` and change the configuration variables appropriately
+- Run `docker-compose up -d` - this should pull the latest public image and start the application stack
+- Use `docker-compose pull` to update and restart the stack with `docker-compose up -d`
 
-services:
-  nagatoro:
-    image: ghcr.io/daste745/nagatoro/nagatoro:latest
-    restart: unless-stopped
-    environment:
-      - TOKEN=bot_token
-      - PREFIX=prefix
-      - ...
-```
-- Add other variables in the `environment` section, same as in .env.example
-- Start with `docker-compose up -d` and check logs with `docker-compose logs`
-- To update the image to its latest version, use `docker-compose pull` and restart with `docker-compose up -d`
+To check logs, use `docker-compose logs` or `docker-compose logs nagatoro` if you only want to see bot logs
 
 ### Manual
 - Make sure you have python version 3.8 or higher installed. You can check by running `python3 --version`
