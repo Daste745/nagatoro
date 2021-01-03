@@ -1,4 +1,4 @@
-from discord import Color, TextChannel
+from discord import Color
 from discord.ext.commands import (
     Cog,
     Context,
