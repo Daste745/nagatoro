@@ -17,7 +17,7 @@ from discord.ext.commands import (
 
 from nagatoro.checks import is_moderator
 from nagatoro.objects import Embed
-from nagatoro.converters import Member, Timedelta
+from nagatoro.converters import Member, Timedelta, User as UserC
 from nagatoro.db import Guild, User, Moderator, Mute, Warn
 
 
@@ -73,6 +73,7 @@ class Moderation(Cog):
         user, _ = await User.get_or_create(id=member.id)
         guild, _ = await Guild.get_or_create(id=ctx.guild.id)
         await Moderator.create(guild=guild, user=user, title=title)
+        await self.bot.generate_moderator_cache()
 
         await ctx.send(f"Saved **{member}** as a moderator of **{ctx.guild}**.")
 
@@ -107,6 +108,8 @@ class Moderation(Cog):
         if len(new_moderators) == 0:
             return await ctx.send("No new moderators were added.")
 
+        await self.bot.generate_moderator_cache()
+
         await ctx.send(
             f"Added **{len(new_moderators)}** new moderators: "
             f"{', '.join(i.name for i in new_moderators)}"
@@ -129,6 +132,7 @@ class Moderation(Cog):
             )
 
         await moderator.delete()
+        await self.bot.generate_moderator_cache()
 
         await ctx.send(f"Removed **{member}** from **{ctx.guild}**'s moderators.")
 
@@ -181,7 +185,7 @@ class Moderation(Cog):
     @command(name="ban")
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
-    async def ban(self, ctx: Context, user: User, *, reason: str = None):
+    async def ban(self, ctx: Context, user: UserC, *, reason: str = None):
         """Ban someone
 
         You can use an ID to ban someone is outside the server.
@@ -205,7 +209,7 @@ class Moderation(Cog):
     @command(name="unban", aliases=["pardon"])
     @bot_has_permissions(ban_members=True)
     @has_permissions(ban_members=True)
-    async def unban(self, ctx: Context, user: User):
+    async def unban(self, ctx: Context, user: UserC):
         """Unban someone
 
         Note: Only works with IDs.

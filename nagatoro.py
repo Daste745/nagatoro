@@ -29,6 +29,9 @@ async def run():
     if status := bot.config.status:
         bot.activity = Activity(name=status, type=bot.config.status_type)
     bot.load_cogs()
+    await bot.generate_prefix_cache()
+    await bot.generate_moderator_cache()
+
     await bot.login(token=bot.config.token)
     await bot.connect()
 

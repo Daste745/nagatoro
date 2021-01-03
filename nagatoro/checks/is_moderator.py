@@ -1,8 +1,6 @@
 from discord.ext.commands import Context, check
 from discord.ext.commands.errors import CheckFailure
 
-from nagatoro.db import Moderator
-
 
 class NotModerator(CheckFailure):
     """Exception raised when the command invoker isn't on the moderator list."""
@@ -15,12 +13,11 @@ class NotModerator(CheckFailure):
 
 def is_moderator():
     async def predicate(ctx: Context):
-        moderator = await Moderator.get_or_none(
-            user__id=ctx.author.id, guild__id=ctx.guild.id
-        )
-        if not moderator:
+        if not ctx.bot.cache.sismember(
+            f"{ctx.guild.id}:moderators",
+            ctx.author.id,
+        ):
             raise NotModerator()
-        else:
-            return True
+        return True
 
     return check(predicate)

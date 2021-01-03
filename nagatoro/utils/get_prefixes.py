@@ -1,24 +1,16 @@
-from discord.ext.commands import when_mentioned_or, when_mentioned
-from asyncio import TimeoutError
+from typing import Optional
 
-from nagatoro.db import Guild
+from discord.ext.commands import when_mentioned_or, when_mentioned
 
 
 async def get_prefixes(bot, message):
-    prefixes = []
+    prefix: Optional[str] = bot.config.prefix
 
-    if prefix := bot.config.prefix:
-        prefixes.append(prefix)
+    cache_key = f"{message.guild.id}:prefix"
+    if bot.cache.exists(cache_key):
+        prefix = bot.cache.get(cache_key).decode()
 
-    if message.guild:
-        try:
-            guild, _ = await Guild.get_or_create(id=message.guild.id)
-            if guild.prefix:
-                prefixes.append(guild.prefix)
-        except TimeoutError:
-            pass
-
-    if prefixes:
-        return when_mentioned_or(*prefixes)(bot, message)
+    if prefix:
+        return when_mentioned_or(prefix)(bot, message)
     else:
         return when_mentioned(bot, message)
