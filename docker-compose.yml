@@ -1,6 +1,25 @@
 version: "3"
 
+volumes:
+  db:
+
 services:
+  db:
+    image: mariadb
+    restart: unless-stopped
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=nagatoro
+      - MYSQL_USER=nagatoro
+      - MYSQL_PASSWORD=nagatoro
+      - MYSQL_RANDOM_ROOT_PASSWORD=true
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+    - ./redis.conf:/etc/redis.conf
+    command: redis-server /etc/redis.conf
   nagatoro:
     build: .
     restart: unless-stopped
