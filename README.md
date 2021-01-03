@@ -46,6 +46,7 @@ There are two ways to run Nagatoro through docker:
 - Copy the [`docker-compose.yml`](./docker-compose.yml) file to this directory
 - Under `services>nagatoro` replace the line containing `build .` with `image: ghcr.io/daste745/nagatoro/nagatoro:latest` to use the latest public image, without needing to build it every time
 - Copy [`env.example`](./.env.example), rename it to `.env` and change the configuration variables appropriately
+- Copy [`redis.conf`](./redis.conf) to your directory
 - Run `docker-compose up -d` - this should pull the latest public image and start the application stack
 - Use `docker-compose pull` to update and restart the stack with `docker-compose up -d`
 
