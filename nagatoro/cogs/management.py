@@ -36,8 +36,12 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     @is_owner()
     async def cache(self, ctx: Context):
         cached_prefixes = await self.bot.generate_prefix_cache()
+        cached_moderators = await self.bot.generate_moderator_cache()
 
-        await ctx.send(f"Cached **{cached_prefixes}** prefix(es).")
+        await ctx.send(
+            f"Cached **{cached_prefixes} prefix(es)** "
+            f"and **{cached_moderators} moderator(s)**."
+        )
 
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)

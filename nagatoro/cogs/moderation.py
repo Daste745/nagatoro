@@ -73,6 +73,7 @@ class Moderation(Cog):
         user, _ = await User.get_or_create(id=member.id)
         guild, _ = await Guild.get_or_create(id=ctx.guild.id)
         await Moderator.create(guild=guild, user=user, title=title)
+        await self.bot.generate_moderator_cache()
 
         await ctx.send(f"Saved **{member}** as a moderator of **{ctx.guild}**.")
 
@@ -107,6 +108,8 @@ class Moderation(Cog):
         if len(new_moderators) == 0:
             return await ctx.send("No new moderators were added.")
 
+        await self.bot.generate_moderator_cache()
+
         await ctx.send(
             f"Added **{len(new_moderators)}** new moderators: "
             f"{', '.join(i.name for i in new_moderators)}"
@@ -129,6 +132,7 @@ class Moderation(Cog):
             )
 
         await moderator.delete()
+        await self.bot.generate_moderator_cache()
 
         await ctx.send(f"Removed **{member}** from **{ctx.guild}**'s moderators.")
 

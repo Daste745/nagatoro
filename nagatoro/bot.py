@@ -1,6 +1,7 @@
 import os
 import logging
 from time import time
+from itertools import groupby
 
 from discord import Color, Intents
 from discord.ext import commands
@@ -9,7 +10,7 @@ from discord.ext.commands import Context, errors as cerrors
 from nagatoro.utils import get_prefixes
 from nagatoro.objects import Config, Embed, HelpCommand
 from nagatoro.checks.is_moderator import NotModerator
-from nagatoro.db import init_redis, Guild
+from nagatoro.db import init_redis, Guild, Moderator
 
 
 log = logging.getLogger(__name__)
@@ -73,6 +74,29 @@ class Bot(commands.Bot):
 
         log.info(f"Cached {cached_prefixes} prefix(es).")
         return cached_prefixes
+
+    async def generate_moderator_cache(self) -> int:
+        cached_moderators: int = 0
+
+        # TODO: Come up with a better solution to removing orphan moderators.
+        for guild in self.guilds:
+            self.cache.delete(f"{guild.id}:moderators")
+
+        all_moderators = await Moderator.all().prefetch_related("guild", "user")
+        for guild_id, moderators in groupby(
+            # Sort before grouping so every guild has exactly one list of mods
+            sorted(all_moderators, key=lambda x: x.guild.id),
+            key=lambda x: x.guild.id,
+        ):
+            moderator_ids = [i.user.id for i in moderators]
+            self.cache.sadd(
+                f"{guild_id}:moderators",
+                *moderator_ids,
+            )
+            cached_moderators += len(moderator_ids)
+
+        log.info(f"Cached {cached_moderators} moderator(s).")
+        return cached_moderators
 
     async def on_ready(self):
         log.info(f"Bot ready as {self.user} with prefix {self.config.prefix}")
