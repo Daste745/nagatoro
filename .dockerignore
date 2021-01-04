@@ -1,3 +1,10 @@
 venv/
+.git/
+.idea/
+.github/
+Dockerfile
 .env
+.env.example
+.gitignore
 redis.conf
+nagatoro.png

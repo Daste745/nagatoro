@@ -1,6 +1,15 @@
-FROM python:3.8.5-slim-buster
+# Using python:slim so we don't have to install build deps manually
+FROM python:slim AS build
+
+COPY requirements.txt /requirements.txt
+RUN python -m venv /venv && \
+    /venv/bin/pip install --no-cache-dir -r requirements.txt
+
+
+FROM python:alpine
+
+COPY --from=build /venv /venv
+COPY . /app
 WORKDIR /app
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-CMD [ "python3", "-u" ,"./nagatoro.py" ]
+
+CMD [ "/venv/bin/python", "-u" ,"./nagatoro.py" ]
