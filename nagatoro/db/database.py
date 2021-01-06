@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from tortoise import Tortoise
@@ -12,6 +13,9 @@ from tortoise.fields import (
     ForeignKeyRelation,
     ReverseRelation,
 )
+
+
+log = logging.getLogger(__name__)
 
 
 class Guild(Model):
@@ -139,10 +143,10 @@ class Warn(Model):
 
 
 async def init_database(db_url: str):
-    # logging.info("Initializing database connection...")
+    log.info("Initializing database connection.")
     await Tortoise.init(
         db_url=db_url,
         modules={"models": [__name__]},
     )
     await Tortoise.generate_schemas()
-    # logging.info("Successfully connected to database")
+    log.info("Successfully connected to the database.")
