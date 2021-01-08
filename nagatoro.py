@@ -17,15 +17,15 @@ logging.basicConfig(
     format="%(levelname)s:%(name)s:%(funcName)s:%(message)s",
 )
 
+
 bot = Bot(Config())
-db_url = (
-    f"mysql://{bot.config.db_user}:{bot.config.db_passwd}"
-    f"@{bot.config.db_url}/{bot.config.db_name}"
-)
 
 
 async def run():
-    await init_database(db_url)
+    await init_database(
+        f"mysql://{bot.config.db_user}:{bot.config.db_passwd}"
+        f"@{bot.config.db_url}/{bot.config.db_name}"
+    )
 
     if status := bot.config.status:
         bot.activity = Activity(name=status, type=bot.config.status_type)
