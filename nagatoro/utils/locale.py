@@ -49,6 +49,8 @@ def translate(ctx: Context, key: str, item: str, **kwargs) -> str:
 
     if ctx.bot.locale_cache.hexists(f"{locale}:{key}", item):
         string = ctx.bot.locale_cache.hget(f"{locale}:{key}", item).decode()
+        if not kwargs:
+            return string
         return string.format(**kwargs)
     else:
         return f"{locale}:{key}:{item}"
