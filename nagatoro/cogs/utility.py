@@ -38,8 +38,8 @@ class Utility(Cog):
                 value=t(
                     ctx,
                     "color_value",
-                    hex={role.color.value},
-                    rgb=role.color.to_rgb(),
+                    hex=str(role.color),
+                    rgb=str(role.color.to_rgb()),
                 ),
             )
 

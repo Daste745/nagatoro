@@ -63,7 +63,7 @@ commands:
       mentionable_yes: "Yes"
       mentionable_no: "No"
       color: "Color"
-      color_value: "{hex}, rgb({rgb})"
+      color_value: "{hex} | rgb{rgb}"
       created_at: "Created at"
 
     user:
