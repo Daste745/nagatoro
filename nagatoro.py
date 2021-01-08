@@ -31,6 +31,7 @@ async def run():
     bot.load_cogs()
     await bot.generate_prefix_cache()
     await bot.generate_moderator_cache()
+    await bot.generate_locale_cache()
 
     await bot.login(token=bot.config.token)
     await bot.connect()

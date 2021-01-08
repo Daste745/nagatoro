@@ -98,6 +98,19 @@ class Bot(commands.Bot):
         log.info(f"Cached {cached_moderators} moderator(s).")
         return cached_moderators
 
+    async def generate_locale_cache(self) -> int:
+        cached_locales: int = 0
+
+        async for guild in Guild.all():
+            if not guild.locale:
+                self.cache.delete(f"{guild.id}:locale")
+            else:
+                self.cache.set(f"{guild.id}:locale", guild.locale)
+                cached_locales += 1
+
+        log.info(f"Cached {cached_locales} locale(s)")
+        return cached_locales
+
     async def on_ready(self):
         log.info(f"Bot ready as {self.user} with prefix {self.config.prefix}")
 

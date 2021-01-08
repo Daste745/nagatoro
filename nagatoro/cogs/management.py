@@ -37,10 +37,12 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     async def cache(self, ctx: Context):
         cached_prefixes = await self.bot.generate_prefix_cache()
         cached_moderators = await self.bot.generate_moderator_cache()
+        cached_locales = await self.bot.generate_locale_cache()
 
         await ctx.send(
-            f"Cached **{cached_prefixes} prefix(es)** "
-            f"and **{cached_moderators} moderator(s)**."
+            f"Cached **{cached_prefixes} prefix(es)**, "
+            f"**{cached_moderators} moderator(s)** "
+            f"and **{cached_locales} locale(s)**."
         )
 
     @group(name="prefix", invoke_without_command=True)
