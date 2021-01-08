@@ -3,7 +3,7 @@ import logging
 from time import time
 from itertools import groupby
 
-from discord import Color, Intents
+from discord import Color, Intents, AllowedMentions
 from discord.ext import commands
 from discord.ext.commands import Context, errors as cerrors
 
@@ -21,7 +21,6 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix=get_prefixes,
             help_command=HelpCommand(),
-            # heartbeat_timeout=30,  # Leaving this untouched, experimentally
             case_insensitive=True,
             intents=Intents(
                 guilds=True,
@@ -29,6 +28,7 @@ class Bot(commands.Bot):
                 members=True,
                 reactions=True,
             ),
+            allowed_mentions=AllowedMentions.none(),
             **kwargs,
         )
         self.config = config
