@@ -9,6 +9,48 @@ language:
 #errors:
 
 commands:
+  info:
+    description: "Info about Nagatoro"
+
+    ping:
+      description: |
+        Bot connection latency
+
+        This isn't very accurate, and mainly used as a "is this bot alive?" command.
+      title: "Ping :ping_pong:"
+      message: "Latency: {ping}ms"
+
+    uptime:
+      description: "Bot uptime"
+      title: "Uptime"
+
+    support:
+      description: "Invite to Nagatoro's support server"
+      message: "Sent you an invite, check your DMs"
+      invite_url: "https://discord.gg/qDzU7gd"
+
+    bug:
+      description: "Where to report bugs and request features"
+      title: "Reporting bugs"
+      message: >
+        Join the support server (see the `support` command) if you need help
+        with anything. You can also report any issues on the
+        [issue tracker](https://github.com/daste745/nagatoro/issues)
+
+        Please provide any errors and context while reporting bugs and try to
+        clearly explain the issue.
+
+    invite:
+      description: "Nagatoro's bot invite link"
+      title: "Nagatoro invite link"
+      message: |
+        Nagatoro requires permissions for some commands to work:
+        **Manage Roles** - Required by the Moderation module for muting
+        **Ban Members** - Required by the ban command
+        **Add Reactions** - Confirmations and refreshing gifs
+        **Manage Messages** - Makes refreshing gifs easier
+      invite_url: "https://discord.com/oauth2/authorize?client_id=672485626179747864&permissions=268443716&scope=bot"
+
   utility:
     description: "Utility commands"
 
