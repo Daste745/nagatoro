@@ -8,6 +8,7 @@ from discord import Activity
 from nagatoro import Bot
 from nagatoro.objects import Config
 from nagatoro.db import init_database
+from nagatoro.utils import load_locales
 
 
 logging.basicConfig(
@@ -28,7 +29,10 @@ async def run():
 
     if status := bot.config.status:
         bot.activity = Activity(name=status, type=bot.config.status_type)
+
+    load_locales(bot.locale_cache)
     bot.load_cogs()
+
     await bot.generate_prefix_cache()
     await bot.generate_moderator_cache()
     await bot.generate_locale_cache()

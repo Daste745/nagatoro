@@ -1,0 +1,45 @@
+locale: "en"
+flag: ":flag_us:"
+language:
+  en: "english"
+  pl: "angielski"
+
+#date_format:
+
+#errors:
+
+commands:
+  utility:
+    role:
+      description: "Shows info about a role"
+      title: "Role {role}"
+      id: "ID"
+      members: "Members"
+      mentionable: "Mentionable"
+      mentionable_yes: "Yes"
+      mentionable_no: "No"
+      color: "Color"
+      color_value: "{hex}, rgb({rgb})"
+      created_at: "Created at"
+
+    user:
+      description: "Shows info about an user or a member"
+      title_bot: "{user} :robot:"
+      id: "ID"
+      created_at: "Created at"
+
+    avatar:
+      description: "Shows an user's avatar"
+      title: "{user}'s avatar"
+
+    server:
+      description: "Shows info about this server"
+      id: "ID"
+      owner: "Owner"
+      region: "Region"
+      members: "Members"
+      text_channels: "Text channels"
+      voice_channels: "Voice channels"
+
+# This is incomplete
+# TODO: Translate all the commands and stuff

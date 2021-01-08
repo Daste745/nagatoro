@@ -4,3 +4,4 @@ tortoise-orm
 aiomysql
 python-dotenv
 redis
+PyYAML

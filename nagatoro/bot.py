@@ -36,6 +36,7 @@ class Bot(commands.Bot):
 
         # Redis cache
         self.cache = init_redis(self.config, db=0)
+        self.locale_cache = init_redis(self.config, db=1)
 
     def load_cogs(self):
         path = "nagatoro/cogs/"
