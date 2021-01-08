@@ -20,6 +20,10 @@ def load_locale(path: str, cache: Redis) -> None:
 
     for category, commands in data["commands"].items():
         for command, keys in commands.items():
+            if command == "description":
+                cache.set(f"{locale}:commands:{category}:description", keys)
+                continue
+
             cache.hmset(f"{locale}:commands:{category}:{command}", keys)
             cached_strings += len(keys)
 

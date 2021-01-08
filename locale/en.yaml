@@ -10,6 +10,8 @@ language:
 
 commands:
   utility:
+    description: "Utility commands"
+
     role:
       description: "Shows info about a role"
       title: "Role {role}"
