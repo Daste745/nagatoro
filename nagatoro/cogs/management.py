@@ -13,6 +13,7 @@ from discord.ext.commands import (
 from nagatoro.objects import Embed
 from nagatoro.checks import is_moderator
 from nagatoro.db import Guild
+from nagatoro.utils import available_locales
 
 
 class Management(Cog, command_attrs=dict(ignore_extra=True)):
@@ -44,6 +45,44 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
             f"**{cached_moderators} moderator(s)** "
             f"and **{cached_locales} locale(s)**."
         )
+
+    @group(name="language", aliases=["lang", "locale"], invoke_without_command=True)
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def language(self, ctx: Context):
+        """Bot language"""
+
+        guild = await Guild.get(id=ctx.guild.id)
+
+        if not guild.locale:
+            return await ctx.send(f"**{ctx.guild.name}** doesn't have a language set.")
+
+        return await ctx.send(f"Language on **{ctx.guild.name}**: **{guild.locale}**")
+
+    @language.command(name="available")
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def language_available(self, ctx: Context):
+        """Available languages"""
+
+        await ctx.send(f"Available languages: **{', '.join(available_locales())}**")
+
+    @language.command(name="set")
+    @is_moderator()
+    @cooldown(rate=2, per=30, type=BucketType.guild)
+    async def language_set(self, ctx: Context, language: str):
+        """Set Nagatoro's language on this server"""
+
+        if language not in available_locales():
+            return await ctx.send(
+                f"**{language}** is not available. "
+                f"See the `language available` command for more details."
+            )
+
+        guild = await Guild.get(id=ctx.guild.id)
+        guild.locale = language
+        await guild.save()
+        await self.bot.generate_locale_cache()
+
+        await ctx.send(f"Set custom locale to `{language}`")
 
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
