@@ -57,9 +57,10 @@ def translate(ctx: Context, key: str, item: str, **kwargs) -> str:
 
 
 def translate_command(ctx: Context, key: str, **kwargs) -> str:
+    command_name = ctx.command.qualified_name.replace(" ", "_").replace("-", "_")
     return translate(
         ctx,
-        f"commands:{ctx.cog.qualified_name.lower()}:{ctx.command.name}",
+        f"commands:{ctx.cog.qualified_name.lower()}:{command_name}",
         key,
         **kwargs,
     )
