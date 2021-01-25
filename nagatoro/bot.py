@@ -7,7 +7,7 @@ from discord import Color, Intents, AllowedMentions
 from discord.ext import commands
 from discord.ext.commands import Context, errors as cerrors
 
-from nagatoro.utils import get_prefixes
+from nagatoro.utils import get_prefixes, tg
 from nagatoro.objects import Config, Embed, HelpCommand
 from nagatoro.checks.is_moderator import NotModerator
 from nagatoro.db import init_redis, Guild, Moderator
@@ -128,7 +128,7 @@ class Bot(commands.Bot):
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):
-        title = "Error"
+        title = tg(ctx, "error")
 
         try:
             raise exception
@@ -141,17 +141,17 @@ class Bot(commands.Bot):
             # Send the help message
             return await ctx.send_help(ctx.command)
         except (cerrors.BadArgument, cerrors.BadUnionArgument):
-            title = "Bad argument(s)"
+            title = tg(ctx, "bad_argument")
         except (cerrors.NotOwner, cerrors.MissingPermissions, NotModerator):
-            title = "Insufficient permissions"
+            title = tg(ctx, "missing_permissions")
         except cerrors.BotMissingPermissions:
-            title = "Missing bot permissions"
+            title = tg(ctx, "bot_missing_permissions")
         except cerrors.MissingRole:
-            title = "Missing role"
+            title = tg(ctx, "missing_role")
         except cerrors.NSFWChannelRequired:
-            title = "Channel is not NSFW"
+            title = tg(ctx, "nsfw_channel_required")
         except cerrors.CommandOnCooldown:
-            title = "Cooldown"
+            title = tg(ctx, "command_on_cooldown")
         except Exception:
             log.exception(exception)
 

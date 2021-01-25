@@ -1,9 +1,10 @@
 import os
 import logging
+from typing import Optional, Union
 
 import yaml
 from redis import Redis
-from discord.ext.commands import Context
+from discord.ext.commands import Context, Command, Cog, Group
 
 
 LOCALE_PATH = "locale/"
@@ -18,6 +19,10 @@ def load_locale(path: str, cache: Redis) -> None:
     locale: str = data["locale"]
     cached_strings: int = 0
 
+    # Global keys
+    cache.hmset(f"{locale}:global", data["global"])
+
+    # Command translations
     for category, commands in data["commands"].items():
         for command, keys in commands.items():
             if command == "description":
@@ -40,12 +45,17 @@ def available_locales() -> list[str]:
     return [os.path.splitext(file)[0] for file in files]
 
 
-def translate(ctx: Context, key: str, item: str, **kwargs) -> str:
+def get_locale(ctx: Context) -> str:
     locale = (
         ctx.bot.cache.get(f"{ctx.guild.id}:locale")
         if ctx.bot.cache.exists(f"{ctx.guild.id}:locale")
         else ctx.bot.config.locale
     ).decode()
+    return locale
+
+
+def translate(ctx: Context, key: str, item: str, **kwargs) -> str:
+    locale = get_locale(ctx)
 
     if ctx.bot.locale_cache.hexists(f"{locale}:{key}", item):
         string = ctx.bot.locale_cache.hget(f"{locale}:{key}", item).decode()
@@ -56,11 +66,37 @@ def translate(ctx: Context, key: str, item: str, **kwargs) -> str:
         return f"{locale}:{key}:{item}"
 
 
-def translate_command(ctx: Context, key: str, **kwargs) -> str:
-    command_name = ctx.command.qualified_name.replace(" ", "_").replace("-", "_")
+def get_command_name(command: Command) -> str:
+    return command.qualified_name.replace(" ", "_").replace("-", "_")
+
+
+def translate_command(
+    ctx: Context,
+    key: str,
+    command: Optional[Union[Command, Group]] = None,
+    **kwargs,
+) -> str:
+    command_name = get_command_name(command or ctx.command)
+    cog_name = command.cog.qualified_name if command else ctx.cog.qualified_name
     return translate(
         ctx,
-        f"commands:{ctx.cog.qualified_name.lower()}:{command_name}",
+        f"commands:{cog_name.lower()}:{command_name}",
         key,
         **kwargs,
     )
+
+
+def translate_cog_description(ctx: Context, cog: Cog = None, **kwargs) -> str:
+    locale = get_locale(ctx)
+    key = f"{locale}:commands:{cog.qualified_name.lower()}:description"
+    if ctx.bot.locale_cache.exists(key):
+        string = ctx.bot.locale_cache.get(key).decode()
+        if not kwargs:
+            return string
+        return string.format(**kwargs)
+    else:
+        return key
+
+
+def translate_global(ctx: Context, key: str, **kwargs) -> str:
+    return translate(ctx, f"global", key, **kwargs)
