@@ -98,9 +98,11 @@ class Social(Cog):
         """
 
         if ctx.invoked_with == "baltop":
-            return await self.ranking_balance.__call__(ctx)
+            ctx.command = self.ranking_balance
+            return await self.ranking_balance(ctx)
 
-        await self.ranking_level.__call__(ctx)
+        ctx.command = self.ranking_level
+        await self.ranking_level(ctx)
 
     @ranking.command(name="level", aliases=["lvl"])
     @cooldown(rate=2, per=30, type=BucketType.guild)
