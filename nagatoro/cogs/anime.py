@@ -1,23 +1,23 @@
 from discord import Color
-from discord.ext.commands import Cog, Context, command, BucketType, \
-    CooldownMapping
+from discord.ext.commands import Cog, Context, command, BucketType, CooldownMapping
 from discord.ext.commands.errors import CommandOnCooldown
 
 from nagatoro.objects import Embed
-from nagatoro.utils import anilist, trace
+from nagatoro.utils import anilist, trace, t
 
 
 def clean_description(text: str) -> str:
-    return text. \
-        replace("<br>", ""). \
-        replace("\n", " "). \
-        replace("&ndash;", " - "). \
-        replace("<i>", "*"). \
-        replace("</i>", "*"). \
-        replace("<b>", "**"). \
-        replace("</b>", "**"). \
-        replace("~!", " "). \
-        replace("!~", " ")
+    return (
+        text.replace("<br>", "")
+        .replace("\n", " ")
+        .replace("&ndash;", " - ")
+        .replace("<i>", "*")
+        .replace("</i>", "*")
+        .replace("<b>", "**")
+        .replace("</b>", "**")
+        .replace("~!", " ")
+        .replace("!~", " ")
+    )
 
 
 class Anime(Cog):
@@ -25,8 +25,9 @@ class Anime(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self._cooldown = CooldownMapping.from_cooldown(rate=5, per=20,
-                                                       type=BucketType.user)
+        self._cooldown = CooldownMapping.from_cooldown(
+            rate=5, per=20, type=BucketType.user
+        )
 
     async def cog_before_invoke(self, ctx: Context):
         # Cog-wide cooldowns, every command is on a shared cooldown.
@@ -78,14 +79,19 @@ class Anime(Cog):
 
         await ctx.trigger_typing()
         user = (await anilist(query, {"username": username}))["data"]["User"]
-        anime_lists, manga_lists = [(await anilist(
-            list_query,
-            {"username": username, "type": i}
-        ))["data"]["MediaListCollection"]["lists"]
-                                    for i in ["ANIME", "MANGA"]]
+        anime_lists, manga_lists = [
+            (await anilist(list_query, {"username": username, "type": i}))["data"][
+                "MediaListCollection"
+            ]["lists"]
+            for i in ["ANIME", "MANGA"]
+        ]
 
-        embed = Embed(ctx, title=user["name"],
-                      url=user["siteUrl"], footer="Via AniList")
+        embed = Embed(
+            ctx,
+            title=t(ctx, "title", user=user["name"]),
+            url=user["siteUrl"],
+            footer="Via AniList",
+        )
 
         embed.set_thumbnail(url=user["avatar"]["large"])
 
@@ -93,39 +99,41 @@ class Anime(Cog):
             anime_list_body = ""
             for i in anime_lists:
                 if i["status"]:
-                    status = i["status"] \
-                        .replace("COMPLETED", "✅") \
-                        .replace("PLANNING", "🗓️") \
-                        .replace("DROPPED", "🗑️") \
-                        .replace("CURRENT", "📺") \
-                        .replace("PAUSED", "⏸️") \
+                    status = (
+                        i["status"]
+                        .replace("COMPLETED", "✅")
+                        .replace("PLANNING", "🗓️")
+                        .replace("DROPPED", "🗑️")
+                        .replace("CURRENT", "📺")
+                        .replace("PAUSED", "⏸️")
                         .replace("REPEATING", "🔁")
+                    )
                 else:
                     status = "⚙️"
 
-                anime_list_body += f"{status} **{len(i['entries'])}** " \
-                                   f"{i['name']}\n"
+                anime_list_body += f"{status} **{len(i['entries'])}** " f"{i['name']}\n"
 
-            embed.add_field(name="Anime", value=anime_list_body)
+            embed.add_field(name=t(ctx, "anime"), value=anime_list_body)
 
         if manga_lists:
             manga_list_body = ""
             for i in manga_lists:
                 if i["status"]:
-                    status = i["status"] \
-                        .replace("COMPLETED", "✅") \
-                        .replace("PLANNING", "🗓️") \
-                        .replace("DROPPED", "🗑️️") \
-                        .replace("CURRENT", "📖") \
-                        .replace("PAUSED", "⏸️") \
+                    status = (
+                        i["status"]
+                        .replace("COMPLETED", "✅")
+                        .replace("PLANNING", "🗓️")
+                        .replace("DROPPED", "🗑️️")
+                        .replace("CURRENT", "📖")
+                        .replace("PAUSED", "⏸️")
                         .replace("REPEATING", "🔁")
+                    )
                 else:
                     status = "⚙️"
 
-                manga_list_body += f"{status} **{len(i['entries'])}** " \
-                                   f"{i['name']}\n"
+                manga_list_body += f"{status} **{len(i['entries'])}** " f"{i['name']}\n"
 
-            embed.add_field(name="Manga", value=manga_list_body)
+            embed.add_field(name=t(ctx, "manga"), value=manga_list_body)
 
         if any(user["favourites"][i]["nodes"] for i in user["favourites"]):
             favorites_body = ""
@@ -137,24 +145,24 @@ class Anime(Cog):
                 favorites_body += f"__{i.title()}__"
 
                 # Show total amount of favs if they exceed a limit (3)
-                if (favorites_count := len(user['favourites'][i]['nodes'])) > 3:
-                    favorites_body += \
-                        f" ({favorites_count})"
+                if (favorites_count := len(user["favourites"][i]["nodes"])) > 3:
+                    favorites_body += f" ({favorites_count})"
                 favorites_body += "\n"
 
                 for item in user["favourites"][i]["nodes"][:3]:
                     # There are three types of names, so unify them.
                     if i in ["anime", "manga"]:
-                        name = item['title']['romaji']
+                        name = item["title"]["romaji"]
                     elif i in ["characters", "staff"]:
-                        name = item['name']['full']
+                        name = item["name"]["full"]
                     else:
-                        name = item['name']
+                        name = item["name"]
 
                     favorites_body += f"[{name}]({item['siteUrl']})\n"
 
-            embed.add_field(name="Favorites", value=favorites_body,
-                            inline=False)
+            embed.add_field(
+                name=t(ctx, "favorites"), value=favorites_body, inline=False
+            )
 
         await ctx.send(embed=embed)
 
@@ -184,8 +192,13 @@ class Anime(Cog):
         """
         anime = (await anilist(query, {"title": title}))["data"]["Media"]
 
-        embed = Embed(ctx, title=anime["title"]["romaji"], description="",
-                      url=anime["siteUrl"], footer="Via AniList")
+        embed = Embed(
+            ctx,
+            title=anime["title"]["romaji"],
+            description="",
+            url=anime["siteUrl"],
+            footer="Via AniList",
+        )
 
         embed.set_thumbnail(url=anime["coverImage"]["extraLarge"])
 
@@ -202,8 +215,11 @@ class Anime(Cog):
         embed.description += "\n"
 
         if description := clean_description(anime["description"]):
-            embed.description += f"Synopsis: ||{description[:250]}...||" \
-                if len(description) >= 250 else f"Synopsis: ||{description}||"
+            embed.description += (
+                t(ctx, "synopsis_ellipsis", synopsis=description[:250])
+                if len(description) >= 250
+                else t(ctx, "synopsis", synopsis=description)
+            )
 
         if color_hex := anime["coverImage"]["color"]:
             embed.color = Color(int(color_hex.replace("#", ""), 16))
@@ -211,20 +227,19 @@ class Anime(Cog):
             embed.color = Color.blue()
 
         embed.add_fields(
-            ("Status", anime["status"].title()),
-            ("Episodes", anime["episodes"]),
-            ("Episode length", f"{anime['duration']} minutes"),
-            ("Season", f"{anime['season'].title()} {anime['seasonYear']}"),
-            ("Format", anime["format"].title().replace("_", " ")),
-            ("Score", f"{anime['averageScore']} / 100"),
-
+            (t(ctx, "status"), anime["status"].title()),
+            (t(ctx, "episodes"), anime["episodes"]),
+            (t(ctx, "episode_length"), f"{anime['duration']} minutes"),
+            (t(ctx, "season"), f"{anime['season'].title()} {anime['seasonYear']}"),
+            (t(ctx, "format"), anime["format"].title().replace("_", " ")),
+            (t(ctx, "score"), f"{anime['averageScore']} / 100"),
         )
 
         if anime_studios := anime["studios"]["nodes"]:
-            embed.add_field(name="Studio", value=anime_studios[0]["name"])
+            embed.add_field(name=t(ctx, "studio"), value=anime_studios[0]["name"])
 
         if anime["genres"]:
-            embed.add_field(name="Genres", value=", ".join(anime["genres"]))
+            embed.add_field(name=t(ctx, "genres"), value=", ".join(anime["genres"]))
 
         # TODO: Add pagination.
         await ctx.send(embed=embed)
@@ -252,8 +267,13 @@ class Anime(Cog):
         """
         manga = (await anilist(query, {"title": title}))["data"]["Media"]
 
-        embed = Embed(ctx, title=manga["title"]["romaji"], description="",
-                      url=manga["siteUrl"], footer="Via AniList")
+        embed = Embed(
+            ctx,
+            title=manga["title"]["romaji"],
+            description="",
+            url=manga["siteUrl"],
+            footer="Via AniList",
+        )
 
         embed.set_thumbnail(url=manga["coverImage"]["extraLarge"])
 
@@ -271,27 +291,30 @@ class Anime(Cog):
 
         if manga["description"]:
             description = clean_description(manga["description"])
-            embed.description += f"Synopsis: ||{description[:250]}...||" \
-                if len(description) >= 250 else f"Synopsis: ||{description}||"
+            embed.description += (
+                t(ctx, "synopsis_ellipsis", synopsis=description[:250])
+                if len(description) >= 250
+                else t(ctx, "synopsis", synopsis=description)
+            )
 
         if color_hex := manga["coverImage"]["color"]:
             embed.color = Color(int(color_hex.replace("#", ""), 16))
         else:
             embed.color = Color.blue()
 
-        embed.add_field(name="Status", value=manga["status"].title())
+        embed.add_field(name=t(ctx, "status"), value=manga["status"].title())
 
         if manga["chapters"]:
-            embed.add_field(name="Chapters", value=manga["chapters"])
+            embed.add_field(name=t(ctx, "chapters"), value=manga["chapters"])
 
         if manga["volumes"]:
-            embed.add_field(name="Volumes", value=manga["volumes"])
+            embed.add_field(name=t(ctx, "volumes"), value=manga["volumes"])
 
-        embed.add_field(name="Format", value=manga["format"].title())
-        embed.add_field(name="Score", value=f"{manga['averageScore']} / 100")
+        embed.add_field(name=t(ctx, "format"), value=manga["format"].title())
+        embed.add_field(name=t(ctx, "score"), value=f"{manga['averageScore']} / 100")
 
         if manga["genres"]:
-            embed.add_field(name="Genres", value=", ".join(manga["genres"]))
+            embed.add_field(name=t(ctx, "genres"), value=", ".join(manga["genres"]))
 
         # TODO: Add pagination.
         await ctx.send(embed=embed)
@@ -320,25 +343,32 @@ class Anime(Cog):
         """
         studio = (await anilist(query, {"name": name}))["data"]["Studio"]
 
-        embed = Embed(ctx, title=studio["name"],
-                      url=studio["siteUrl"], footer="Via AniList")
+        embed = Embed(
+            ctx, title=studio["name"], url=studio["siteUrl"], footer="Via AniList"
+        )
 
-        embed.set_thumbnail(
-            url=studio["media"]["nodes"][0]["coverImage"]["extraLarge"])
+        embed.set_thumbnail(url=studio["media"]["nodes"][0]["coverImage"]["extraLarge"])
 
         if studio["isAnimationStudio"]:
-            embed.description = "Animation Studio"
+            embed.description = t(ctx, "animation_studio")
 
         # TODO: Observe, if this breaks when isAnimationStudio=False.
-        most_popular = ["Popularity ⭐ Favorites ❤"]
+        most_popular = [t(ctx, "most_popular_header")]
         for i in studio["media"]["nodes"]:
             most_popular.append(
-                f"{i['popularity']} ⭐ {i['favourites']} ❤️ "
-                f"[{i['title']['romaji']}]({i['siteUrl']}) "
+                t(
+                    ctx,
+                    "most_popular_item",
+                    popularity=i["popularity"],
+                    favorites=i["favourites"],
+                    title=i["title"]["romaji"],
+                    url=i["siteUrl"],
+                )
             )
 
-        embed.add_field(name="Most popular productions",
-                        value="\n".join(most_popular))
+        embed.add_field(
+            name=t(ctx, "most_popular_title"), value="\n".join(most_popular)
+        )
 
         await ctx.send(embed=embed)
 
@@ -369,32 +399,50 @@ class Anime(Cog):
 
         character = (await anilist(query, {"name": name}))["data"]["Character"]
 
-        embed = Embed(ctx, title=character["name"]["full"], description="",
-                      url=character["siteUrl"], footer="Via AniList",
-                      color=Color.blue())
+        embed = Embed(
+            ctx,
+            title=character["name"]["full"],
+            description="",
+            url=character["siteUrl"],
+            footer="Via AniList",
+            color=Color.blue(),
+        )
 
         embed.set_thumbnail(url=character["image"]["large"])
 
         if character["favourites"]:
-            embed.description += f"❤️ {character['favourites']} favorites \n\n"
+            embed.description += (
+                t(ctx, "favorites", favorites=character["favourites"]) + "\n\n"
+            )
 
         if character["description"]:
             description = clean_description(character["description"])
-            embed.description += f"Description: ||{description[:250]}...||" \
-                if len(description) >= 250 \
-                else f"Description: ||{description}||"
+            embed.description += (
+                t(ctx, "character_description_ellipsis", description=description[:250])
+                if len(description) >= 250
+                else t(ctx, "character_description", description=description)
+            )
 
-        appears_in = ["Main 🌕 Supporting 🌗 Background 🌑"]
+        appears_in = [t(ctx, "appears_in_header")]
         for i in character["media"]["edges"]:
-            role = i["characterRole"] \
-                .replace("MAIN", "🌕") \
-                .replace("SUPPORTING", "🌗") \
+            role = (
+                i["characterRole"]
+                .replace("MAIN", "🌕")
+                .replace("SUPPORTING", "🌗")
                 .replace("BACKGROUND", "🌑")
+            )
 
-            appears_in.append(f"{role} [{i['node']['title']['romaji']}]"
-                              f"({i['node']['siteUrl']})")
+            appears_in.append(
+                t(
+                    ctx,
+                    "appears_in_item",
+                    role=role,
+                    title=i["node"]["title"]["romaji"],
+                    url=i["node"]["siteUrl"],
+                )
+            )
 
-        embed.add_field(name="Appears in", value="\n".join(appears_in))
+        embed.add_field(name=t(ctx, "appears_in_title"), value="\n".join(appears_in))
 
         await ctx.send(embed=embed)
 
@@ -412,22 +460,27 @@ class Anime(Cog):
         if not image_url:
             if not (attachments := ctx.message.attachments):
                 # TODO: Raise a MissingRequiredArgument or other error
-                return await ctx.send(
-                    "Please provide an image (url or attachment)")
+                return await ctx.send(t(ctx, "missing_image"))
 
             image_url = attachments[0].url
 
         image_name = image_url.split("/")[-1]
-        embed = Embed(ctx, title="Image search", footer="Via trace.moe",
-                      description=f"Searching with *{image_name}* ...",
-                      color=Color.blue())
+        embed = Embed(
+            ctx,
+            title=t(ctx, "title"),
+            footer="Via trace.moe",
+            description=t(ctx, "searching", image=image_name),
+            color=Color.blue(),
+        )
         message = await ctx.send(embed=embed)
         search = await trace(image_url)
 
         if "errors" in search.keys():
-            embed.description = "Error while loading image. Try posting the " \
-                                "image directly in chat or check if you used " \
-                                "a valid URL."
+            embed.description = (
+                "Error while loading image. Try posting the "
+                "image directly in chat or check if you used "
+                "a valid URL."
+            )
             return await message.edit(embed=embed)
 
         embed.description = ""
@@ -435,11 +488,14 @@ class Anime(Cog):
             if result["is_adult"]:
                 continue
 
-            embed.description += \
-                f"[{result['title_romaji']}]" \
-                f"(https://anilist.co/anime/{result['anilist_id']}) " \
-                f"episode {result['episode']} " \
-                f"({round(result['similarity'] * 100)}%)\n"
+            embed.description += t(
+                ctx,
+                "entry",
+                title=result["title_romaji"],
+                id=result["anilist_id"],
+                episode=result["episode"],
+                similarity=result["similarity"],
+            )
 
         # TODO: Implement video previews
         await message.edit(embed=embed)

@@ -1,0 +1,465 @@
+locale: "en"
+flag: ":flag_us:"
+language:
+  en: "english"
+  pl: "angielski"
+
+#date_format:
+
+global:
+  level_up_message: >
+    Congrats **{user}**, you levelled up to **level {level}**
+    and got a bonus of **{bonus} points**!
+  error: "Error"
+  bad_argument: "Bad argument(s)"
+  missing_permissions: "Insufficient permissions"
+  bot_missing_permissions: "Missing bot permissions"
+  missing_role: "Missing role"
+  nsfw_channel_required: "Channel is not NSFW"
+  command_on_cooldown: "Cooldown"
+
+commands:
+  anime:
+    description: "Anime and manga info using AniList"
+
+    anilist:
+      description: |
+        AniList profile
+
+        Shows anime/manga stats and favorites.
+      title: "{user}'s AniList profile"
+      anime: "Anime"
+      manga: "Manga"
+      favorites: "Favorites"
+
+    anime:
+      description: "Anime info from AniList"
+      synopsis: "Synopsis: ||{synopsis}||"
+      synopsis_ellipsis: "Synopsis: ||{synopsis}...||"
+      status: "Status"
+      episodes: "Episodes"
+      episode_length: "Episode length"
+      season: "Season"
+      format: "Format"
+      score: "Score"
+      studio: "Studio"
+      genres: "Genres"
+
+    manga:
+      description: "Manga info from AniList"
+      synopsis: "Synopsis: ||{synopsis}||"
+      synopsis_ellipsis: "Synopsis: ||{synopsis}...||"
+      status: "Status"
+      chapters: "Chapters"
+      volumes: "Volumes"
+      format: "Format"
+      score: "Score"
+      genres: "Genres"
+
+    studio:
+      description: "Studio info from AniList"
+      animation_studio: "Animation Studio"
+      most_popular_title: "Most popular productions"
+      most_popular_header: "Popularity ⭐ Favorites ❤"
+      most_popular_item: "{popularity} ⭐ {favorites} ❤ [{title}]({url})"
+
+    character:
+      description: "Character info from AniList"
+      favorites: "❤ {favorites} favorites"
+      character_description: "Description: ||{description}||"
+      character_description_ellipsis: "Description: ||{description}...||"
+      appears_in_title: "Appears in"
+      appears_in_header: "Main 🌕 Supporting 🌗 Background 🌑"
+      appears_in_item: "{role} [{title}]({url})"
+
+    trace:
+      description: |
+        Trace.moe image search
+
+        Uses the trace.moe image search to find what anime it's from.
+        This search engine recognizes only images/gifs from anime.
+        When searching with a gif, the first frame is used.
+        Tenor links don't work, because they don't provide a direct image URL.
+        All NSFW results are hidden.
+      title: "Image search"
+      entry: >
+        [{title}](https://anilist.co/anime/{id})
+        episode {episode} ({similarity:%})
+      searching: "Searching with *{image}*"
+      error_loading: >
+        Error while loading image. Try posting the image directly in chat
+        or check if you used a valid URL.
+      missing_image: "Please provide an image (url or attachment)"
+
+  info:
+    description: "Info about Nagatoro"
+
+    help:
+      description: "Bot help"
+      opening_note: |
+        Use `{prefix}{command_name} [command]` for info about a command.
+        Use `{prefix}{command_name} [category]` for info about a category.
+      commands: "Commands"
+      cog_commands: "{cog} Commands"
+
+    ping:
+      description: |
+        Bot connection latency
+
+        This isn't very accurate, and mainly used as a "is this bot alive?" command.
+      title: "Ping :ping_pong:"
+      message: "Latency: {ping}ms"
+
+    uptime:
+      description: "Bot uptime"
+      title: "Uptime"
+
+    support:
+      description: "Invite to Nagatoro's support server"
+      message: "Sent you an invite, check your DMs"
+      invite_url: "https://discord.gg/qDzU7gd"
+
+    bug:
+      description: "Where to report bugs and request features"
+      title: "Reporting bugs"
+      message: >
+        Join the support server (see the `support` command) if you need help
+        with anything. You can also report any issues on the
+        [issue tracker](https://github.com/daste745/nagatoro/issues)
+
+        Please provide any errors and context while reporting bugs and try to
+        clearly explain the issue.
+
+    invite:
+      description: "Nagatoro's bot invite link"
+      title: "Nagatoro invite link"
+      message: |
+        Nagatoro requires permissions for some commands to work:
+        **Manage Roles** - Required by the Moderation module for muting
+        **Ban Members** - Required by the ban command
+        **Add Reactions** - Confirmations and refreshing gifs
+        **Manage Messages** - Makes refreshing gifs easier
+      invite_url: "https://discord.com/oauth2/authorize?client_id=672485626179747864&permissions=268443716&scope=bot"
+
+  management:
+    description: "Bot settings and info"
+
+    reload:
+      description: "Reload all cogs and commands"
+      message: "Reloaded **{commands}** commands from **{modules}** modules."
+
+    cache:
+      description: "Rebuild all caches"
+      message: >
+        Cached **{prefixes} prefix(es)**, **{moderators}** moderator(s) and
+        **{locales}** locale(s).
+
+    language:
+      description: "Bot language"
+      not_set: "**{guild}** doesn't have a language set."
+      message: "Language on **{guild}**: **{locale}**."
+
+    language_available:
+      description: "Available languages"
+      message: "Available languages: **{locales}**"
+
+    language_set:
+      description: "Set Nagatoro's language on this server"
+      not_available: >
+        **{language}** is not available.
+        See the `language available` command for more details.
+      message: "Set custom locale to `{language}`"
+
+    prefix:
+      description: "Custom bot prefix"
+      title: "Prefixes for {guild}"
+
+    prefix_set:
+      description: "Set a custom prefix for this server"
+      message: "Set custom prefix to `{prefix}`"
+
+    prefix_delete:
+      description: "Delete the prefix from this server"
+      not_set: "**{guild}** doesn't have a custom prefix."
+      message: "Removed prefix from **{name}**"
+
+    level_up_messages:
+      description: |
+        Toggle level up messages on this server
+
+        Level up messages are not sent until you reach level 6.
+      already_disabled: "Level up messages on **{guild}** are already disabled."
+      already_enabled: "Level up messages on **{guild}** are already enabled."
+      disabled: "Disabled level up messages on **{guild}**."
+      enabled: "Enabled level up messages on **{guild}**."
+
+  moderation:
+    description: "Server moderation"
+
+    moderators:
+      description: |
+        See who moderates this server
+
+        Everyone on this list can use moderation commands like `mute` and `warn`.
+      no_moderators: "There are no moderators on this server"
+      title: "Moderators of {guild}"
+
+    moderators_add:
+      description: |
+        Add someone to the list of moderators
+
+        `title` is optional and can be used to differentiate between moderator postions.
+      already_moderator: "**{member}** is already a moderator!"
+      message: "Saved **{member}** as a moderator of **{guild}**."
+
+    moderators_add_role:
+      description: |
+        Add members from a role as moderators
+
+        Members who are already moderators are ignored.
+        Roles with more than 25 members are disallowed.
+        `title` is optional and can be used to differentiate between moderator postions.
+      too_much: "I can't add more than {limit} moderators at once!"
+      none_added: "No new moderators were added."
+      message: "Added **{amount}** new moderators: {moderators}"
+
+    moderators_delete:
+      description: "Remove someone from the list of moderators"
+      not_moderator: >
+        **{member}** is not a moderator, you can't delete them from the list!
+      message: "Removed **{member}** from **{guild}**'s moderators."
+
+    muterole:
+      description: |
+        Check the mute role
+
+        Role given to muted users, it stays with them until the mute ends or they are unmuted manually.
+      not_set: "The mute role is not set on this server."
+      doesnt_exist: "The mute role on this server doesn't exist."
+      message: "{guild}'s mute role: **{name}** (id: `{id}`)"
+
+    muterole_set:
+      description: "Set this server's mute role"
+      message: "Set the mute role to **{role}**."
+
+    muterole_delete:
+      description: |
+        Remove this server's mute role
+
+        This command DOES NOT delete the role on the server.
+      message: "Removed the mute role from {guild}"
+
+    ban:
+      description: |
+        Ban someone
+
+        You can use an ID to ban someone is outside the server.
+        To get a user's ID, enable Developer Mode under Appearance Settings, right click on the user's name and select "Copy ID".
+        This command does not delete their messages.
+      message: "Banned {user}."
+      message_with_reason: "Banned {user}, reason: *{reason}*."
+
+    unban:
+      description: |
+        Unban someone
+
+        Note: Only works with IDs.
+        To get a user's ID, enable Developer Mode under Appearance Settings, right click on the user's name and select "Copy ID".
+      not_banned: "{user} is not banned."
+      message: "Unbanned {user}."
+
+    warn:
+      description: |
+        Warn someone
+
+        Warns do not give any punishments apart fron an entry on the warn list.
+      message: "Warned {member}, reason: *{reason}*"
+      dm_message: "You have been warned in **{guild}**, reason: *{reason}*"
+
+    warn_delete:
+      description: |
+        Delete a warn from the database
+
+        Use the warn id given when muting or viewing someone's warns (the number in square brackets, e.g. [32]).
+      doesnt_exist: "A Warn with ID **{id}** doesn't exist."
+      other_guild: >
+        The warn with id `{id}` is from another server.
+        You can't change or delete it.
+      message: "Removed warn `{id}` from the database."
+
+    warns:
+      description: |
+        See someone's warns
+
+        If no member specified, this shows Your warns.
+      title: "{member}'s warns"
+      no_warns: "{member} doesn't have any warns on this server."
+
+    mute:
+      description: |
+        Mute someone
+
+        Muting someone gives them the mute role specified by the muterole command and removes the role after the specified time has passed.
+        Note: Mutes are checked every 10 seconds, so times are not perfect.
+      message_extended: "Extended {member}'s mute by {time}."
+      no_mute_role: >
+        **{guild}** has no mute role set.
+        See help for the `muterole` command for more info.
+      title: "Mute [{id}]"
+      message: |
+        Muted {member} for {time}
+        Reason: *{reason}*
+      dm_message: >
+        You have been muted in **{guild}** for {time}, reason: *{reason}*
+
+    mute_delete:
+      description: |
+        Delete a mute and unmute someone
+
+        Use the mute id given when muting or viewing someone's mutes (the number in square brackets, e.g. [64]).
+      doesnt_exist: "A Mute with ID **{id}** doesn't exist."
+      other_guild: >
+        The mute with id `{id}` is from another server.
+        You can't change or delete it.
+      message: "Removed mute `{id}` from the database."
+
+    unmute:
+      description: |
+        Unmute someone
+
+        Manually end someone's mute period.
+      not_muted: "{member} is not muted."
+      message: "Unmuted **{member}**."
+
+    mutes:
+      description: |
+        See someone's mutes
+
+        If no member specified, this shows Your mutes.
+      title: "{member}'s mutes"
+      no_mutes: "{member} doesn't have any mutes on this server."
+      no_reason: "No reason"
+
+    mutes_active:
+      description: "See active mutes"
+      title: "Active mutes"
+      no_mutes: "There are no active mutes in **{guild}**."
+      entry: |
+        **Given at**: {given_at}
+        **Duration**: {duration}
+        **Moderator**: {moderator}
+      entry_with_reason: |
+        **Given at**: {given_at}
+        **Duration**: {duration}
+        **Moderator**: {moderator}
+        **Reason**: {reason}
+
+  social:
+    description: "Social commands"
+
+    profile:
+      description: "User's profile"
+      title: "{member}'s profile"
+      rank: "Rank"
+      level: "Level"
+      experience: "Experience"
+      balance: "Balance"
+      balance_value: "{bal} coins"
+      mutes: "Mutes"
+      warns: "Warns"
+
+    balance:
+      description: "Coin balance"
+      message: "{member}'s balance: **{bal}**"
+
+    level:
+      description: "User's level"
+      message: "{member}'s level: **{lvl}**"
+
+    ranking:
+      description: |
+        User ranking
+
+        Use 'baltop' for quicker access to the balance ranking
+
+    ranking_level:
+      description: "User ranking, by level"
+      title: "Level Ranking"
+      ranking_entry: "{pos}. **{user}**: {lvl} ({exp} exp)\n"
+
+    ranking_balance:
+      description: "User ranking, sorted by balance"
+      title: "Balance Ranking"
+      ranking_entry: "{pos}. **{user}**: {lvl} ({exp} exp)\n"
+
+    pay:
+      description: |
+        Give coins to someone
+
+        You can't give money to yourself or any bots.
+        Transfer amount should be more than 0.
+      title: "Transfer"
+      other_users_only: "You can give money to other users only."
+      at_least_one: "You need to pay at least 1 coin."
+      not_enough_funds: >
+        Not enough funds, you have {coins} coins ({missing} missing).
+      confirmation: >
+        You are about to give **{amount}** coin(s) to {member}, are you sure?
+      cancelled: "Transfer cancelled."
+      success: "Transferred **{amount}** coin(s) to {member}"
+
+    daily:
+      description: |
+        Daily coin reward
+
+        Mention someone to give your them your reward.
+        Can be used once every 23 hours.
+        Streak gives you more coins over time, but will be lost after 2 days of inactivity.
+      title: "Daily"
+      cannot_give_to_bot: "You can't give points to a bot!"
+      lost_streak: "(lost streak)"
+      next_daily: >
+        Your next daily will be available in **{remaining} hour(s)**.
+        Current streak: **{streak}**.
+      received_daily: |
+        You received **{amount}** daily points
+        Streak: **{streak}** {expired}
+        Come back in **{remaining} hour(s)** to continue your streak!
+      gave_daily: |
+        You gave your **{amount}** daily points to {member}
+        Streak: **{streak}** {expired}
+        Come back in **{remaining} hour(s)** to continue your streak!
+
+  utility:
+    description: "Utility commands"
+
+    role:
+      description: "Shows info about a role"
+      title: "Role {role}"
+      id: "ID"
+      members: "Members"
+      mentionable: "Mentionable"
+      mentionable_yes: "Yes"
+      mentionable_no: "No"
+      color: "Color"
+      color_value: "{hex} | rgb{rgb}"
+      created_at: "Created at"
+
+    user:
+      description: "Shows info about an user or a member"
+      title_bot: "{user} :robot:"
+      id: "ID"
+      created_at: "Created at"
+
+    avatar:
+      description: "Shows an user's avatar"
+      title: "{user}'s avatar"
+
+    server:
+      description: "Shows info about this server"
+      id: "ID"
+      owner: "Owner"
+      region: "Region"
+      members: "Members"
+      text_channels: "Text channels"
+      voice_channels: "Voice channels"

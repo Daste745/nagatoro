@@ -4,6 +4,7 @@ from datetime import timedelta
 from discord.ext.commands import Cog, Context, command
 
 from nagatoro.objects import Embed
+from nagatoro.utils import t
 
 
 class Info(Cog):
@@ -21,8 +22,11 @@ class Info(Cog):
         This isn't very accurate, and mainly used as a "is this bot alive?" command.
         """
 
-        ping = round(self.bot.latency * 1000)
-        embed = Embed(ctx, title="Ping", description=f":ping_pong:‎‎{ping}ms")
+        embed = Embed(
+            ctx,
+            title=t(ctx, "title"),
+            description=t(ctx, "message", ping=round(self.bot.latency * 1000)),
+        )
 
         await ctx.send(embed=embed)
 
@@ -30,10 +34,9 @@ class Info(Cog):
     async def uptime(self, ctx: Context):
         """Bot uptime"""
 
-        current_timestamp = time()
-        timestamp_difference = round(current_timestamp - self.bot.start_timestamp)
+        timestamp_difference = round(time() - self.bot.start_timestamp)
         uptime = timedelta(seconds=timestamp_difference)
-        embed = Embed(ctx, title="Uptime", description=str(uptime))
+        embed = Embed(ctx, title=t(ctx, "title"), description=str(uptime))
 
         await ctx.send(embed=embed)
 
@@ -41,8 +44,8 @@ class Info(Cog):
     async def support(self, ctx: Context):
         """Invite to Nagatoro's support server"""
 
-        await ctx.send("Sent you an invite, check your DMs")
-        await ctx.author.send("https://discord.gg/qDzU7gd")
+        await ctx.send(t(ctx, "message"))
+        await ctx.author.send(t(ctx, "invite_url"))
 
     @command(name="bug")
     async def bug(self, ctx: Context):
@@ -50,12 +53,8 @@ class Info(Cog):
 
         embed = Embed(
             ctx,
-            title="Bug reporting",
-            description="You can report bugs directly to me (@Predator#xxxx) "
-            "or preferrably, if you are familiar with GitHub, on the "
-            "[issues page](https://github.com/stefankar1000/nagatoro/issues)"
-            "\n\nPlease, provide any errors and context while reporting bugs "
-            "and clearly explain the issue.",
+            title=t(ctx, "title"),
+            description=t(ctx, "message"),
         )
 
         await ctx.send(embed=embed)
@@ -64,25 +63,11 @@ class Info(Cog):
     async def invite(self, ctx: Context):
         """Nagatoro's bot invite link"""
 
-        invite = (
-            "https://discord.com/oauth2/authorize"
-            "?client_id=672485626179747864&scope=bot&permissions=268443716"
-        )
-
         embed = Embed(
             ctx,
-            title="Nagatoro invite link",
-            url=invite,
-            description=(
-                "Nagatoro requires permissions for some commands to work:\n"
-                "**Manage Roles** - Used by the Moderation module for muting\n"
-                "**Ban Members** - Used only by the ban command, can be left off\n"
-                "**Manage Messages** - Automatic reaction removal while refreshing\n"
-                "**Add Reactions** - Confirmations and reloading gifs\n\n"
-                "If any permissions are missing, an appropriate message will "
-                "be displayed, these can be turned on or off at any time in "
-                "server settings."
-            ),
+            title=t(ctx, "title"),
+            url=t(ctx, "invite_url"),
+            description=t(ctx, "message"),
         )
 
         await ctx.send(embed=embed)

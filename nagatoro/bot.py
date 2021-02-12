@@ -3,11 +3,11 @@ import logging
 from time import time
 from itertools import groupby
 
-from discord import Color, Intents
+from discord import Color, Intents, AllowedMentions
 from discord.ext import commands
 from discord.ext.commands import Context, errors as cerrors
 
-from nagatoro.utils import get_prefixes
+from nagatoro.utils import get_prefixes, tg
 from nagatoro.objects import Config, Embed, HelpCommand
 from nagatoro.checks.is_moderator import NotModerator
 from nagatoro.db import init_redis, Guild, Moderator
@@ -21,7 +21,6 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix=get_prefixes,
             help_command=HelpCommand(),
-            # heartbeat_timeout=30,  # Leaving this untouched, experimentally
             case_insensitive=True,
             intents=Intents(
                 guilds=True,
@@ -29,6 +28,7 @@ class Bot(commands.Bot):
                 members=True,
                 reactions=True,
             ),
+            allowed_mentions=AllowedMentions.none(),
             **kwargs,
         )
         self.config = config
@@ -36,6 +36,7 @@ class Bot(commands.Bot):
 
         # Redis cache
         self.cache = init_redis(self.config, db=0)
+        self.locale_cache = init_redis(self.config, db=1)
 
     def load_cogs(self):
         path = "nagatoro/cogs/"
@@ -98,6 +99,19 @@ class Bot(commands.Bot):
         log.info(f"Cached {cached_moderators} moderator(s).")
         return cached_moderators
 
+    async def generate_locale_cache(self) -> int:
+        cached_locales: int = 0
+
+        async for guild in Guild.all():
+            if not guild.locale:
+                self.cache.delete(f"{guild.id}:locale")
+            else:
+                self.cache.set(f"{guild.id}:locale", guild.locale)
+                cached_locales += 1
+
+        log.info(f"Cached {cached_locales} locale(s)")
+        return cached_locales
+
     async def on_ready(self):
         log.info(f"Bot ready as {self.user} with prefix {self.config.prefix}")
 
@@ -114,7 +128,7 @@ class Bot(commands.Bot):
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: Exception):
-        title = "Error"
+        title = tg(ctx, "error")
 
         try:
             raise exception
@@ -127,17 +141,17 @@ class Bot(commands.Bot):
             # Send the help message
             return await ctx.send_help(ctx.command)
         except (cerrors.BadArgument, cerrors.BadUnionArgument):
-            title = "Bad argument(s)"
+            title = tg(ctx, "bad_argument")
         except (cerrors.NotOwner, cerrors.MissingPermissions, NotModerator):
-            title = "Insufficient permissions"
+            title = tg(ctx, "missing_permissions")
         except cerrors.BotMissingPermissions:
-            title = "Missing bot permissions"
+            title = tg(ctx, "bot_missing_permissions")
         except cerrors.MissingRole:
-            title = "Missing role"
+            title = tg(ctx, "missing_role")
         except cerrors.NSFWChannelRequired:
-            title = "Channel is not NSFW"
+            title = tg(ctx, "nsfw_channel_required")
         except cerrors.CommandOnCooldown:
-            title = "Cooldown"
+            title = tg(ctx, "command_on_cooldown")
         except Exception:
             log.exception(exception)
 

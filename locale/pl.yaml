@@ -1,0 +1,465 @@
+locale: "pl"
+flag: ":flag_pl:"
+language:
+  en: "polish"
+  pl: "polski"
+
+#date_format:
+
+global:
+  level_up_message: >
+    Gratulacje **{user}**, awansujesz na **{level} poziom**!
+    Otrzymujesz bonusowe **{bonus} punktów**.
+  error: "Wystąpił błąd"
+  bad_argument: "Niepoprawne parametry"
+  missing_permissions: "Niewystarczające permisje"
+  bot_missing_permissions: "Brakująca rola bota"
+  missing_role: "Brakująca rola"
+  nsfw_channel_required: "Kanał nie jest NSFW"
+  command_on_cooldown: "Poczekaj!"
+
+commands:
+  anime:
+    description: "Informacje o anime/mandze z AniList"
+
+    anilist:
+      description: |
+        Profil na AniList
+
+        Statystyki mangi/anime oraz ulubione serie.
+      title: "Profil użytkownika {user}"
+      anime: "Anime"
+      manga: "Manga"
+      favorites: "Ulubione"
+
+    anime:
+      description: "Informacje o anime"
+      synopsis: "Opis: ||{synopsis}||"
+      synopsis_ellipsis: "Opis: ||{synopsis}...||"
+      status: "Status"
+      episodes: "Ilość odcinków"
+      episode_length: "Długość odcinka"
+      season: "Sezon"
+      format: "Format"
+      score: "Ocena"
+      studio: "Studio"
+      genres: "Gatunki"
+
+    manga:
+      description: "Informacje o mandze"
+      synopsis: "Opis: ||{synopsis}||"
+      synopsis_ellipsis: "Opis: ||{synopsis}...||"
+      status: "Status"
+      chapters: "Ilość rozdziałów"
+      volumes: "Ilośc tomów"
+      format: "Format"
+      score: "Ocena"
+      genres: "Gatunki"
+
+    studio:
+      description: "Informacje o studiu"
+      animation_studio: "Studio animacji"
+      most_popular_title: "Najpopularniejsze produkcje"
+      most_popular_header: "Popularność ⭐ Ulubione ❤"
+      most_popular_item: "{popularity} ⭐ {favorites} ❤ [{title}]({url})"
+
+    character:
+      description: "Informacje o postaci"
+      favorites: "❤ {favorites} ulubione"
+      character_description: "Opis: ||{description}||"
+      character_description_ellipsis: "Opis: ||{description}...||"
+      appears_in_title: "Występuje w"
+      appears_in_header: "Główna 🌕 Wspierająca 🌗 Drugoplanowa 🌑"
+      appears_in_item: "{role} [{title}]({url})"
+
+    trace:
+      description: |
+        Wyszukiwanie obrazami trace.moe
+
+        Używa wyszukiwarki trace.moe do sprawdzenia z jakiego anime pochodzi obraz.
+        Przy wyszukiwaniu gifem używana jest jego piewsza klatka.
+        Linki do gifów z Tenora/Giphy nie są wspierane.
+        Wszystkie wyniki oznaczone jako NSFW są automatycznie ukrywane.
+      title: "Wyszukiwanie obrazem"
+      entry: >
+        [{title}](https://anilist.co/anime/{id})
+        odcinek {episode} ({similarity:%})
+      searching: "Wyszukiwanie *{image}*"
+      error_loading: >
+        Wystąpił błąd przy ładowaniu obrazu.
+        Sprawdź, czy link nie jest uszkodzony.
+      missing_image: "Podaj url obrazka lub prześlij plik"
+
+  info:
+    description: "Informacje o Nagatoro"
+
+    help:
+      description: "Komendy"
+      opening_note: |
+        Wpisz `{prefix}{command_name} [command]` aby dowiedzieć się więcej o komendzie.
+        Wpisz `{prefix}{command_name} [category]` aby dowiedzieć się więcej o kategorii komend.
+      commands: "Komendy"
+      cog_commands: "Komendy {cog}"
+
+    ping:
+      description: |
+        Opóźnienie połączenia bota z Discordem
+
+        Wartość pingu nie jest zbyt dokładna, ta komenda najczęściej używana jest w celu sprawdzenia czy bot działa.
+      title: "Ping :ping_pong:"
+      message: "Opóźnienie: {ping}ms"
+
+    uptime:
+      description: "Czas pracy bota"
+      title: "Czas pracy"
+
+    support:
+      description: "Zaproszenie na serwer wsparcia Nagatoro"
+      message: "Wysłałam Ci zaproszenie na PW!"
+      invite_url: "https://discord.gg/qDzU7gd"
+
+    bug:
+      description: "Gdzie zgłaszać błędy i prosić o nową funkcjonalność"
+      title: "Zgłaszanie błędów"
+      message: >
+        Dołącz na serwer wsparcia (komenda `support`) Jeśli potrzebujesz z
+        czymkolwiek pomocy. Możesz też zgłaszać błędy bota na
+        [issue trackerze](https://github.com/daste745/nagatoro/issues)
+
+        Przy zgłaszaniu błędów pamiętaj aby podać wszystkie ważne szczegóły i
+        opisać w jaki sposób doszło do błędu.
+
+    invite:
+      description: "Link do zaproszenia Nagatoro"
+      title: "Zaproszenie Nagatoro"
+      message: |
+        Nagatoro wymaga paru permisji aby poprawnie działać:
+        **Zarządzanie Rolami** - Wymagane przez moduł moderacyjny do wyciszania użytkowników
+        **Banowanie Członków** - Wymagane przez komendę ban
+        **Dodawanie Reakcji** - Potwierdzenia i odświeżanie gifów
+        **Zarządzanie Wiadomościami** - Ułatwia odświeżanie gifów
+      invite_url: "https://discord.com/oauth2/authorize?client_id=672485626179747864&permissions=268443716&scope=bot"
+
+  management:
+    description: "Ustawienia oraz informacje o bocie"
+
+    reload:
+      description: "Reload all cogs and commands"
+      message: "Reloaded **{commands}** commands from **{modules}** modules."
+
+    cache:
+      description: "Rebuild all caches"
+      message: >
+        Cached **{prefixes} prefix(es)**, **{moderators}** moderator(s) and
+        **{locales}** locale(s).
+
+    language:
+      description: "Język bota"
+      not_set: "**{guild}** nie ma ustawionego języka."
+      message: "Język **{guild}**: **{locale}**."
+
+    language_available:
+      description: "Dostępne języki"
+      message: "Dostępne języki: **{locales}**"
+
+    language_set:
+      description: "Ustaw język Nagatoro na tym serwerze"
+      not_available: >
+        **{language}** nie jest dostępny.
+        Sprawdź komendę `language available` aby zobaczyć wszystkie dostępne języki.
+      message: "Ustawiono język `{language}`"
+
+    prefix:
+      description: "Własny prefiks bota"
+      title: "Prefiksy na {guild}"
+
+    prefix_set:
+      description: "Ustaw własny prefiks na serwerze"
+      message: "Ustawiono `{prefix}` jako prefiks serwera."
+
+    prefix_delete:
+      description: "Usuń własny prefiks z serwera"
+      not_set: "**{guild}** nie ma ustawionego żadnego prefiksu."
+      message: "Usunięto prefiks na **{name}**"
+
+    level_up_messages:
+      description: |
+        Przełącz widoczność wiadomości level-up
+
+        Wiadomości level-up domyślnie są ukryte przed osiągnięciem 6 poziomu.
+      already_disabled: "Wiadomości level-up są już wyłączone na **{guild}**."
+      already_enabled: "Wiadomości level-up są już włączone na **{guild}**."
+      disabled: "Wyłączono wiadomości level-up na **{guild}**."
+      enabled: "Włączono wiadomości level-up na **{guild}**."
+
+  moderation:
+    description: "Moderowanie serwerem"
+
+    moderators:
+      description: |
+        Lista moderatorów serwera
+
+        Każdy z tej listy może używać komend moderacyjnych, np. `mute` lub `warn`.
+      no_moderators: "Nie ma moderatorów na tym serwerze"
+      title: "Moderatorzy {guild}"
+
+    moderators_add:
+      description: |
+        Dodaj użytkownika do list moderatorów
+
+        `title` jest opcjonalny - może być wykorzystywany do rozróżniania funkcji moderatorów.
+      already_moderator: "**{member}** jest już moderatorem!"
+      message: "Dodano **{member}** do listy moderatorów **{guild}**."
+
+    moderators_add_role:
+      description: |
+        Dodaj użytkowników posiadających rolę do listy moderatorów
+
+        Użytkownicy, którzy są już moderatorami zostaną pominięci.
+        W dodawanej roli może znajdować się maksymalnie 25 członków.
+        `title` jest opcjonalny - może być wykorzystywany do rozróżniania funkcji moderatorów.
+      too_much: "Nie mogę dodać więcej niż {limit} moderatorów na raz!"
+      none_added: "Nie dodano żadnych moderatorów."
+      message: "Dodano **{amount}** moderatorów: {moderators}"
+
+    moderators_delete:
+      description: "Usuń użytkownika z list moderatorów"
+      not_moderator: "**{member}** nie jest moderatorem!"
+      message: "Usunięto **{member}** z listy moderatorów **{guild}**."
+
+    muterole:
+      description: |
+        Sprawdź która rola wycisza
+
+        Rola nakładana przy wyciszaniu użytkowników.
+        Jest ona zdejmowana automatycznie po zakończeniu wyciszenia lub manualnym odciszeniu.
+      not_set: "Nie ustawiono roli do wyciszeń."
+      doesnt_exist: "Rola do wyciszeń nie istnieje."
+      message: "Rola do wyciszeń na {guild}: **{name}** (id: `{id}`)"
+
+    muterole_set:
+      description: "Ustaw rolę do wyciszeń"
+      message: "Ustawiono **{role}** jako rolę do wyciszeń."
+
+    muterole_delete:
+      description: |
+        Deaktywuj rolę do wyciszeń
+
+        Ta komenda NIE USUWA roli z serwera.
+      message: "Removed the mute role from {guild}"
+
+    ban:
+      description: |
+        Zbanuj użytkownika
+
+        Aby zbanować użytkownika, którego nie ma na serwerze, użyj jego ID.
+        Aby zdobyć czyjeś id włącz Tryb Developera w ustawieniach wyglądu Discorda. Następnie kliknij na użytkownika prawym przyciskiem myszy i wybierz "Kopiuj ID".
+        Zbanowanie nie usunie wiadomości użytkownika.
+      message: "Zbanowano {user}."
+      message_with_reason: "Zbanowano {user} z powodu: *{reason}*."
+
+    unban:
+      description: |
+        Odbanuj użytkownika
+
+        Odbanować można tylko za pomocą ID.
+        Aby zdobyć czyjeś id włącz Tryb Developera w ustawieniach wyglądu Discorda. Następnie kliknij na użytkownika prawym przyciskiem myszy i wybierz "Kopiuj ID".
+      not_banned: "{user} nie jest zbanowany/a."
+      message: "Odbanowano {user}."
+
+    warn:
+      description: |
+        Ostrzeż użytkownika
+
+        Ostrzeżenia nie wpływają na użytkownika na serwerze, są jedynie wpisami do listy.
+      message: "Ostrzeżono {member}, powód: *{reason}*"
+      dm_message: "Otrzymałeś/aś ostrzeżenie na serwerze **{guild}** z powodu *{reason}*"
+
+    warn_delete:
+      description: |
+        Usuń ostrzeżenie z historii
+
+        Użyj ID, które podane jest przy dodawaniu ostrzeżenia lub przeglądaniu ich listy (liczba w kwadratowych nawiasach, np. [32]).
+      doesnt_exist: "Ostrzeżenie o ID **{id}** Nie istnieje."
+      other_guild: >
+        Ostrzeżenie o ID `{id}` należy do innego serwera.
+        Nie możesz go zmodyfikować.
+      message: "Usunięto ostrzeżenie `{id}` z historii."
+
+    warns:
+      description: |
+        Lista ostrzeżeń
+
+        Domyślnie pokazuje listę Twoich ostrzeżeń.
+      title: "Ostrzeżenia {member}"
+      no_warns: "{member} nie ma ostrzeżeń na tym serwerze."
+
+    mute:
+      description: |
+        Wycisz użytkownika
+
+        Wyciszenie nadaje użytkownikowi specjalną rolę, którą można ustawić komendą `muterole`.
+        Rola automatycznie zostaje zdjęta po podanym czasie.
+        Uwaga: Wyciszenia sprawdzane są co 10 sekund, więc niektóre z nich mogą nie mieć idealnej długości.
+      message_extended: "Przedłużono wyciszenie {member} o {time}."
+      no_mute_role: >
+        Nie ustawiono roli wyciszonych użytkowników na **{guild}**.
+        Sprawdź komendę `muterole` aby ją ustawić.
+      title: "Wyciszenie [{id}]"
+      message: |
+        Wyciszono {member} na {time}
+        Powód: *{reason}*
+      dm_message: >
+        Otrzyłeś/aś wyciszenie na serwerze **{guild}** na {time} z powodu *{reason}*
+
+    mute_delete:
+      description: |
+        Zdejmij oraz usuń wyciszenie
+
+        Użyj ID, które podane jest przy wyciszaniu lub przeglądaniu ich listy (liczba w kwadratowych nawiasach, np. [32]).
+      doesnt_exist: "Wyciszenie o ID **{id}** nie istnieje."
+      other_guild: >
+        Wyciszenie o id `{id}` należy do innego serwera.
+        Nie możesz go zmodyfikować.
+      message: "Usunięto wyciszenie `{id}` z historii."
+
+    unmute:
+      description: |
+        Zdejmij wyciszenie
+
+        Manualnie zakończ czyjeś wyciszenie.
+      not_muted: "{member} nie jest wyciszony/a."
+      message: "Zakończono wyciszenie **{member}**."
+
+    mutes:
+      description: |
+        Sprawdź listę wyciszeń
+
+        Domyślnie pokazuje listę Twoich wyciszeń.
+      title: "Wyciszenia {member}"
+      no_mutes: "{member} nie ma wyciszeń na tym serwerze."
+      no_reason: "Nie podano"
+
+    mutes_active:
+      description: "Aktywne wyciszenia"
+      title: "Aktywne wyciszenia"
+      no_mutes: "Aktualnie nie ma aktywnych wyciszeń na **{guild}**."
+      entry: |
+        **Data nadania**: {given_at}
+        **Czas trwania**: {duration}
+        **Moderator**: {moderator}
+      entry_with_reason: |
+        **Data nadania**: {given_at}
+        **Czas trwania**: {duration}
+        **Moderator**: {moderator}
+        **Powód**: {reason}
+
+  social:
+    description: "Interakcje towarzyskie"
+
+    profile:
+      description: "Profil użytkownika"
+      title: "Profil {member}"
+      rank: "Pozycja w rankingu"
+      level: "Poziom"
+      experience: "Doświadczenie"
+      balance: "Stan konta"
+      balance_value: "{bal} monet"
+      mutes: "Wyciszenia"
+      warns: "Ostrzeżenia"
+
+    balance:
+      description: "Stan konta"
+      message: "Stan konta {member}: **{bal}**"
+
+    level:
+      description: "Poziom"
+      message: "Poziom {member}: **{lvl}**"
+
+    ranking:
+      description: |
+        Ranking użytkowników
+
+        Komenda `baltop` jest skrótem do `ranking balance`
+
+    ranking_level:
+      description: "Ranking poziomów"
+      title: "Ranking poziomów"
+      ranking_entry: "{pos}. **{user}**: {lvl} ({exp} exp)\n"
+
+    ranking_balance:
+      description: "Ranking stanów konta"
+      title: "Ranking stanów konta"
+      ranking_entry: "{pos}. **{user}**: {lvl} ({exp} exp)\n"
+
+    pay:
+      description: |
+        Przekaż komuś monety
+
+        Nie możesz przekazywać monet botom lub samemu sobie.
+        Ilość powinna wynosić więcej niż 0.
+      title: "Przelew"
+      other_users_only: "Monety możesz przekazywać tylko innym użytkownikom."
+      at_least_one: "Musisz przekazać co najmniej 1 monetę."
+      not_enough_funds: >
+        Brakuje Ci {missing} monet, aktualnie masz ich {coins}.
+      confirmation: >
+        Czy na pewno chcesz przekazać {member} **{amount}** monet?
+      cancelled: "Anulowano."
+      success: "Przekazano {member} **{amount}** monet."
+
+    daily:
+      description: |
+        Dzienna dawka punktów
+
+        Oznacz kogoś, aby przekazać swoje dzienne punkty.
+        Komendy można używać raz na 23 godziny.
+        Utrzymywanie wysokiej passy nagrodzi Cię dodatkowymi punktami. Znika ona po 2 dniach nieaktywności.
+      title: "Dzienne punkty"
+      cannot_give_to_bot: "Nie możesz oddawać punktów botom!"
+      lost_streak: "(utracono passę)"
+      next_daily: >
+        Musisz poczekać **{remaining} godzin**.
+        Aktualna passa: **{streak}**.
+      received_daily: |
+        Otrzymałeś/aś **{amount}** punktów
+        Passa: **{streak}** {expired}
+        Wróć po więcej za **{remaining} godzin** aby kontynuować swoją passę!
+      gave_daily: |
+        Oddałeś/aś {member} **{amount}** punktów
+        Passa: **{streak}** {expired}
+        Wróć po więcej za **{remaining} godzin** aby kontynuować swoją passę!
+
+  utility:
+    description: "Komendy użytkowe"
+
+    role:
+      description: "Informacje o roli"
+      title: "Rola {role}"
+      id: "ID"
+      members: "Członkowie"
+      mentionable: "Można pingować?"
+      mentionable_yes: "Tak"
+      mentionable_no: "Nie"
+      color: "Kolor"
+      color_value: "{hex}, rgb({rgb})"
+      created_at: "Utworzono"
+
+    user:
+      description: "Informacje o użytkowniku"
+      title_bot: "{user} :robot:"
+      id: "ID"
+      created_at: "Utworzono"
+
+    avatar:
+      description: "Awatar użytkownika w pełnej rozdzielczości"
+      title: "Awatar {user}"
+
+    server:
+      description: "Informacje o tym serwerze"
+      id: "ID"
+      owner: "Właściciel"
+      region: "Region"
+      members: "Członkowie"
+      text_channels: "Kanały tekstowe"
+      voice_channels: "Kanały głosowe"

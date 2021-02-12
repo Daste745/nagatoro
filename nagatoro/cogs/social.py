@@ -15,7 +15,7 @@ from discord.ext.commands import (
 
 from nagatoro.converters import Member
 from nagatoro.objects import Embed
-from nagatoro.utils import aenumerate
+from nagatoro.utils import aenumerate, t, tg
 from nagatoro.db import Guild, User, Mute, Warn
 
 
@@ -44,24 +44,26 @@ class Social(Cog):
         # Find position of profile in global user ranking
         rank = (await User.all().order_by("-exp")).index(user)
 
-        embed = Embed(ctx, title=f"{member.name}'s profile", color=member.color)
+        embed = Embed(
+            ctx, title=t(ctx, "title", member=member.name), color=member.color
+        )
         embed.set_thumbnail(url=member.avatar_url)
 
         embed.add_fields(
-            ("Rank", str(rank + 1)),
-            ("Level", f"{user.level}"),
-            ("Experience", f"{user.exp}/{next_level_exp} ({progress}%)"),
-            ("Balance", f"{user.balance} coins"),
+            (t(ctx, "rank"), str(rank + 1)),
+            (t(ctx, "level"), f"{user.level}"),
+            (t(ctx, "experience"), f"{user.exp}/{next_level_exp} ({progress}%)"),
+            (t(ctx, "balance"), t(ctx, "balance_value", bal=user.balance)),
         )
 
         if mutes := await Mute.filter(
             guild__id=ctx.guild.id, user__id=member.id
         ).count():
-            embed.add_field(name="Mutes", value=str(mutes))
+            embed.add_field(name=t(ctx, "mutes"), value=str(mutes))
         if warns := await Warn.filter(
             guild__id=ctx.guild.id, user__id=member.id
         ).count():
-            embed.add_field(name="Warns", value=str(warns))
+            embed.add_field(name=t(ctx, "warns"), value=str(warns))
 
         await ctx.send(embed=embed)
 
@@ -74,7 +76,7 @@ class Social(Cog):
             member = ctx.author
 
         user, _ = await User.get_or_create(id=member.id)
-        await ctx.send(f"{member.name}'s balance: **{user.balance}**")
+        await ctx.send(t(ctx, "messsage", member=member.name, bal=user.balance))
 
     @command(name="level", aliases=["lvl"])
     @cooldown(rate=5, per=10, type=BucketType.user)
@@ -85,7 +87,7 @@ class Social(Cog):
             member = ctx.author
 
         user, _ = await User.get_or_create(id=member.id)
-        await ctx.send(f"{member.name}'s level: **{user.level}**")
+        await ctx.send(t(ctx, "message", member=member.name, lvl=user.level))
 
     @group(name="ranking", aliases=["top", "baltop"], invoke_without_command=True)
     @cooldown(rate=2, per=30, type=BucketType.guild)
@@ -105,12 +107,14 @@ class Social(Cog):
     async def ranking_level(self, ctx: Context):
         """User ranking, by level"""
 
-        embed = Embed(ctx, title="Level Ranking", description="", color=Color.blue())
+        embed = Embed(ctx, title=t(ctx, "title"), description="", color=Color.blue())
 
         await ctx.trigger_typing()
         async for pos, i in aenumerate(User.all().order_by("-exp").limit(10), start=1):
             user = await self.bot.fetch_user(i.id)
-            embed.description += f"{pos}. **{user}**: {i.level} ({i.exp} exp)\n"
+            embed.description += t(
+                ctx, "ranking_entry", pos=pos, user=user, lvl=i.level, exp=i.exp
+            )
 
         await ctx.send(embed=embed)
 
@@ -119,14 +123,16 @@ class Social(Cog):
     async def ranking_balance(self, ctx: Context):
         """User ranking, sorted by balance"""
 
-        embed = Embed(ctx, title="Balance Ranking", description="", color=Color.blue())
+        embed = Embed(ctx, title=t(ctx, "title"), description="", color=Color.blue())
 
         await ctx.trigger_typing()
         async for pos, i in aenumerate(
             User.all().order_by("-balance").limit(10), start=1
         ):
             user = await self.bot.fetch_user(i.id)
-            embed.description += f"{pos}. **{user}**: {i.balance} coins\n"
+            embed.description += t(
+                ctx, "ranking_entry", pos=pos, user=user, lvl=i.level, exp=i.exp
+            )
 
         await ctx.send(embed=embed)
 
@@ -140,23 +146,26 @@ class Social(Cog):
         """
 
         if member == ctx.author or member.bot:
-            return await ctx.send("You can give money to other users only.")
+            return await ctx.send(t(ctx, "other_users_only"))
         if amount <= 0:
-            return await ctx.send("You need to pay at least 1 coin.")
+            return await ctx.send(t(ctx, "at_least_one"))
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
         if user.balance < amount:
             return await ctx.send(
-                f"Not enough funds, you have "
-                f"{user.balance} coins ({amount - user.balance} missing)."
+                t(
+                    ctx,
+                    "not_enough_funds",
+                    coins=user.balance,
+                    missing=amount - user.balance,
+                )
             )
 
         embed = Embed(
             ctx,
-            title="Transfer",
-            description=f"You are about to give **{amount}** "
-            f"coin(s) to {member.mention}, are you sure?",
+            title=t(ctx, "title"),
+            description=t(ctx, "confirmation", amount=amount, member=member.mention),
         )
         message = await ctx.send(embed=embed)
         await message.add_reaction("✅")
@@ -168,7 +177,7 @@ class Social(Cog):
                 check=lambda r, u: u == ctx.message.author and str(r.emoji) == "✅",
             )
         except TimeoutError:
-            embed.description = "Transfer cancelled."
+            embed.description = t(ctx, "cancelled")
             return await message.edit(embed=embed)
 
         target_user, _ = await User.get_or_create(id=member.id)
@@ -182,7 +191,7 @@ class Social(Cog):
         except Forbidden:
             pass
 
-        embed.description = f"Transferred **{amount}** coin(s) " f"to {member.mention}"
+        embed.description = t(ctx, "success", amount=amount, member=member.mention)
         await message.edit(embed=embed)
 
     @command(name="daily", aliases=["dly"])
@@ -195,7 +204,7 @@ class Social(Cog):
         """
 
         if member and member.bot:
-            return await ctx.send("You can't give points to a bot!")
+            return await ctx.send(t(ctx, "cannot_give_to_bot"))
 
         user, _ = await User.get_or_create(id=ctx.author.id)
 
@@ -207,15 +216,18 @@ class Social(Cog):
         if not user.daily_available:
             try:
                 await ctx.send(
-                    f"Your next daily will be available in "
-                    f"**{hours_til_next_daily()} hour(s)**. Current streak: "
-                    f"**{user.daily_streak}**."
+                    t(
+                        ctx,
+                        "next_daily",
+                        remaining=hours_til_next_daily(),
+                        streak=user.daily_streak,
+                    )
                 )
             except Forbidden:
                 pass
             return
 
-        expired = "(lost streak)" if user.daily_streak_expired else ""
+        expired = t(ctx, "lost_streak") if user.daily_streak_expired else ""
         if user.daily_streak_expired:
             user.daily_streak = 1
         else:
@@ -234,21 +246,26 @@ class Social(Cog):
         if user != target_user:
             await target_user.save()
 
-        embed = Embed(ctx, title="Daily", color=ctx.author.color)
+        embed = Embed(ctx, title=t(ctx, "title"), color=ctx.author.color)
         if user == target_user:
-            embed.description = (
-                f"You received **{100 + bonus}** daily points\n"
-                f"Streak: **{user.daily_streak}** {expired}\n"
-                f"Come back in **{hours_til_next_daily()} hour(s)** "
-                f"to continue your streak!"
+            embed.description = t(
+                ctx,
+                "received_daily",
+                amount=100 + bonus,
+                streak=user.daily_streak,
+                expired=expired,
+                remaining=hours_til_next_daily(),
             )
+
         else:
-            embed.description = (
-                f"You gave your **{100 + bonus}** daily points "
-                f"to {member.mention}\n"
-                f"Streak: **{user.daily_streak}** {expired}\n"
-                f"Come back in **{hours_til_next_daily()} hour(s)** "
-                f"to continue your streak!"
+            embed.description = t(
+                ctx,
+                "received_daily",
+                amount=100 + bonus,
+                member=member.mention,
+                streak=user.daily_streak,
+                expired=expired,
+                remaining=hours_til_next_daily(),
             )
 
         try:
@@ -260,6 +277,7 @@ class Social(Cog):
     async def on_message(self, message: Message):
         if (
             message.author.bot
+            or not message.guild
             or len(message.content) <= 5
             or "spam" in message.channel.name.lower()
         ):
@@ -290,9 +308,13 @@ class Social(Cog):
 
             try:
                 await ctx.send(
-                    f"Congrats **{ctx.author.name}**, "
-                    f"you levelled up to **level {user.level}** "
-                    f"and got a bonus of **{bonus} points**."
+                    tg(
+                        ctx,
+                        "level_up_message",
+                        user=ctx.author.name,
+                        level=user.level,
+                        bonus=bonus,
+                    )
                 )
             except Forbidden:
                 pass

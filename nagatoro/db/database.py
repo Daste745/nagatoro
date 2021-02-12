@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from tortoise import Tortoise
@@ -6,6 +7,7 @@ from tortoise.fields import (
     IntField,
     BigIntField,
     TextField,
+    CharField,
     DatetimeField,
     BooleanField,
     ForeignKeyField,
@@ -14,9 +16,13 @@ from tortoise.fields import (
 )
 
 
+log = logging.getLogger(__name__)
+
+
 class Guild(Model):
     id = BigIntField(pk=True)
     prefix = TextField(null=True)
+    locale = CharField(null=True, max_length=2)
     mute_role = BigIntField(null=True)
     level_up_messages = BooleanField(default=True)
     moderators: ReverseRelation["Moderator"]
@@ -27,7 +33,10 @@ class Guild(Model):
         table = "guilds"
 
     def __str__(self):
-        return f"<Guild id:{self.id} prefix:{self.prefix} muterole:{self.mute_role}>"
+        return (
+            f"<Guild id:{self.id} prefix:{self.prefix} "
+            f"locale:{self.locale} muterole:{self.mute_role}>"
+        )
 
 
 class User(Model):
@@ -139,10 +148,10 @@ class Warn(Model):
 
 
 async def init_database(db_url: str):
-    # logging.info("Initializing database connection...")
+    log.info("Initializing database connection.")
     await Tortoise.init(
         db_url=db_url,
         modules={"models": [__name__]},
     )
     await Tortoise.generate_schemas()
-    # logging.info("Successfully connected to database")
+    log.info("Successfully connected to the database.")

@@ -13,6 +13,7 @@ from discord.ext.commands import (
 from nagatoro.objects import Embed
 from nagatoro.checks import is_moderator
 from nagatoro.db import Guild
+from nagatoro.utils import available_locales, t
 
 
 class Management(Cog, command_attrs=dict(ignore_extra=True)):
@@ -28,20 +29,69 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         ctx.bot.reload_cogs()
         await ctx.send(
-            f"Reloaded **{len(ctx.bot.commands)}** commands "
-            f"from **{len(ctx.bot.cogs)}** modules."
+            t(
+                ctx,
+                "message",
+                commands=len(ctx.bot.commands),
+                modules=len(ctx.bot.cogs),
+            )
         )
 
     @command(name="cache", hidden=True)
     @is_owner()
     async def cache(self, ctx: Context):
+        """Rebuild all caches"""
+
         cached_prefixes = await self.bot.generate_prefix_cache()
         cached_moderators = await self.bot.generate_moderator_cache()
+        cached_locales = await self.bot.generate_locale_cache()
 
         await ctx.send(
-            f"Cached **{cached_prefixes} prefix(es)** "
-            f"and **{cached_moderators} moderator(s)**."
+            t(
+                ctx,
+                "description",
+                prefixes=cached_prefixes,
+                moderators=cached_moderators,
+                locales=cached_locales,
+            )
         )
+
+    @group(name="language", aliases=["lang", "locale"], invoke_without_command=True)
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def language(self, ctx: Context):
+        """Bot language"""
+
+        guild = await Guild.get(id=ctx.guild.id)
+
+        if not guild.locale:
+            return await ctx.send(t(ctx, "not_set", guild=ctx.guild.name))
+
+        return await ctx.send(
+            t(ctx, "message", guild=ctx.guild.name, locale=guild.locale)
+        )
+
+    @language.command(name="available")
+    @cooldown(rate=2, per=10, type=BucketType.user)
+    async def language_available(self, ctx: Context):
+        """Available languages"""
+
+        await ctx.send(t(ctx, "message", locales=", ".join(available_locales())))
+
+    @language.command(name="set")
+    @is_moderator()
+    @cooldown(rate=2, per=30, type=BucketType.guild)
+    async def language_set(self, ctx: Context, language: str):
+        """Set Nagatoro's language on this server"""
+
+        if language not in available_locales():
+            return await ctx.send(t(ctx, "not_available", language=language))
+
+        guild = await Guild.get(id=ctx.guild.id)
+        guild.locale = language
+        await guild.save()
+        await self.bot.generate_locale_cache()
+
+        await ctx.send(t(ctx, "message", language=language))
 
     @group(name="prefix", invoke_without_command=True)
     @cooldown(rate=2, per=10, type=BucketType.user)
@@ -50,7 +100,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         embed = Embed(
             ctx,
-            title=f"Prefixes for {ctx.guild.name}",
+            title=t(ctx, "title", guild=ctx.guild.name),
             description="",
             color=Color.blue(),
         )
@@ -71,7 +121,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         await guild.save()
         await self.bot.generate_prefix_cache()
 
-        await ctx.send(f"Set custom prefix to `{prefix}`")
+        await ctx.send(t(ctx, "message", prefix=prefix))
 
     @prefix.command(name="delete", aliases=["unset", "remove", "del"])
     @is_moderator()
@@ -81,15 +131,13 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         guild = await Guild.get(id=ctx.guild.id)
         if not guild.prefix:
-            return await ctx.send(
-                f"**{ctx.guild.name}** " f"doesn't have a custom prefix."
-            )
+            return await ctx.send(t(ctx, "not_set", guild=ctx.guild.name))
 
         guild.prefix = None
         await guild.save()
         await self.bot.generate_prefix_cache()
 
-        await ctx.send(f"Removed prefix from **{ctx.guild.name}**")
+        await ctx.send(t(ctx, "message", name=ctx.guild.name))
 
     @command(name="level-up-messages", usage="[disable|enable]")
     @has_guild_permissions(manage_channels=True)
@@ -104,21 +152,17 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
 
         if action == "disable":
             if not guild.level_up_messages:
-                return await ctx.send(
-                    f"Level up messages on **{ctx.guild}** are already disabled."
-                )
+                return await ctx.send(t(ctx, "already_disabled", guild=ctx.guild))
 
             guild.level_up_messages = False
-            await ctx.send(f"Disabled level up messages on **{ctx.guild}**")
+            await ctx.send(t(ctx, "disabled", guild=ctx.guild))
 
         elif action == "enable":
             if guild.level_up_messages:
-                return await ctx.send(
-                    f"Level up messages on **{ctx.guild}** are already enabled."
-                )
+                return await ctx.send(t(ctx, "already_enabled", guild=ctx.guild))
 
             guild.level_up_messages = True
-            await ctx.send(f"Enabled level up messages on **{ctx.guild}**")
+            await ctx.send(t(ctx, "enabled", guild=ctx.guild))
 
         await guild.save()
 

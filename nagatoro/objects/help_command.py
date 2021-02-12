@@ -1,6 +1,7 @@
 from discord import Color
 from discord.ext.commands import HelpCommand as BaseHelpCommand
 from nagatoro.objects import Embed
+from nagatoro.utils import t, tc
 
 
 class HelpCommand(BaseHelpCommand):
@@ -11,9 +12,11 @@ class HelpCommand(BaseHelpCommand):
         prefix = self.clean_prefix
         command_name = self.invoked_with
 
-        return (
-            f"Use `{prefix}{command_name} [command]` for info about a command.\n"
-            f"Use `{prefix}{command_name} [category]` for info about a category."
+        return t(
+            self.context,
+            "opening_note",
+            prefix=prefix,
+            command_name=command_name,
         )
 
     def get_command_signature(self, command):
@@ -31,8 +34,12 @@ class HelpCommand(BaseHelpCommand):
         )
 
     def get_formatted_commands(self, commands):
+        def short_doc(command):
+            return t(self.context, "description", command).split("\n")[0]
+
         return (
-            f"`{self.clean_prefix}{i.qualified_name}` - {i.short_doc}" for i in commands
+            f"`{self.clean_prefix}{i.qualified_name}` - {short_doc(i)}"
+            for i in commands
         )
 
     async def send_bot_help(self, mapping):
@@ -64,15 +71,15 @@ class HelpCommand(BaseHelpCommand):
         ctx = self.context
         embed = Embed(
             ctx,
-            title=f"{cog.qualified_name} Commands",
-            description=cog.description,
+            title=t(ctx, "cog_commands", cog=cog.qualified_name),
+            description=tc(ctx, cog),
             color=Color.blue(),
         )
 
         commands = self.get_formatted_commands(
             await self.filter_commands(cog.get_commands())
         )
-        embed.add_field(name="Commands", value="\n".join(commands))
+        embed.add_field(name=t(ctx, "commands"), value="\n".join(commands))
 
         await ctx.send(embed=embed)
 
@@ -81,14 +88,14 @@ class HelpCommand(BaseHelpCommand):
         embed = Embed(
             ctx,
             title=f"`{self.get_command_signature(group)}`",
-            description=group.help,
+            description=t(ctx, "description", group),
             color=Color.blue(),
         )
 
         commands = self.get_formatted_commands(
             await self.filter_commands(group.commands)
         )
-        embed.add_field(name="Commands", value="\n".join(commands))
+        embed.add_field(name=t(ctx, "commands"), value="\n".join(commands))
 
         await ctx.send(embed=embed)
 
@@ -97,7 +104,7 @@ class HelpCommand(BaseHelpCommand):
         embed = Embed(
             ctx,
             title=f"`{self.get_command_signature(command)}`",
-            description=command.help,
+            description=t(ctx, "description", command),
             color=Color.blue(),
         )
 

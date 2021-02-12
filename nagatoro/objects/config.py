@@ -9,6 +9,7 @@ class Config:
         load_dotenv()
 
         self.prefix: Optional[str] = getenv("PREFIX", None)
+        self.locale: Optional[str] = getenv("LOCALE", None)
         self.token: Optional[str] = getenv("TOKEN", None)
         self.status: Optional[str] = getenv("STATUS", None)
         self.status_type: int = int(getenv("STATUS_TYPE", 0))
