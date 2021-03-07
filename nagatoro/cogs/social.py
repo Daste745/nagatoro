@@ -262,7 +262,7 @@ class Social(Cog):
         else:
             embed.description = t(
                 ctx,
-                "received_daily",
+                "gave_daily",
                 amount=100 + bonus,
                 member=member.mention,
                 streak=user.daily_streak,
