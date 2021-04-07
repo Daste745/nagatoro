@@ -61,7 +61,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     async def language(self, ctx: Context):
         """Bot language"""
 
-        guild = await Guild.get(id=ctx.guild.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
 
         if not guild.locale:
             return await ctx.send(t(ctx, "not_set", guild=ctx.guild.name))
@@ -86,7 +86,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
         if language not in available_locales():
             return await ctx.send(t(ctx, "not_available", language=language))
 
-        guild = await Guild.get(id=ctx.guild.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
         guild.locale = language
         await guild.save()
         await self.bot.generate_locale_cache()
@@ -116,7 +116,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     async def prefix_set(self, ctx: Context, prefix: str):
         """Set a custom prefix for this server"""
 
-        guild = await Guild.get(id=ctx.guild.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
         guild.prefix = prefix
         await guild.save()
         await self.bot.generate_prefix_cache()
@@ -129,7 +129,7 @@ class Management(Cog, command_attrs=dict(ignore_extra=True)):
     async def prefix_delete(self, ctx: Context):
         """Delete the prefix from this server"""
 
-        guild = await Guild.get(id=ctx.guild.id)
+        guild, _ = await Guild.get_or_create(id=ctx.guild.id)
         if not guild.prefix:
             return await ctx.send(t(ctx, "not_set", guild=ctx.guild.name))
 
