@@ -289,7 +289,7 @@ class Moderation(Cog):
         warns = Warn.filter(user__id=member.id, guild__id=ctx.guild.id)
 
         if not await warns.count():
-            return await ctx.send(t(ctx, "no_mutes", member=member))
+            return await ctx.send(t(ctx, "no_warns", member=member))
 
         async for i in warns:
             moderator = ctx.bot.get_user(i.moderator)
