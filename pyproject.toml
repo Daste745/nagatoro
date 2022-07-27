@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "nagatoro"
+version = "1.4.5"
+description = "Multi-purpose Discord bot"
+authors = ["Daste <stefankar1000@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+"discord.py" = {git = "https://github.com/Rapptz/discord.py.git", rev = "6d1069e7896337f5abeabc6a99dd6a997ca57944"}
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+flake8 = "^4.0.1"
+isort = "^5.10.1"
+mypy = "^0.971"
+pre-commit = "^2.20.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
