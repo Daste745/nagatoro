@@ -6,6 +6,9 @@ from nagatoro.common import Bot, Cog
 
 
 class Utility(Cog):
+    AvatarSizeChoices = Literal[16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    AvatarFormatChoices = Literal["webp", "jpeg", "jpg", "png", "gif"]
+
     @app_commands.command()
     @app_commands.describe(size="Image size (default: 1024)")
     @app_commands.describe(format="Image format (default: png)")
@@ -13,10 +16,11 @@ class Utility(Cog):
         self,
         itx: Interaction,
         user: User | Member,
-        size: Literal[16, 32, 64, 128, 256, 512, 1024, 2048, 4096] | None = None,
-        format: Literal["webp", "jpeg", "jpg", "png", "gif"] | None = None,
+        size: AvatarSizeChoices | None = None,
+        format: AvatarFormatChoices | None = None,
     ):
         """Get someone's avatar"""
+        # TODO: Guild vs global avatar
 
         if not user.avatar:
             return await itx.response.send_message(f"{user} doesn't have an avatar")
