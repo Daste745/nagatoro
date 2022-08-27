@@ -13,6 +13,7 @@ def main():
         .allowed_mentions(AllowedMentions.none())
         .extension_package("nagatoro.extensions")
         .extension(".management")
+        .extension(".info")
     )
     bot = Bot(config)
 
