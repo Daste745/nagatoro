@@ -1,6 +1,5 @@
 FROM python:3.10-buster AS build
 
-# We could use poetry directly to avoid problems with unhashable packages (such as discord.py)
 COPY requirements.txt /requirements.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --no-cache-dir -r requirements.txt
