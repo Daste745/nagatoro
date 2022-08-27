@@ -14,6 +14,7 @@ def main():
         .extension_package("nagatoro.extensions")
         .extension(".management")
         .extension(".info")
+        .extension(".utility")
     )
     bot = Bot(config)
 
