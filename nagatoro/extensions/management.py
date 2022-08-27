@@ -26,11 +26,12 @@ class Management(Cog):
         async with ctx.typing():
             synced = await self.bot.tree.sync()
 
-            await ctx.send(content=f"Synced {len(synced)} command(s) globally")
+            await ctx.send(f"Synced {len(synced)} command(s) globally")
 
     @sync.command(name="guild", aliases=["guilds"])
+    @commands.guild_only()
     async def sync_guild(self, ctx: Context, guilds: Greedy[Guild] = None):
-        """Sync commands to given guild(s)"""
+        """Sync guild commands"""
 
         if not guilds:
             guilds = [ctx.guild]
@@ -48,7 +49,7 @@ class Management(Cog):
                     pass
 
             await ctx.send(
-                content=f"Synced {command_count} command(s) to {guild_count} guild(s)"
+                f"Synced {command_count} command(s) to {guild_count} guild(s)"
             )
 
 
