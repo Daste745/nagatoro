@@ -16,8 +16,15 @@ class Management(Cog):
             await ctx.send("Reloaded extensions.")
 
     @commands.group(name="sync")
+    @commands.guild_only()
     async def sync(self, ctx: Context):
-        await self.sync_global(ctx)
+        """Sync all commands to the current guild"""
+
+        async with ctx.typing():
+            self.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await self.bot.tree.sync(guild=ctx.guild)
+
+            await ctx.send(f"Synced {len(synced)} command(s) to this guild")
 
     @sync.command(name="global")
     async def sync_global(self, ctx: Context):
