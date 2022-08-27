@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-"discord.py" = {git = "https://github.com/Rapptz/discord.py.git", rev = "6d1069e7896337f5abeabc6a99dd6a997ca57944"}
+"discord.py" = "2.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
