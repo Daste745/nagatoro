@@ -13,7 +13,7 @@ class Management(Cog):
         async with ctx.typing():
             await self.bot.reload_extensions()
 
-            await ctx.send("Reloaded extensions.")
+            await ctx.send("Reloaded extensions")
 
     @commands.group(name="sync")
     @commands.guild_only()
