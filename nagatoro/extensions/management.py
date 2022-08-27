@@ -6,6 +6,7 @@ from discord.ext.commands import Context, Greedy
 from nagatoro.common import Bot, Cog
 
 
+@commands.is_owner()
 class Management(Cog):
     @commands.command(name="reload", aliases=["r"])
     async def reload(self, ctx: Context):
