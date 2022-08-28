@@ -10,6 +10,8 @@ from nagatoro.common import Bot, Cog
 class Management(Cog):
     @commands.command(name="reload", aliases=["r"])
     async def reload(self, ctx: Context):
+        """Reload all loaded extensions"""
+
         async with ctx.typing():
             await self.bot.reload_extensions()
 
@@ -18,7 +20,7 @@ class Management(Cog):
     @commands.group(name="sync")
     @commands.guild_only()
     async def sync(self, ctx: Context):
-        """Sync all commands to the current guild"""
+        """Sync global commands to the current guild"""
 
         async with ctx.typing():
             self.bot.tree.copy_global_to(guild=ctx.guild)
@@ -28,7 +30,7 @@ class Management(Cog):
 
     @sync.command(name="global")
     async def sync_global(self, ctx: Context):
-        """Sync all commands globally"""
+        """Sync global commands"""
 
         async with ctx.typing():
             synced = await self.bot.tree.sync()
