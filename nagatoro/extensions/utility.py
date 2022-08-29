@@ -7,8 +7,8 @@ from nagatoro.common import Bot, Cog
 
 
 class Utility(Cog):
-    AvatarSizeChoices = Literal[16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
-    AvatarFormatChoices = Literal["webp", "jpeg", "jpg", "png", "gif"]
+    AssetSizeChoices = Literal[16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+    AssetFormatChoices = Literal["webp", "jpeg", "jpg", "png", "gif"]
 
     @app_commands.command()
     @app_commands.describe(size="Image size (default: 1024)")
@@ -17,8 +17,8 @@ class Utility(Cog):
         self,
         itx: Interaction,
         user: User | Member,
-        size: AvatarSizeChoices | None = None,
-        format: AvatarFormatChoices | None = None,
+        size: AssetSizeChoices | None = None,
+        format: AssetFormatChoices | None = None,
     ):
         """Get someone's avatar"""
         # TODO: Guild vs global avatar
@@ -40,6 +40,42 @@ class Utility(Cog):
         avatar_url = user.avatar.with_size(size).with_format(format).url  # type: ignore
         embed = Embed(description=f"{user}'s avatar")
         embed.set_image(url=avatar_url)
+
+        await itx.response.send_message(embed=embed)
+
+    @app_commands.command()
+    @app_commands.describe(size="Image size (default: 1024)")
+    @app_commands.describe(format="Image format (default: png)")
+    async def banner(
+        self,
+        itx: Interaction,
+        user: User | Member,
+        size: AssetSizeChoices | None = None,
+        format: AssetFormatChoices | None = None,
+    ):
+        """Get someone's banner"""
+        # TODO: Guild vs global banner
+
+        # Re-fetch the user in order to see their profile banner
+        user = await self.bot.fetch_user(user.id)
+
+        if not user.banner:
+            return await itx.response.send_message(f"{user} doesn't have a banner")
+
+        if not size:
+            size = 1024
+
+        if not format:
+            format = "png"
+
+        if format == "gif" and not user.banner.is_animated():
+            return await itx.response.send_message(
+                f"{user} doesn't have an animated banner, please use a different format"
+            )
+
+        banner_url = user.banner.with_size(size).with_format(format).url  # type: ignore
+        embed = Embed(description=f"{user}'s banner")
+        embed.set_image(url=banner_url)
 
         await itx.response.send_message(embed=embed)
 
