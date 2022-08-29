@@ -39,7 +39,7 @@ class Bot(commands.Bot):
         return await super().reload_extension(name, package=package)
 
     async def load_extensions(self) -> None:
-        if not self._config._extensions:
+        if len(self._config._extensions) == 0:
             return
 
         await asyncio.gather(
@@ -53,7 +53,7 @@ class Bot(commands.Bot):
         )
 
     async def reload_extensions(self) -> None:
-        if not self._config._extensions:
+        if len(self._config._extensions) == 0:
             return
 
         await asyncio.gather(

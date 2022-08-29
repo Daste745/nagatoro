@@ -23,13 +23,13 @@ class Utility(Cog):
         """Get someone's avatar"""
         # TODO: Guild vs global avatar
 
-        if not user.avatar:
+        if user.avatar is None:
             return await itx.response.send_message(f"{user} doesn't have an avatar")
 
-        if not size:
+        if size is None:
             size = 1024
 
-        if not format:
+        if format is None:
             format = "png"
 
         if format == "gif" and not user.avatar.is_animated():
@@ -59,13 +59,13 @@ class Utility(Cog):
         # Re-fetch the user in order to see their profile banner
         user = await self.bot.fetch_user(user.id)
 
-        if not user.banner:
+        if user.banner is None:
             return await itx.response.send_message(f"{user} doesn't have a banner")
 
-        if not size:
+        if size is None:
             size = 1024
 
-        if not format:
+        if format is None:
             format = "png"
 
         if format == "gif" and not user.banner.is_animated():
