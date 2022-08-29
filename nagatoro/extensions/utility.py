@@ -1,6 +1,7 @@
 from typing import Literal
 
 from discord import Embed, Interaction, Member, User, app_commands
+from discord.utils import format_dt
 
 from nagatoro.common import Bot, Cog
 
@@ -39,6 +40,51 @@ class Utility(Cog):
         avatar_url = user.avatar.with_size(size).with_format(format).url  # type: ignore
         embed = Embed(description=f"{user}'s avatar")
         embed.set_image(url=avatar_url)
+
+        await itx.response.send_message(embed=embed)
+
+    @app_commands.command()
+    @app_commands.guild_only()
+    async def server(self, itx: Interaction):
+        """See info about this server"""
+
+        guild = itx.guild
+        assert guild  # guild-only
+        assert guild.owner  # members intent
+
+        embed = Embed(title=guild.name)
+
+        embed.add_field(name="Owner", value=guild.owner.mention)
+        embed.add_field(
+            name="Creation Date",
+            value=format_dt(guild.created_at, style="D"),
+        )
+
+        embed.add_field(name="Members", value=guild.member_count)
+        embed.add_field(name="Roles", value=len(guild.roles))
+
+        boosts_value = (
+            f"Level: {guild.premium_tier}\n"
+            f"Boosts: {guild.premium_subscription_count}"
+        )
+        embed.add_field(name="Server Boosts", value=boosts_value)
+
+        channels_value = (
+            f"Text: {len(guild.text_channels)}\n"
+            f"Voice: {len(guild.voice_channels)}\n"
+            f"Stage: {len(guild.stage_channels)}"
+        )
+        embed.add_field(name="Channels", value=channels_value)
+
+        emoji_count = len(guild.emojis)
+        if (emoji_count := len(guild.emojis)) > 0:
+            emoji_value = " ".join(str(i) for i in guild.emojis[:20])
+            if emoji_count > 20:
+                emoji_value += f" ({emoji_count - 20} more)"
+            embed.add_field(name="Emoji", value=emoji_value, inline=False)
+
+        if icon := guild.icon:
+            embed.set_thumbnail(url=icon.url)
 
         await itx.response.send_message(embed=embed)
 

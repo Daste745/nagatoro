@@ -7,9 +7,12 @@ from nagatoro.common import Bot, Config
 
 
 def main():
+    intents = Intents.default()
+    intents.members = True
+
     config = (
         Config.default()
-        .intents(Intents.default())
+        .intents(intents)
         .allowed_mentions(AllowedMentions.none())
         .extension_package("nagatoro.extensions")
         .extension(".management")
