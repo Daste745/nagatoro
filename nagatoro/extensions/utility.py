@@ -88,6 +88,38 @@ class Utility(Cog):
 
         await itx.response.send_message(embed=embed)
 
+    @app_commands.command()
+    async def user(self, itx: Interaction, user: User | Member):
+        """See info about a user"""
+
+        if user.system:
+            title = f"{user} [SYSTEM]"
+        elif user.bot:
+            title = f"{user} [BOT]"
+        else:
+            title = str(user)
+
+        embed = Embed(title=title)
+
+        embed.add_field(
+            name="Creation Date", value=format_dt(user.created_at, style="D")
+        )
+
+        if isinstance(user, Member):
+            assert user.joined_at  # Member instance
+
+            embed.add_field(
+                name="Server Join Date", value=format_dt(user.joined_at, style="D")
+            )
+            embed.add_field(name="Top Role", value=user.top_role.mention)
+            roles_count = len(user.roles[1:])  # Exclude @everyone
+            embed.add_field(name="Roles", value=roles_count)
+
+        if avatar := user.avatar:
+            embed.set_thumbnail(url=avatar.url)
+
+        await itx.response.send_message(embed=embed)
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Utility(bot))
