@@ -133,6 +133,8 @@ class Utility(Cog):
             title = f"{user} [SYSTEM]"
         elif user.bot:
             title = f"{user} [BOT]"
+        elif itx.guild and user == itx.guild.owner:
+            title = f"{user} :crown:"
         else:
             title = str(user)
 
