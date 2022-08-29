@@ -1,9 +1,10 @@
 from typing import Literal
 
-from discord import Embed, Interaction, Member, User, app_commands
+from discord import Embed, Interaction, Member, Role, User, app_commands
 from discord.utils import format_dt
 
 from nagatoro.common import Bot, Cog
+from nagatoro.utils import format_bool
 
 
 class Utility(Cog):
@@ -153,6 +154,40 @@ class Utility(Cog):
 
         if avatar := user.avatar:
             embed.set_thumbnail(url=avatar.url)
+
+        await itx.response.send_message(embed=embed)
+
+    @app_commands.command()
+    @app_commands.guild_only()
+    async def role(self, itx: Interaction, role: Role):
+        """See info about a role"""
+
+        if role.is_default():
+            description = "Default role"
+        elif role.is_bot_managed():
+            description = "Managed by a bot"
+        elif role.is_premium_subscriber():
+            description = "Nitro booster role"
+        else:
+            description = ""
+
+        embed = Embed(title=role, description=description)
+
+        embed.add_field(
+            name="Creation Date", value=format_dt(role.created_at, style="D")
+        )
+        embed.add_field(name="Members", value=len(role.members))
+        embed.add_field(name="Mentionable", value=format_bool(role.mentionable))
+        embed.add_field(name="Position", value=role.position)
+
+        color_value = f"Hex: {role.color}\nRGB: {role.color.to_rgb()}"
+        embed.add_field(name="Color", value=color_value)
+
+        if icon := role.icon:
+            embed.set_thumbnail(url=icon.url)
+
+        if color := role.color:
+            embed.color = color  # type: ignore
 
         await itx.response.send_message(embed=embed)
 
