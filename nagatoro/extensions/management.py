@@ -19,20 +19,26 @@ class Management(Cog):
 
     @commands.group(name="sync")
     @commands.guild_only()
-    async def sync(self, ctx: Context):
+    async def sync(self, ctx: Context, clear: bool = False):
         """Sync global commands to the current guild"""
 
         async with ctx.typing():
+            if clear:
+                self.bot.tree.clear_commands(guild=ctx.guild)
+
             self.bot.tree.copy_global_to(guild=ctx.guild)
             synced = await self.bot.tree.sync(guild=ctx.guild)
 
             await ctx.send(f"Synced {len(synced)} command(s) to this guild")
 
     @sync.command(name="global")
-    async def sync_global(self, ctx: Context):
+    async def sync_global(self, ctx: Context, clear: bool = False):
         """Sync global commands"""
 
         async with ctx.typing():
+            if clear:
+                self.bot.tree.clear_commands()
+
             synced = await self.bot.tree.sync()
 
             await ctx.send(f"Synced {len(synced)} command(s) globally")
