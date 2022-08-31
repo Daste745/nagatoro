@@ -67,6 +67,13 @@ class Management(Cog):
                 f"Synced {command_count} command(s) to {guild_count} guild(s)"
             )
 
+    @commands.command(name="rs")
+    async def reload_and_sync(self, ctx: Context, clear: bool = False):
+        """Reload all loaded extensions and sync global commands to the current guild"""
+
+        await self.reload(ctx)
+        await self.sync(ctx, clear)
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Management(bot))
