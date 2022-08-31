@@ -18,20 +18,14 @@ class Utility(Cog):
         self,
         itx: Interaction,
         user: User | Member,
-        size: AssetSizeChoices | None = None,
-        format: AssetFormatChoices | None = None,
+        size: AssetSizeChoices = 1024,
+        format: AssetFormatChoices = "png",
     ):
         """Get someone's avatar"""
         # TODO: Guild vs global avatar
 
         if user.avatar is None:
             return await itx.response.send_message(f"{user} doesn't have an avatar")
-
-        if size is None:
-            size = 1024
-
-        if format is None:
-            format = "png"
 
         if format == "gif" and not user.avatar.is_animated():
             return await itx.response.send_message(
@@ -46,12 +40,12 @@ class Utility(Cog):
 
     @app_commands.command()
     @app_commands.describe(size="Image size (default: 1024)")
-    @app_commands.describe(format="Image format (default: png)")
+    @app_commands.describe(format="Image format (default: gif or png)")
     async def banner(
         self,
         itx: Interaction,
         user: User | Member,
-        size: AssetSizeChoices | None = None,
+        size: AssetSizeChoices = 1024,
         format: AssetFormatChoices | None = None,
     ):
         """Get someone's banner"""
@@ -63,16 +57,13 @@ class Utility(Cog):
         if user.banner is None:
             return await itx.response.send_message(f"{user} doesn't have a banner")
 
-        if size is None:
-            size = 1024
-
-        if format is None:
-            format = "png"
-
         if format == "gif" and not user.banner.is_animated():
             return await itx.response.send_message(
                 f"{user} doesn't have an animated banner, please use a different format"
             )
+
+        if format is None:
+            format = "gif" if user.banner.is_animated() else "png"
 
         banner_url = user.banner.with_size(size).with_format(format).url  # type: ignore
         embed = Embed(description=f"{user}'s banner")
