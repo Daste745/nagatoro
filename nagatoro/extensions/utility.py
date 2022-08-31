@@ -90,6 +90,7 @@ class Utility(Cog):
         assert guild.owner  # members intent
 
         embed = Embed(title=guild.name)
+        embed.set_footer(text=f"ID: {guild.id}")
 
         embed.add_field(name="Owner", value=guild.owner.mention)
         embed.add_field(
@@ -139,6 +140,7 @@ class Utility(Cog):
             title = str(user)
 
         embed = Embed(title=title)
+        embed.set_footer(text=f"ID: {user.id}")
 
         embed.add_field(
             name="Creation Date", value=format_dt(user.created_at, style="D")
@@ -174,6 +176,7 @@ class Utility(Cog):
             description = ""
 
         embed = Embed(title=role, description=description)
+        embed.set_footer(text=f"ID: {role.id}")
 
         embed.add_field(
             name="Creation Date", value=format_dt(role.created_at, style="D")
