@@ -32,13 +32,10 @@ class Management(Cog):
             await ctx.send(f"Synced {len(synced)} command(s) to this guild")
 
     @sync.command(name="global")
-    async def sync_global(self, ctx: Context, clear: bool = False):
+    async def sync_global(self, ctx: Context):
         """Sync global commands"""
 
         async with ctx.typing():
-            if clear:
-                self.bot.tree.clear_commands()
-
             synced = await self.bot.tree.sync()
 
             await ctx.send(f"Synced {len(synced)} command(s) globally")
