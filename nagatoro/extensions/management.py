@@ -19,13 +19,10 @@ class Management(Cog):
 
     @commands.group(name="sync")
     @commands.guild_only()
-    async def sync(self, ctx: Context, clear: bool = False):
+    async def sync(self, ctx: Context):
         """Sync global commands to the current guild"""
 
         async with ctx.typing():
-            if clear:
-                self.bot.tree.clear_commands(guild=ctx.guild)
-
             self.bot.tree.copy_global_to(guild=ctx.guild)
             synced = await self.bot.tree.sync(guild=ctx.guild)
 
@@ -63,6 +60,27 @@ class Management(Cog):
             await ctx.send(
                 f"Synced {command_count} command(s) to {guild_count} guild(s)"
             )
+
+    @commands.command(name="clear")
+    @commands.guild_only()
+    async def clear(self, ctx: Context, guilds: Greedy[Guild] = None):
+        """Clear commands from guilds"""
+
+        if not guilds:
+            guilds = [ctx.guild]
+
+        guild_count = 0
+
+        async with ctx.typing():
+            for guild in guilds:
+                try:
+                    self.bot.tree.clear_commands(guild=guild)
+                    await self.bot.tree.sync(guild=guild)
+                    guild_count += 1
+                except discord.HTTPException:
+                    pass
+
+            await ctx.send(f"Cleared commands from {guild_count} guild(s)")
 
     @commands.command(name="rs")
     async def reload_and_sync(self, ctx: Context, clear: bool = False):
