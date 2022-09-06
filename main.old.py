@@ -1,5 +1,6 @@
 import logging
 import sys
+import signal
 
 import asyncio
 from tortoise import Tortoise
@@ -16,7 +17,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:%(name)s:%(funcName)s:%(message)s",
 )
-
+log = logging.getLogger(__name__)
 
 bot = Bot(Config())
 
@@ -41,8 +42,14 @@ async def run():
     await bot.connect()
 
 
+def sigterm_handler(signum, frame):
+    log.info("Received SIGTERM, exiting gracefully...")
+    raise KeyboardInterrupt
+
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     try:
         loop.run_until_complete(run())

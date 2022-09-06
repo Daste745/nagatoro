@@ -47,10 +47,10 @@ def available_locales() -> list[str]:
 
 def get_locale(ctx: Context) -> str:
     locale = (
-        ctx.bot.cache.get(f"{ctx.guild.id}:locale")
+        ctx.bot.cache.get(f"{ctx.guild.id}:locale").decode()
         if ctx.bot.cache.exists(f"{ctx.guild.id}:locale")
         else ctx.bot.config.locale
-    ).decode()
+    )
     return locale
 
 

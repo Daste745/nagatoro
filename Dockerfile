@@ -1,15 +1,21 @@
-# Using python:slim so we don't have to install build deps manually
-FROM python:slim AS build
+FROM python:3.10-buster AS build
 
 COPY requirements.txt /requirements.txt
 RUN python -m venv /venv && \
     /venv/bin/pip install --no-cache-dir -r requirements.txt
 
 
-FROM python:alpine
+FROM python:3.10-alpine
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+STOPSIGNAL SIGINT
+
+COPY docker-entrypoint.sh /usr/local/bin
 
 COPY --from=build /venv /venv
 COPY . /app
 WORKDIR /app
 
-CMD [ "/venv/bin/python", "-u" ,"./nagatoro.py" ]
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD [ "python",  "main.py" ]
