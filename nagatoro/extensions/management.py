@@ -17,7 +17,7 @@ class Management(Cog):
 
             await ctx.send("Reloaded extensions")
 
-    @commands.group(name="sync")
+    @commands.group(name="sync", invoke_without_command=True)
     @commands.guild_only()
     async def sync(self, ctx: Context):
         """Sync global commands to the current guild"""
