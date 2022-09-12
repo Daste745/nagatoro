@@ -61,10 +61,24 @@ class Management(Cog):
                 f"Synced {command_count} command(s) to {guild_count} guild(s)"
             )
 
-    @commands.command(name="clear")
+    @commands.group(name="clear")
+    async def clear(self, _: Context):
+        ...
+
+    @clear.command(name="global")
+    async def clear_global(self, ctx: Context):
+        """Clear global commands"""
+
+        async with ctx.typing():
+            self.bot.tree.clear_commands(guild=None)
+            await self.bot.tree.sync()
+
+            await ctx.send("Cleared command(s) globally")
+
+    @clear.command(name="guild", aliases=["guilds"])
     @commands.guild_only()
-    async def clear(self, ctx: Context, guilds: Greedy[Guild] = None):
-        """Clear commands from guilds"""
+    async def clear_guild(self, ctx: Context, guilds: Greedy[Guild] = None):
+        """Clear guild commands"""
 
         if not guilds:
             guilds = [ctx.guild]
