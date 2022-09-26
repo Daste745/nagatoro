@@ -19,7 +19,7 @@ class Utility(Cog):
         itx: Interaction,
         user: User | Member,
         size: AssetSizeChoices = 1024,
-        format: AssetFormatChoices = "png",
+        format: AssetFormatChoices | None = None,
     ):
         """Get someone's avatar"""
         # TODO: Guild vs global avatar
@@ -31,6 +31,9 @@ class Utility(Cog):
             return await itx.response.send_message(
                 f"{user} doesn't have an animated avatar, please use a different format"
             )
+
+        if format is None:
+            format = "gif" if user.avatar.is_animated() else "png"
 
         avatar_url = user.avatar.with_size(size).with_format(format).url  # type: ignore
         embed = Embed(description=f"{user}'s avatar")
