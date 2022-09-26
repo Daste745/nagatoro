@@ -13,7 +13,7 @@ class Utility(Cog):
 
     @app_commands.command()
     @app_commands.describe(size="Image size (default: 1024)")
-    @app_commands.describe(format="Image format (default: png)")
+    @app_commands.describe(format="Image format (default: gif or png)")
     async def avatar(
         self,
         itx: Interaction,
