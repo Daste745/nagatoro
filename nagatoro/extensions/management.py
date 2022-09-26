@@ -97,11 +97,11 @@ class Management(Cog):
             await ctx.send(f"Cleared commands from {guild_count} guild(s)")
 
     @commands.command(name="rs")
-    async def reload_and_sync(self, ctx: Context, clear: bool = False):
+    async def reload_and_sync(self, ctx: Context):
         """Reload all loaded extensions and sync global commands to the current guild"""
 
         await self.reload(ctx)
-        await self.sync(ctx, clear)
+        await self.sync(ctx)
 
 
 async def setup(bot: Bot) -> None:
