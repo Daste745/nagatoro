@@ -10,32 +10,60 @@ from nagatoro.utils import format_bool
 class Utility(Cog):
     AssetSizeChoices = Literal[16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
     AssetFormatChoices = Literal["webp", "jpeg", "jpg", "png", "gif"]
+    AssetProfileChoices = Literal["user", "server"]
 
     @app_commands.command()
+    @app_commands.describe(profile="Profile (default: server if available)")
     @app_commands.describe(size="Image size (default: 1024)")
     @app_commands.describe(format="Image format (default: gif or png)")
     async def avatar(
         self,
         itx: Interaction,
         user: User | Member,
+        profile: AssetProfileChoices | None = None,
         size: AssetSizeChoices = 1024,
         format: AssetFormatChoices | None = None,
     ):
         """Get someone's avatar"""
-        # TODO: Guild vs global avatar
 
-        if user.avatar is None:
-            return await itx.response.send_message(f"{user} doesn't have an avatar")
+        if profile == "server":
+            if itx.guild is None:
+                return await itx.response.send_message(
+                    f"The server profile is only supported on servers"
+                )
 
-        if format == "gif" and not user.avatar.is_animated():
+            elif isinstance(user, User):
+                return await itx.response.send_message(
+                    f"{user} is not a member of this server"
+                )
+
+            elif isinstance(user, Member):
+                if user.guild_avatar is None:
+                    return await itx.response.send_message(
+                        f"{user} doesn't have a server avatar"
+                    )
+                else:
+                    avatar = user.guild_avatar
+
+        elif profile == "user":
+            # Manually get the `default_avatar`, because when user is of type `Member`,
+            # `display_avatar` will return their guild avatar when available
+            avatar = user.avatar or user.default_avatar
+
+        elif profile is None:
+            # `display_avatar` has an override on the `Member` type, which returns
+            # `guild_avatar` or `avatar` or `default_avatar`
+            avatar = user.display_avatar
+
+        if format == "gif" and not avatar.is_animated():
             return await itx.response.send_message(
                 f"{user} doesn't have an animated avatar, please use a different format"
             )
 
-        if format is None:
-            format = "gif" if user.avatar.is_animated() else "png"
+        elif format is None:
+            format = "gif" if avatar.is_animated() else "png"
 
-        avatar_url = user.avatar.with_size(size).with_format(format).url  # type: ignore
+        avatar_url = avatar.with_size(size).with_format(format).url  # type: ignore
         embed = Embed(description=f"{user}'s avatar")
         embed.set_image(url=avatar_url)
 
