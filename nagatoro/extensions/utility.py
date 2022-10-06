@@ -4,7 +4,7 @@ from discord import Embed, Interaction, Member, Role, User, app_commands
 from discord.utils import format_dt
 
 from nagatoro.common import Bot, Cog
-from nagatoro.utils import format_bool
+from nagatoro.utils import format_bool, get_user_avatar
 
 
 class Utility(Cog):
@@ -178,8 +178,8 @@ class Utility(Cog):
             roles_count = len(user.roles[1:])  # Exclude @everyone
             embed.add_field(name="Roles", value=roles_count)
 
-        if avatar := user.avatar:
-            embed.set_thumbnail(url=avatar.url)
+        avatar = get_user_avatar(user)
+        embed.set_thumbnail(url=avatar.url)
 
         await itx.response.send_message(embed=embed)
 
