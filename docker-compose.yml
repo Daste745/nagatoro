@@ -6,3 +6,5 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+    volumes:
+      - "./:/app"
