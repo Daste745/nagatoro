@@ -29,18 +29,21 @@ class Utility(Cog):
         if profile == "server":
             if itx.guild is None:
                 return await itx.response.send_message(
-                    f"The server profile is only supported on servers"
+                    f"The server profile is only supported on servers",
+                    ephemeral=True,
                 )
 
             elif isinstance(user, User):
                 return await itx.response.send_message(
-                    f"{user} is not a member of this server"
+                    f"{user} is not a member of this server",
+                    ephemeral=True,
                 )
 
             elif isinstance(user, Member):
                 if user.guild_avatar is None:
                     return await itx.response.send_message(
-                        f"{user} doesn't have a server avatar"
+                        f"{user} doesn't have a server avatar",
+                        ephemeral=True,
                     )
                 else:
                     avatar = user.guild_avatar
@@ -57,7 +60,8 @@ class Utility(Cog):
 
         if format == "gif" and not avatar.is_animated():
             return await itx.response.send_message(
-                f"{user} doesn't have an animated avatar, please use a different format"
+                f"{user} doesn't have an animated avatar, please use a different format",
+                ephemeral=True,
             )
 
         elif format is None:
@@ -86,11 +90,15 @@ class Utility(Cog):
         user = await self.bot.fetch_user(user.id)
 
         if user.banner is None:
-            return await itx.response.send_message(f"{user} doesn't have a banner")
+            return await itx.response.send_message(
+                f"{user} doesn't have a banner",
+                ephemeral=True,
+            )
 
         if format == "gif" and not user.banner.is_animated():
             return await itx.response.send_message(
-                f"{user} doesn't have an animated banner, please use a different format"
+                f"{user} doesn't have an animated banner, please use a different format",
+                ephemeral=True,
             )
 
         if format is None:
