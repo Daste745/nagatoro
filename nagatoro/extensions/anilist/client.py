@@ -3,7 +3,7 @@ from os import path
 
 from aiohttp import ClientSession
 
-from nagatoro.extensions.anilist.models import Media, MediaType
+from nagatoro.extensions.anilist.models import Media, MediaSearch, MediaType
 
 API_URL = "https://graphql.anilist.co/"
 
@@ -52,6 +52,36 @@ class AniListClient:
             banner_image=media_data.get("bannerImage"),
             is_favourite_blocked=media_data.get("isFavouriteBlocked"),
         )
+
+    async def search_media(
+        self,
+        title: str,
+        media_type: MediaType,
+        max_results: int = 10,
+    ) -> list[MediaSearch]:
+        with open(
+            path.join(path.dirname(__file__), "queries/search_media.gql")
+        ) as query:
+            request_data = {
+                "query": query.read().strip(),
+                "variables": {
+                    "title": title,
+                    "type": media_type,
+                    "perPage": max_results,
+                },
+            }
+
+        async with self._session.post(API_URL, json=request_data) as response:
+            response_data = await response.json()
+            media_entries = response_data["data"]["Page"]["media"]
+
+        return [
+            MediaSearch(
+                id=entry.get("id"),
+                title=entry.get("title"),
+            )
+            for entry in media_entries
+        ]
 
 
 async def main():

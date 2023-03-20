@@ -223,3 +223,8 @@ class Media(BaseModel):
     is_recommendation_blocked: bool | None
     is_review_blocked: bool | None
     mod_notes: str | None
+
+
+class MediaSearch(BaseModel):
+    id: int
+    title: MediaTitle | None
