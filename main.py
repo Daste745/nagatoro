@@ -18,6 +18,7 @@ def main():
         .extension(".management")
         .extension(".info")
         .extension(".utility")
+        .extension(".anilist")
     )
     bot = Bot(config)
 
