@@ -38,3 +38,28 @@ class AniList(Cog):
         embed.add_field(name="Status", value=f"{found_anime.status}")
 
         await itx.response.send_message(embed=embed)
+
+    async def manga_autocomplete(
+        self, itx: Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        searched = await self.api_client.search_media(
+            current, MediaType.MANGA, max_results=25
+        )
+        return [
+            app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
+            for entry in searched
+        ]
+
+    @app_commands.command()
+    @app_commands.autocomplete(title=manga_autocomplete)
+    async def manga(self, itx: Interaction, title: str):
+        found_manga = await self.api_client.find_media(title, MediaType.MANGA)
+
+        embed = Embed(title=found_manga.title.romaji)
+        if cover_image := found_manga.cover_image:
+            embed.set_thumbnail(url=cover_image.large)
+
+        embed.add_field(name="Format", value=f"{found_manga.format}")
+        embed.add_field(name="Status", value=f"{found_manga.status}")
+
+        await itx.response.send_message(embed=embed)
