@@ -1,0 +1,75 @@
+query ($title: String, $type: MediaType, $descriptionAsHtml: Boolean) {
+  Media(type: $type, search: $title) {
+    id
+    idMal
+    title {
+      romaji
+      english
+      native
+    }
+    type
+    format
+    status
+    description(asHtml: $descriptionAsHtml)
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
+    season
+    seasonYear
+    seasonInt
+    episodes
+    duration
+    chapters
+    volumes
+    countryOfOrigin
+    isLicensed
+    source
+    hashtag
+    trailer {
+      id
+      site
+      thumbnail
+    }
+    updatedAt
+    coverImage {
+      extraLarge
+      large
+      medium
+      color
+    }
+    bannerImage
+    genres
+    synonyms
+    averageScore
+    meanScore
+    popularity
+    isLocked
+    trending
+    favourites
+    tags {
+      id
+      name
+      description
+      category
+      rank
+      isGeneralSpoiler
+      isMediaSpoiler
+      isAdult
+      userId
+    }
+    isFavouriteBlocked
+    isAdult
+    siteUrl
+    autoCreateForumThread
+    isRecommendationBlocked
+    isReviewBlocked
+    modNotes
+  }
+}

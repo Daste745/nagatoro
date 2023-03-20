@@ -169,7 +169,7 @@ class MediaStats(BaseModel):
 
 class Media(BaseModel):
     id: int
-    mal_id: int | None
+    id_mal: int | None
     title: MediaTitle | None
     type: MediaType | None
     format: MediaFormat | None
@@ -179,12 +179,12 @@ class Media(BaseModel):
     end_date: FuzzyDate | None
     season: MediaSeason | None
     season_year: int | None
-    season_number: int | None
+    season_int: int | None
     episodes: int | None
     duration: int | None
     chapters: int | None
     volumes: int | None
-    origin_country: str | None
+    country_of_origin: str | None
     is_licensed: bool | None
     source: MediaSource | None
     hashtag: str | None
@@ -199,7 +199,7 @@ class Media(BaseModel):
     popularity: int | None
     is_locked: bool | None
     trending: int | None
-    favorites: int | None
+    favourites: int | None
     tags: list[MediaTag | None] | None
     # TODO: relations
     # TODO: characters
@@ -222,4 +222,4 @@ class Media(BaseModel):
     auto_create_forum_thread: bool | None
     is_recommendation_blocked: bool | None
     is_review_blocked: bool | None
-    moderator_notes: str | None
+    mod_notes: str | None
