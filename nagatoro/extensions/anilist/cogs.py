@@ -14,16 +14,26 @@ class AniList(Cog):
     async def cog_unload(self) -> None:
         await self.api_client.close()
 
-    async def anime_autocomplete(
-        self, itx: Interaction, current: str
+    async def media_autocomplete(
+        self, current: str, media_type: MediaType
     ) -> list[app_commands.Choice[str]]:
         searched = await self.api_client.search_media(
-            current, MediaType.ANIME, max_results=25
+            current, media_type, max_results=25
         )
         return [
             app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
             for entry in searched
         ]
+
+    async def anime_autocomplete(
+        self, _itx: Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        return await self.media_autocomplete(current, MediaType.ANIME)
+
+    async def manga_autocomplete(
+        self, _itx: Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        return await self.media_autocomplete(current, MediaType.MANGA)
 
     @app_commands.command()
     @app_commands.autocomplete(title=anime_autocomplete)
@@ -38,17 +48,6 @@ class AniList(Cog):
         embed.add_field(name="Status", value=f"{found_anime.status}")
 
         await itx.response.send_message(embed=embed)
-
-    async def manga_autocomplete(
-        self, itx: Interaction, current: str
-    ) -> list[app_commands.Choice[str]]:
-        searched = await self.api_client.search_media(
-            current, MediaType.MANGA, max_results=25
-        )
-        return [
-            app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
-            for entry in searched
-        ]
 
     @app_commands.command()
     @app_commands.autocomplete(title=manga_autocomplete)
