@@ -14,7 +14,19 @@ class AniList(Cog):
     async def cog_unload(self) -> None:
         await self.api_client.close()
 
+    async def anime_autocomplete(
+        self, itx: Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        searched = await self.api_client.search_media(
+            current, MediaType.ANIME, max_results=25
+        )
+        return [
+            app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
+            for entry in searched
+        ]
+
     @app_commands.command()
+    @app_commands.autocomplete(title=anime_autocomplete)
     async def anime(self, itx: Interaction, title: str):
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
 
