@@ -225,6 +225,6 @@ class Media(BaseModel):
     mod_notes: str | None
 
 
-class MediaSearch(BaseModel):
+class MediaBasic(BaseModel):
     id: int
     title: MediaTitle | None

@@ -3,7 +3,7 @@ from os import path
 
 from aiohttp import ClientSession
 
-from nagatoro.extensions.anilist.models import Media, MediaSearch, MediaType
+from nagatoro.extensions.anilist.models import Media, MediaBasic, MediaType
 
 API_URL = "https://graphql.anilist.co/"
 
@@ -61,7 +61,7 @@ class AniListClient:
         media_type: MediaType,
         *,
         max_results: int = 10,
-    ) -> list[MediaSearch]:
+    ) -> list[MediaBasic]:
         """Search basic information about Media by its title and type"""
 
         with open(
@@ -81,7 +81,7 @@ class AniListClient:
             media_entries = response_data["data"]["Page"]["media"]
 
         return [
-            MediaSearch(
+            MediaBasic(
                 id=entry.get("id"),
                 title=entry.get("title"),
             )
