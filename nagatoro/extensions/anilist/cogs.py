@@ -7,14 +7,14 @@ from nagatoro.extensions.anilist.models import MediaType
 
 
 class AniList(Cog):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot) -> None:
         super().__init__(bot)
         self.api_client = AniListClient()
 
     async def cog_unload(self) -> None:
         await self.api_client.close()
 
-    async def media_autocomplete(
+    async def _media_autocomplete(
         self, current: str, media_type: MediaType
     ) -> list[app_commands.Choice[str]]:
         searched = await self.api_client.search_media(
@@ -23,24 +23,25 @@ class AniList(Cog):
         return [
             app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
             for entry in searched
+            if entry.title and entry.title.romaji
         ]
 
     async def anime_autocomplete(
         self, _itx: Interaction, current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.media_autocomplete(current, MediaType.ANIME)
+        return await self._media_autocomplete(current, MediaType.ANIME)
 
     async def manga_autocomplete(
         self, _itx: Interaction, current: str
     ) -> list[app_commands.Choice[str]]:
-        return await self.media_autocomplete(current, MediaType.MANGA)
+        return await self._media_autocomplete(current, MediaType.MANGA)
 
     @app_commands.command()
     @app_commands.autocomplete(title=anime_autocomplete)
-    async def anime(self, itx: Interaction, title: str):
+    async def anime(self, itx: Interaction, title: str) -> None:
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
 
-        embed = Embed(title=found_anime.title.romaji)
+        embed = Embed(title=found_anime.title.romaji if found_anime.title else title)
         if cover_image := found_anime.cover_image:
             embed.set_thumbnail(url=cover_image.large)
 
@@ -51,10 +52,10 @@ class AniList(Cog):
 
     @app_commands.command()
     @app_commands.autocomplete(title=manga_autocomplete)
-    async def manga(self, itx: Interaction, title: str):
+    async def manga(self, itx: Interaction, title: str) -> None:
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
 
-        embed = Embed(title=found_manga.title.romaji)
+        embed = Embed(title=found_manga.title.romaji if found_manga.title else title)
         if cover_image := found_manga.cover_image:
             embed.set_thumbnail(url=cover_image.large)
 
