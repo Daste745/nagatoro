@@ -15,11 +15,13 @@ class AniList(Cog):
         await self.api_client.close()
 
     async def _media_autocomplete(
-        self, current: str, media_type: MediaType
+        self, title: str, media_type: MediaType
     ) -> list[app_commands.Choice[str]]:
-        searched = await self.api_client.search_media(
-            current, media_type, max_results=10
-        )
+        if title.strip == "":
+            return []
+
+        searched = await self.api_client.search_media(title, media_type, max_results=10)
+
         return [
             app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
             for entry in searched
