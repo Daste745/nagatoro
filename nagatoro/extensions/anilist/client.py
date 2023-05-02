@@ -53,6 +53,7 @@ class AniListClient:
             cover_image=media_data.get("coverImage"),
             banner_image=media_data.get("bannerImage"),
             is_favourite_blocked=media_data.get("isFavouriteBlocked"),
+            site_url=media_data.get("siteUrl"),
         )
 
     async def search_media(

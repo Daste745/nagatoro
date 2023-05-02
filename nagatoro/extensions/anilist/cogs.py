@@ -41,7 +41,10 @@ class AniList(Cog):
     async def anime(self, itx: Interaction, title: str) -> None:
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
 
-        embed = Embed(title=found_anime.title.romaji if found_anime.title else title)
+        embed = Embed(
+            title=found_anime.title.romaji if found_anime.title else title,
+            url=found_anime.site_url,
+        )
         if cover_image := found_anime.cover_image:
             embed.set_thumbnail(url=cover_image.large)
 
@@ -55,7 +58,10 @@ class AniList(Cog):
     async def manga(self, itx: Interaction, title: str) -> None:
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
 
-        embed = Embed(title=found_manga.title.romaji if found_manga.title else title)
+        embed = Embed(
+            title=found_manga.title.romaji if found_manga.title else title,
+            url=found_manga.site_url,
+        )
         if cover_image := found_manga.cover_image:
             embed.set_thumbnail(url=cover_image.large)
 
