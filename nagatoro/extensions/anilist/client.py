@@ -22,6 +22,8 @@ class AniListClient:
         *,
         description_as_html: bool = False,
     ) -> Media:
+        """Find a Media object by its title and type"""
+
         with open(path.join(path.dirname(__file__), "queries/media_full.gql")) as query:
             request_data = {
                 "query": query.read().strip(),
@@ -57,8 +59,11 @@ class AniListClient:
         self,
         title: str,
         media_type: MediaType,
+        *,
         max_results: int = 10,
     ) -> list[MediaSearch]:
+        """Search basic information about Media by its title and type"""
+
         with open(
             path.join(path.dirname(__file__), "queries/media_search.gql")
         ) as query:
@@ -82,14 +87,3 @@ class AniListClient:
             )
             for entry in media_entries
         ]
-
-
-async def main():
-    client = AniListClient()
-    anime = await client.find_media("yofukashi no uta", MediaType.ANIME)
-    print(anime.season)
-    await client.close()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
