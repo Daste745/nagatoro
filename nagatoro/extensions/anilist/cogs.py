@@ -18,7 +18,7 @@ class AniList(Cog):
         self, current: str, media_type: MediaType
     ) -> list[app_commands.Choice[str]]:
         searched = await self.api_client.search_media(
-            current, media_type, max_results=25
+            current, media_type, max_results=10
         )
         return [
             app_commands.Choice(name=entry.title.romaji, value=entry.title.romaji)
