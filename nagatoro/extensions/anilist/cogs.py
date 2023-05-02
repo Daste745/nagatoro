@@ -1,3 +1,4 @@
+from discord import Colour as Color
 from discord import Embed, Interaction, app_commands
 
 from nagatoro.common import Cog
@@ -49,9 +50,24 @@ class AniList(Cog):
         )
         if cover_image := found_anime.cover_image:
             embed.set_thumbnail(url=cover_image.large)
+            if cover_image.color:
+                embed.colour = Color.from_str(cover_image.color)
 
-        embed.add_field(name="Format", value=f"{found_anime.format}")
-        embed.add_field(name="Status", value=f"{found_anime.status}")
+        if found_anime.status:
+            embed.add_field(name="Status", value=f"{found_anime.status.title()}")
+        if found_anime.episodes:
+            embed.add_field(name="Episodes", value=f"{found_anime.episodes}")
+        if found_anime.duration:
+            embed.add_field(name="Duration", value=f"{found_anime.duration} minutes")
+        if found_anime.season:
+            embed.add_field(name="Season", value=f"{found_anime.season.title()}")
+        if found_anime.format:
+            embed.add_field(name="Format", value=f"{found_anime.format.title()}")
+        if found_anime.genres:
+            embed.add_field(
+                name="Genres",
+                value=", ".join(genre.title() for genre in found_anime.genres if genre),
+            )
 
         await itx.response.send_message(embed=embed)
 
@@ -66,8 +82,23 @@ class AniList(Cog):
         )
         if cover_image := found_manga.cover_image:
             embed.set_thumbnail(url=cover_image.large)
+            if cover_image.color:
+                embed.colour = Color.from_str(cover_image.color)
 
-        embed.add_field(name="Format", value=f"{found_manga.format}")
-        embed.add_field(name="Status", value=f"{found_manga.status}")
+        if found_manga.status:
+            embed.add_field(name="Status", value=f"{found_manga.status.title()}")
+        if found_manga.chapters:
+            embed.add_field(name="Chapters", value=f"{found_manga.chapters}")
+        if found_manga.volumes:
+            embed.add_field(name="Volumes", value=f"{found_manga.volumes}")
+        if found_manga.season:
+            embed.add_field(name="Season", value=f"{found_manga.season.title()}")
+        if found_manga.format:
+            embed.add_field(name="Format", value=f"{found_manga.format.title()}")
+        if found_manga.genres:
+            embed.add_field(
+                name="Genres",
+                value=", ".join(genre.title() for genre in found_manga.genres if genre),
+            )
 
         await itx.response.send_message(embed=embed)

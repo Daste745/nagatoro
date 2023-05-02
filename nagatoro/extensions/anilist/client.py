@@ -50,8 +50,13 @@ class AniListClient:
             start_date=media_data.get("startDate"),
             end_date=media_data.get("endDate"),
             season=media_data.get("season"),
+            episodes=media_data.get("episodes"),
+            duration=media_data.get("duration"),
+            chapters=media_data.get("chapters"),
+            volumes=media_data.get("volumes"),
             cover_image=media_data.get("coverImage"),
             banner_image=media_data.get("bannerImage"),
+            genres=media_data.get("genres"),
             is_favourite_blocked=media_data.get("isFavouriteBlocked"),
             site_url=media_data.get("siteUrl"),
         )
