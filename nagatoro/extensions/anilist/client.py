@@ -22,7 +22,7 @@ class AniListClient:
         *,
         description_as_html: bool = False,
     ) -> Media:
-        with open(path.join(path.dirname(__file__), "queries/media.gql")) as query:
+        with open(path.join(path.dirname(__file__), "queries/media_full.gql")) as query:
             request_data = {
                 "query": query.read().strip(),
                 "variables": {
@@ -60,7 +60,7 @@ class AniListClient:
         max_results: int = 10,
     ) -> list[MediaSearch]:
         with open(
-            path.join(path.dirname(__file__), "queries/search_media.gql")
+            path.join(path.dirname(__file__), "queries/media_search.gql")
         ) as query:
             request_data = {
                 "query": query.read().strip(),
