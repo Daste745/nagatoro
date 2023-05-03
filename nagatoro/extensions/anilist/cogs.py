@@ -97,6 +97,7 @@ class AniList(Cog):
     async def anime(self, itx: Interaction, title: str) -> None:
         """Search anime on AniList"""
 
+        await itx.response.defer()
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
         description = ""
 
@@ -132,7 +133,7 @@ class AniList(Cog):
                 value=", ".join(genre.title() for genre in found_anime.genres if genre),
             )
 
-        await itx.response.send_message(embed=embed)
+        await itx.followup.send(embed=embed)
 
     # FIXME: We don't really need separate error handlers for cooldowns
     @anime.error
@@ -146,6 +147,7 @@ class AniList(Cog):
     async def manga(self, itx: Interaction, title: str) -> None:
         """Search manga on AniList"""
 
+        await itx.response.defer()
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
         description = ""
 
@@ -181,7 +183,7 @@ class AniList(Cog):
                 value=", ".join(genre.title() for genre in found_manga.genres if genre),
             )
 
-        await itx.response.send_message(embed=embed)
+        await itx.followup.send(embed=embed)
 
     # FIXME: We don't really need separate error handlers for cooldowns
     @manga.error
