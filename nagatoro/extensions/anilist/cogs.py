@@ -29,12 +29,12 @@ class AniList(Cog):
             if entry.title and entry.title.romaji
         ]
 
-    async def anime_autocomplete(
+    async def _anime_autocomplete(
         self, _itx: Interaction, current: str
     ) -> list[app_commands.Choice[str]]:
         return await self._media_autocomplete(current, MediaType.ANIME)
 
-    async def manga_autocomplete(
+    async def _manga_autocomplete(
         self, _itx: Interaction, current: str
     ) -> list[app_commands.Choice[str]]:
         return await self._media_autocomplete(current, MediaType.MANGA)
@@ -54,7 +54,7 @@ class AniList(Cog):
         return output
 
     @app_commands.command()
-    @app_commands.autocomplete(title=anime_autocomplete)
+    @app_commands.autocomplete(title=_anime_autocomplete)
     async def anime(self, itx: Interaction, title: str) -> None:
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
         description = ""
@@ -91,7 +91,7 @@ class AniList(Cog):
         await itx.response.send_message(embed=embed)
 
     @app_commands.command()
-    @app_commands.autocomplete(title=manga_autocomplete)
+    @app_commands.autocomplete(title=_manga_autocomplete)
     async def manga(self, itx: Interaction, title: str) -> None:
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
         description = ""
