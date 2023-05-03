@@ -9,6 +9,7 @@ from nagatoro.common import Cog
 from nagatoro.common.bot import Bot
 from nagatoro.extensions.anilist.client import AniListClient
 from nagatoro.extensions.anilist.models import MediaRank, MediaRankType, MediaType
+from nagatoro.extensions.anilist.views import MediaButtonsView
 
 
 # FIXME: This may be excessive, but we don't have any caching so it's fine for now
@@ -133,7 +134,7 @@ class AniList(Cog):
                 value=", ".join(genre.title() for genre in found_anime.genres if genre),
             )
 
-        await itx.followup.send(embed=embed)
+        await itx.followup.send(embed=embed, view=MediaButtonsView(found_anime))
 
     # FIXME: We don't really need separate error handlers for cooldowns
     @anime.error
@@ -183,7 +184,7 @@ class AniList(Cog):
                 value=", ".join(genre.title() for genre in found_manga.genres if genre),
             )
 
-        await itx.followup.send(embed=embed)
+        await itx.followup.send(embed=embed, view=MediaButtonsView(found_manga))
 
     # FIXME: We don't really need separate error handlers for cooldowns
     @manga.error
