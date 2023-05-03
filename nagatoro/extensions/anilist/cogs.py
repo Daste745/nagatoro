@@ -56,6 +56,8 @@ class AniList(Cog):
     @app_commands.command()
     @app_commands.autocomplete(title=_anime_autocomplete)
     async def anime(self, itx: Interaction, title: str) -> None:
+        """Search anime on AniList"""
+
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
         description = ""
 
@@ -93,6 +95,8 @@ class AniList(Cog):
     @app_commands.command()
     @app_commands.autocomplete(title=_manga_autocomplete)
     async def manga(self, itx: Interaction, title: str) -> None:
+        """Search manga on AniList"""
+
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
         description = ""
 
