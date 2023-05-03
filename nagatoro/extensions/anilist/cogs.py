@@ -4,7 +4,7 @@ from discord import Embed, Interaction, app_commands
 from nagatoro.common import Cog
 from nagatoro.common.bot import Bot
 from nagatoro.extensions.anilist.client import AniListClient
-from nagatoro.extensions.anilist.models import MediaType
+from nagatoro.extensions.anilist.models import MediaRank, MediaRankType, MediaType
 
 
 class AniList(Cog):
@@ -39,13 +39,32 @@ class AniList(Cog):
     ) -> list[app_commands.Choice[str]]:
         return await self._media_autocomplete(current, MediaType.MANGA)
 
+    def _format_media_rankings(self, rankings: list[MediaRank | None]) -> str:
+        output = ""
+
+        for ranking in rankings:
+            if ranking is None or not ranking.all_time:
+                continue
+
+            if ranking.type == MediaRankType.POPULAR:
+                output += f"❤️ #{ranking.rank} {ranking.context.title()}\n"
+            elif ranking.type == MediaRankType.RATED:
+                output += f"⭐ #{ranking.rank} {ranking.context.title()}\n"
+
+        return output
+
     @app_commands.command()
     @app_commands.autocomplete(title=anime_autocomplete)
     async def anime(self, itx: Interaction, title: str) -> None:
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
+        description = ""
+
+        if found_anime.rankings:
+            description += self._format_media_rankings(found_anime.rankings)
 
         embed = Embed(
             title=found_anime.title.romaji if found_anime.title else title,
+            description=description,
             url=found_anime.site_url,
         )
         if cover_image := found_anime.cover_image:
@@ -75,9 +94,14 @@ class AniList(Cog):
     @app_commands.autocomplete(title=manga_autocomplete)
     async def manga(self, itx: Interaction, title: str) -> None:
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
+        description = ""
+
+        if found_manga.rankings:
+            description += self._format_media_rankings(found_manga.rankings)
 
         embed = Embed(
             title=found_manga.title.romaji if found_manga.title else title,
+            description=description,
             url=found_manga.site_url,
         )
         if cover_image := found_manga.cover_image:

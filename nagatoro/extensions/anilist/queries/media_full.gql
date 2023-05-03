@@ -66,6 +66,16 @@ query ($title: String, $type: MediaType, $descriptionAsHtml: Boolean) {
     }
     isFavouriteBlocked
     isAdult
+    rankings {
+      id
+      rank
+      type
+      format
+      year
+      season
+      allTime
+      context
+    }
     siteUrl
     autoCreateForumThread
     isRecommendationBlocked

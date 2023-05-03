@@ -3,7 +3,7 @@ from os import path
 
 from aiohttp import ClientSession
 
-from nagatoro.extensions.anilist.models import Media, MediaBasic, MediaType
+from nagatoro.extensions.anilist.models import Media, MediaBasic, MediaRank, MediaType
 
 API_URL = "https://graphql.anilist.co/"
 
@@ -38,6 +38,21 @@ class AniListClient:
             response_data = await response.json()
             media_data = response_data["data"]["Media"]
 
+        rankings = []
+        for ranking in media_data.get("rankings", []):
+            rankings.append(
+                MediaRank(
+                    id=ranking.get("id"),
+                    rank=ranking.get("rank"),
+                    type=ranking.get("type"),
+                    format=ranking.get("format"),
+                    year=ranking.get("year"),
+                    season=ranking.get("season"),
+                    all_time=ranking.get("allTime"),
+                    context=ranking.get("context"),
+                )
+            )
+
         return Media(
             # TODO: Add missing fields
             id=media_data.get("id"),
@@ -58,6 +73,7 @@ class AniListClient:
             banner_image=media_data.get("bannerImage"),
             genres=media_data.get("genres"),
             is_favourite_blocked=media_data.get("isFavouriteBlocked"),
+            rankings=rankings,
             site_url=media_data.get("siteUrl"),
         )
 

@@ -138,7 +138,7 @@ class MediaRank(BaseModel):
     type: MediaRankType
     format: MediaFormat
     year: int | None
-    season: MediaSeason
+    season: MediaSeason | None
     all_time: bool | None
     context: str
 
