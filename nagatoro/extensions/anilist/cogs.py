@@ -1,3 +1,5 @@
+import re
+
 from discord import Colour as Color
 from discord import Embed, Interaction, app_commands
 from discord.app_commands.checks import cooldown
@@ -43,7 +45,39 @@ class AniList(Cog):
     ) -> list[app_commands.Choice[str]]:
         return await self._media_autocomplete(current, MediaType.MANGA)
 
+    def _format_media_description(self, description: str) -> str:
+        """Trim the media description and replace html tags with markdown"""
+
+        if len(description) > 1000:
+            description = description[:1000] + "..."
+
+        # Replace html tags with markdown
+        description = (
+            description.replace("<br>", "\n")
+            .replace("<i>", "*")
+            .replace("</i>", "*")
+            .replace("<b>", "**")
+            .replace("</b>", "**")
+            .replace("&ndash;", " - ")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+        )
+
+        # Remove repeating newlines
+        description = re.sub(r"\n+", "\n", description)
+
+        return description.strip()
+
     def _format_media_rankings(self, rankings: list[MediaRank | None]) -> str:
+        """
+        Format the media rankings into a string
+
+        Example output:
+
+        ❤️ #10 Highest Rated All Time\n
+        ⭐ #42 Most Popular All Time\n
+        """
+
         output = ""
 
         for ranking in rankings:
@@ -66,6 +100,9 @@ class AniList(Cog):
         found_anime = await self.api_client.find_media(title, MediaType.ANIME)
         description = ""
 
+        if found_anime.description:
+            description += self._format_media_description(found_anime.description)
+            description += "\n\n"
         if found_anime.rankings:
             description += self._format_media_rankings(found_anime.rankings)
 
@@ -112,6 +149,9 @@ class AniList(Cog):
         found_manga = await self.api_client.find_media(title, MediaType.MANGA)
         description = ""
 
+        if found_manga.description:
+            description += self._format_media_description(found_manga.description)
+            description += "\n\n"
         if found_manga.rankings:
             description += self._format_media_rankings(found_manga.rankings)
 
