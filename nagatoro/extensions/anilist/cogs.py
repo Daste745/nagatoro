@@ -1,5 +1,7 @@
 from discord import Colour as Color
 from discord import Embed, Interaction, app_commands
+from discord.app_commands.checks import cooldown
+from discord.app_commands.errors import AppCommandError
 
 from nagatoro.common import Cog
 from nagatoro.common.bot import Bot
@@ -7,6 +9,8 @@ from nagatoro.extensions.anilist.client import AniListClient
 from nagatoro.extensions.anilist.models import MediaRank, MediaRankType, MediaType
 
 
+# FIXME: This may be excessive, but we don't have any caching so it's fine for now
+@cooldown(1.0, 1.0, key=None)
 class AniList(Cog):
     def __init__(self, bot: Bot) -> None:
         super().__init__(bot)
@@ -54,6 +58,7 @@ class AniList(Cog):
         return output
 
     @app_commands.command()
+    @cooldown(1.0, 5.0)
     @app_commands.autocomplete(title=_anime_autocomplete)
     async def anime(self, itx: Interaction, title: str) -> None:
         """Search anime on AniList"""
@@ -92,7 +97,14 @@ class AniList(Cog):
 
         await itx.response.send_message(embed=embed)
 
+    # FIXME: We don't really need separate error handlers for cooldowns
+    @anime.error
+    async def on_anime_error(self, itx: Interaction, error: AppCommandError) -> None:
+        if isinstance(error, app_commands.CommandOnCooldown):
+            await itx.response.send_message(str(error), ephemeral=True)
+
     @app_commands.command()
+    @cooldown(1.0, 5.0)
     @app_commands.autocomplete(title=_manga_autocomplete)
     async def manga(self, itx: Interaction, title: str) -> None:
         """Search manga on AniList"""
@@ -130,3 +142,9 @@ class AniList(Cog):
             )
 
         await itx.response.send_message(embed=embed)
+
+    # FIXME: We don't really need separate error handlers for cooldowns
+    @manga.error
+    async def on_manga_error(self, itx: Interaction, error: AppCommandError) -> None:
+        if isinstance(error, app_commands.CommandOnCooldown):
+            await itx.response.send_message(str(error), ephemeral=True)
