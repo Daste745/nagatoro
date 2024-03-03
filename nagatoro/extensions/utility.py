@@ -154,6 +154,9 @@ class Utility(Cog):
         if icon := guild.icon:
             embed.set_thumbnail(url=icon.url)
 
+        if banner := guild.banner:
+            embed.set_image(url=banner)
+
         await itx.response.send_message(embed=embed)
 
     @app_commands.command()
